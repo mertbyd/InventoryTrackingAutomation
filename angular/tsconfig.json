@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.prod.json",
+  "compilerOptions": {
+    "paths": {
+      "@inventory-tracking-automation": [
+        "projects/inventory-tracking-automation/src/public-api.ts"
+      ],
+      "@inventory-tracking-automation/config": [
+        "projects/inventory-tracking-automation/config/src/public-api.ts"
+      ],
+      "@proxy": ["projects/inventory-tracking-automation/src/lib/proxy/index.ts"],
+      "@proxy/*": ["projects/inventory-tracking-automation/src/lib/proxy/*"]
+    }
+  }
+}

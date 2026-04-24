@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dotnet build *)",
+      "Bash(grep -E \"^.*error|Build succeeded|Hata$\")",
+      "Bash(grep -E \"error CS|Build succeeded|Hata$|Error\")",
+      "Bash(grep -E \"\\\\.cs$\")",
+      "Bash(dotnet ef migrations *)",
+      "Bash(xargs grep *)",
+      "Bash(dotnet ef database *)"
+    ]
+  }
+}

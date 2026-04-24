@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="..\..\common.props" />
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <RootNamespace>InventoryTrackingAutomation</RootNamespace>
+    <NoWarn>$(NoWarn);CS8618</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="12.0.1" />
+    <PackageReference Include="Volo.Abp.Ddd.Domain" Version="7.0.3" />
+    <ProjectReference Include="..\InventoryTrackingAutomation.Domain.Shared\InventoryTrackingAutomation.Domain.Shared.csproj" />
+  </ItemGroup>
+
+</Project>
