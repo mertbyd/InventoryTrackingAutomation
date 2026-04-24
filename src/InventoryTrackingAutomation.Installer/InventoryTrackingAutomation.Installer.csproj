@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <Import Project="..\..\common.props" />
+
+    <PropertyGroup>
+        <TargetFramework>net7.0</TargetFramework>
+        <GenerateEmbeddedFilesManifest>true</GenerateEmbeddedFilesManifest>
+        <RootNamespace>InventoryTrackingAutomation</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Volo.Abp.VirtualFileSystem" Version="7.0.3" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Remove="..\..\InventoryTrackingAutomation.abpmdl.json" />
+      <EmbeddedResource Include="..\..\InventoryTrackingAutomation.abpmdl.json" />
+    </ItemGroup>
+
+</Project>

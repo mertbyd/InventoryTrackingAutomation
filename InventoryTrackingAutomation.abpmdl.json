@@ -1,0 +1,111 @@
+{
+  "folders": {
+    "items": {
+      "src": {},
+      "test": {},
+      "host": {}
+    }
+  },
+  "packages": {
+    "InventoryTrackingAutomation.Domain.Shared": {
+      "path": "src/InventoryTrackingAutomation.Domain.Shared/InventoryTrackingAutomation.Domain.Shared.abppkg.json",
+      "folder": "src"
+    },
+    "InventoryTrackingAutomation.Domain": {
+      "path": "src/InventoryTrackingAutomation.Domain/InventoryTrackingAutomation.Domain.abppkg.json",
+      "folder": "src"
+    },
+    "InventoryTrackingAutomation.Application.Contracts": {
+      "path": "src/InventoryTrackingAutomation.Application.Contracts/InventoryTrackingAutomation.Application.Contracts.abppkg.json",
+      "folder": "src"
+    },
+    "InventoryTrackingAutomation.Application": {
+      "path": "src/InventoryTrackingAutomation.Application/InventoryTrackingAutomation.Application.abppkg.json",
+      "folder": "src"
+    },
+    "InventoryTrackingAutomation.EntityFrameworkCore": {
+      "path": "src/InventoryTrackingAutomation.EntityFrameworkCore/InventoryTrackingAutomation.EntityFrameworkCore.abppkg.json",
+      "folder": "src"
+    },
+    "InventoryTrackingAutomation.MongoDB": {
+      "path": "src/InventoryTrackingAutomation.MongoDB/InventoryTrackingAutomation.MongoDB.abppkg.json",
+      "folder": "src"
+    },
+    "InventoryTrackingAutomation.HttpApi": {
+      "path": "src/InventoryTrackingAutomation.HttpApi/InventoryTrackingAutomation.HttpApi.abppkg.json",
+      "folder": "src"
+    },
+    "InventoryTrackingAutomation.HttpApi.Client": {
+      "path": "src/InventoryTrackingAutomation.HttpApi.Client/InventoryTrackingAutomation.HttpApi.Client.abppkg.json",
+      "folder": "src"
+    },
+    "InventoryTrackingAutomation.TestBase": {
+      "path": "test/InventoryTrackingAutomation.TestBase/InventoryTrackingAutomation.TestBase.abppkg.json",
+      "folder": "test"
+    },
+    "InventoryTrackingAutomation.EntityFrameworkCore.Tests": {
+      "path": "test/InventoryTrackingAutomation.EntityFrameworkCore.Tests/InventoryTrackingAutomation.EntityFrameworkCore.Tests.abppkg.json",
+      "folder": "test"
+    },
+    "InventoryTrackingAutomation.MongoDB.Tests": {
+      "path": "test/InventoryTrackingAutomation.MongoDB.Tests/InventoryTrackingAutomation.MongoDB.Tests.abppkg.json",
+      "folder": "test"
+    },
+    "InventoryTrackingAutomation.Domain.Tests": {
+      "path": "test/InventoryTrackingAutomation.Domain.Tests/InventoryTrackingAutomation.Domain.Tests.abppkg.json",
+      "folder": "test"
+    },
+    "InventoryTrackingAutomation.Application.Tests": {
+      "path": "test/InventoryTrackingAutomation.Application.Tests/InventoryTrackingAutomation.Application.Tests.abppkg.json",
+      "folder": "test"
+    },
+    "InventoryTrackingAutomation.HttpApi.Host": {
+      "path": "host/InventoryTrackingAutomation.HttpApi.Host/InventoryTrackingAutomation.HttpApi.Host.abppkg.json",
+      "folder": "host"
+    },
+    "InventoryTrackingAutomation.Web": {
+      "path": "src/InventoryTrackingAutomation.Web/InventoryTrackingAutomation.Web.abppkg.json",
+      "folder": "src"
+    },
+    "InventoryTrackingAutomation.HttpApi.Client.ConsoleTestApp": {
+      "path": "test/InventoryTrackingAutomation.HttpApi.Client.ConsoleTestApp/InventoryTrackingAutomation.HttpApi.Client.ConsoleTestApp.abppkg.json",
+      "folder": "test"
+    },
+    "InventoryTrackingAutomation.Web.Host": {
+      "path": "host/InventoryTrackingAutomation.Web.Host/InventoryTrackingAutomation.Web.Host.abppkg.json",
+      "folder": "host"
+    },
+    "InventoryTrackingAutomation.AuthServer": {
+      "path": "host/InventoryTrackingAutomation.AuthServer/InventoryTrackingAutomation.AuthServer.abppkg.json",
+      "folder": "host"
+    },
+    "InventoryTrackingAutomation.Host.Shared": {
+      "path": "host/InventoryTrackingAutomation.Host.Shared/InventoryTrackingAutomation.Host.Shared.abppkg.json",
+      "folder": "host"
+    },
+    "InventoryTrackingAutomation.Web.Unified": {
+      "path": "host/InventoryTrackingAutomation.Web.Unified/InventoryTrackingAutomation.Web.Unified.abppkg.json",
+      "folder": "host"
+    },
+    "InventoryTrackingAutomation.Blazor": {
+      "path": "src/InventoryTrackingAutomation.Blazor/InventoryTrackingAutomation.Blazor.abppkg.json",
+      "folder": "src"
+    },
+    "InventoryTrackingAutomation.Blazor.Host": {
+      "path": "host/InventoryTrackingAutomation.Blazor.Host/InventoryTrackingAutomation.Blazor.Host.abppkg.json",
+      "folder": "host"
+    },
+    "InventoryTrackingAutomation.Blazor.Server": {
+      "path": "src/InventoryTrackingAutomation.Blazor.Server/InventoryTrackingAutomation.Blazor.Server.abppkg.json",
+      "folder": "src"
+    },
+    "InventoryTrackingAutomation.Blazor.WebAssembly": {
+      "path": "src/InventoryTrackingAutomation.Blazor.WebAssembly/InventoryTrackingAutomation.Blazor.WebAssembly.abppkg.json",
+      "folder": "src"
+    },
+    "InventoryTrackingAutomation.Blazor.Server.Host": {
+      "path": "host/InventoryTrackingAutomation.Blazor.Server.Host/InventoryTrackingAutomation.Blazor.Server.Host.abppkg.json",
+      "folder": "host"
+    }
+  }
+}

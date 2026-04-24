@@ -1,0 +1,7 @@
+{
+  "modules": {
+    "InventoryTrackingAutomation": {
+      "path": "InventoryTrackingAutomation.abpmdl.json"
+    }
+  }
+}
