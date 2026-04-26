@@ -1,5 +1,7 @@
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using InventoryTrackingAutomation.Dtos.Workflows;
+using InventoryTrackingAutomation.Permissions;
 using InventoryTrackingAutomation.Services.Workflows;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
@@ -28,6 +30,7 @@ public class WorkflowController : InventoryTrackingAutomationController, IWorkfl
     /// Yeni bir iş akışı süreci başlatır.
     /// </summary>
     [HttpPost("start")]
+    [Authorize]
     public async Task<WorkflowInstanceDto> StartAsync([FromBody] StartWorkflowDto input)
     {
         return await _workflowAppService.StartAsync(input);
@@ -37,8 +40,19 @@ public class WorkflowController : InventoryTrackingAutomationController, IWorkfl
     /// Belirtilen iş akışı adımında onay veya ret aksiyonunu işler.
     /// </summary>
     [HttpPost("process-approval")]
+    [Authorize(InventoryTrackingAutomationPermissions.Workflows.Approve)]
     public async Task<WorkflowInstanceStepDto> ProcessApprovalAsync([FromBody] ProcessApprovalDto input)
     {
         return await _workflowAppService.ProcessApprovalAsync(input);
+    }
+
+    /// <summary>
+    /// Mevcut kullanıcının onaylaması bekleyen tüm iş akışı adımlarını döner.
+    /// </summary>
+    [HttpGet("my-pending-approvals")]
+    [Authorize]
+    public async Task<List<PendingWorkflowStepDto>> GetMyPendingApprovalsAsync()
+    {
+        return await _workflowAppService.GetMyPendingApprovalsAsync();
     }
 }
