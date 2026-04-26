@@ -1,3 +1,4 @@
+using AutoMapper;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,91 +12,97 @@ using InventoryTrackingAutomation.Interface.Workflows;
 using Volo.Abp;
 using Volo.Abp.Users;
 using Volo.Abp.Uow;
+using Volo.Abp.Domain.Repositories;
+using Microsoft.AspNetCore.Authorization;
 
 namespace InventoryTrackingAutomation.Services.Workflows;
 
-/// <summary>
-/// Dinamik iş akışlarını dış dünyaya açan uygulama servisinin implementasyonu.
-/// </summary>
+// Dinamik iş akışlarını dış dünyaya açan application servisi — başlatma ve onay/red yönlendirmesi.
 public class WorkflowAppService : InventoryTrackingAutomationAppService, IWorkflowAppService
 {
+    // Domain manager — iş akışı state machine ve onaycı çözümleme.
     private readonly WorkflowManager _workflowManager;
-    private readonly IWorkerRepository _workerRepository;
+    // Yeni instance persist için repository.
     private readonly IWorkflowInstanceRepository _workflowInstanceRepository;
+    // Onay/red sonrası adım güncellemesi için repository.
     private readonly IWorkflowInstanceStepRepository _workflowInstanceStepRepository;
+    // Step definition bilgilerini okumak için repository.
+    private readonly IRepository<WorkflowStepDefinition, Guid> _stepDefinitionRepository;
 
+    // Tüm bağımlılıkları DI ile alır.
+    private readonly IMapper _mapper;
     public WorkflowAppService(
         WorkflowManager workflowManager,
-        IWorkerRepository workerRepository,
         IWorkflowInstanceRepository workflowInstanceRepository,
-        IWorkflowInstanceStepRepository workflowInstanceStepRepository)
+        IWorkflowInstanceStepRepository workflowInstanceStepRepository,
+        IRepository<WorkflowStepDefinition, Guid> stepDefinitionRepository,
+        IMapper mapper)
     {
+        _mapper = mapper;
         _workflowManager = workflowManager;
-        _workerRepository = workerRepository;
         _workflowInstanceRepository = workflowInstanceRepository;
         _workflowInstanceStepRepository = workflowInstanceStepRepository;
+        _stepDefinitionRepository = stepDefinitionRepository;
     }
 
-    /// <summary>
-    /// Yeni bir iş akışı süreci başlatır.
-    /// </summary>
+    // Yeni iş akışı süreci başlatır — initiator CurrentUser'dan çözülür, manager state machine'i kurar, instance persist edilir.
     [UnitOfWork]
     public async Task<WorkflowInstanceDto> StartAsync(StartWorkflowDto input)
     {
-        var currentUserId = CurrentUser.Id;
-        if (currentUserId == null)
-        {
-            throw new UnauthorizedAccessException("Bu işlemi yapmak için giriş yapmalısınız.");
-        }
-
-        Guid? managerId = null;
-        var worker = await _workerRepository.FindAsync(w => w.UserId == currentUserId.Value);
-
-        if (worker != null)
-        {
-            if (worker.ManagerId.HasValue)
-            {
-                var managerWorker = await _workerRepository.FindAsync(w => w.Id == worker.ManagerId.Value);
-                if (managerWorker != null && managerWorker.UserId != Guid.Empty)
-                {
-                    managerId = managerWorker.UserId;
-                }
-            }
-        }
-
-        var model = ObjectMapper.Map<StartWorkflowDto, StartWorkflowModel>(input);
-        model.InitiatorUserId = currentUserId.Value;
-        model.InitiatorsManagerUserId = managerId;
-
+        var currentUserId = CurrentUser.Id.Value;
+        var model = _mapper.Map<StartWorkflowDto, StartWorkflowModel>(input);
+        model.InitiatorUserId = currentUserId;
         var entity = await _workflowManager.StartWorkflowAsync(model);
-
         var inserted = await _workflowInstanceRepository.InsertAsync(entity, autoSave: true);
-
-        return ObjectMapper.Map<WorkflowInstance, WorkflowInstanceDto>(inserted);
+        return _mapper.Map<WorkflowInstance, WorkflowInstanceDto>(inserted);
     }
 
-    /// <summary>
-    /// Belirtilen iş akışı adımında onay veya ret aksiyonunu işler.
-    /// </summary>
+    // Belirtilen iş akışı adımında onay/red aksiyonunu işler — yetki kontrolünü manager yapar, kararı persist eder.
     [UnitOfWork]
     public async Task<WorkflowInstanceStepDto> ProcessApprovalAsync(ProcessApprovalDto input)
     {
-        var currentUserId = CurrentUser.Id;
-        if (currentUserId == null)
+        var currentUserId = CurrentUser.Id.Value;
+        var roles = CurrentUser.Roles != null ? CurrentUser.Roles.ToList() : new List<string>();
+        var model = _mapper.Map<ProcessApprovalDto, ProcessApprovalModel>(input);
+        model.CurrentUserId = currentUserId;
+        model.CurrentUserRoles = roles;
+        var entityStep = await _workflowManager.ProcessApprovalAsync(model);
+        var updated = await _workflowInstanceStepRepository.UpdateAsync(entityStep, autoSave: true);
+        return _mapper.Map<WorkflowInstanceStep, WorkflowInstanceStepDto>(updated);
+    }
+
+    // Mevcut kullanıcıya atanmış tüm bekleyen iş akışı adımlarını entity-agnostic olarak döner.
+    public async Task<List<PendingWorkflowStepDto>> GetMyPendingApprovalsAsync()
+    {
+        var currentUserId = CurrentUser.Id.Value;
+
+        // Kullanıcıya atanmış ve henüz karar verilmemiş step'leri bul
+        var pendingSteps = await _workflowInstanceStepRepository.GetListAsync(
+            x => x.AssignedUserId == currentUserId &&
+                 x.ActionTaken == InventoryTrackingAutomation.Enums.Workflows.WorkflowActionType.Pending);
+
+        var result = new List<PendingWorkflowStepDto>();
+
+        foreach (var step in pendingSteps)
         {
-            throw new UnauthorizedAccessException("Bu işlemi yapmak için giriş yapmalısınız.");
+            var instance = await _workflowInstanceRepository.FindAsync(step.WorkflowInstanceId);
+            if (instance == null) continue;
+
+            var stepDef = await _stepDefinitionRepository.FindAsync(step.WorkflowStepDefinitionId);
+
+            result.Add(new PendingWorkflowStepDto
+            {
+                WorkflowInstanceStepId = step.Id,
+                WorkflowInstanceId = instance.Id,
+                EntityType = instance.EntityType,
+                EntityId = instance.EntityId,
+                StepOrder = stepDef?.StepOrder ?? 0,
+                StepName = stepDef?.RequiredRoleName ?? stepDef?.ResolverKey ?? string.Empty,
+                InitiatorUserId = instance.InitiatorUserId,
+                CreatedAt = step.CreationTime
+            });
         }
 
-        var roles = CurrentUser.Roles != null ? CurrentUser.Roles.ToList() : new List<string>();
-
-        var model = ObjectMapper.Map<ProcessApprovalDto, ProcessApprovalModel>(input);
-        model.CurrentUserId = currentUserId.Value;
-        model.CurrentUserRoles = roles;
-
-        var entityStep = await _workflowManager.ProcessApprovalAsync(model);
-
-        var updated = await _workflowInstanceStepRepository.UpdateAsync(entityStep, autoSave: true);
-
-        return ObjectMapper.Map<WorkflowInstanceStep, WorkflowInstanceStepDto>(updated);
+        return result;
     }
 }
