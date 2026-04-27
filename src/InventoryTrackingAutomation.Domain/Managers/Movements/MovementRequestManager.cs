@@ -8,8 +8,10 @@ using InventoryTrackingAutomation.Interface.Masters;
 using InventoryTrackingAutomation.Interface.Movements;
 using InventoryTrackingAutomation.Interface.Shipments;
 using InventoryTrackingAutomation.Interface.Workflows;
+using InventoryTrackingAutomation.Events.Workflows;
 using InventoryTrackingAutomation.Models.Movements;
 using InventoryTrackingAutomation.Workflows;
+using Volo.Abp.EventBus.Local;
 
 namespace InventoryTrackingAutomation.Managers.Movements;
 
@@ -25,6 +27,7 @@ public class MovementRequestManager : BaseManager<MovementRequest>
     private readonly IWorkflowInstanceRepository _workflowInstanceRepository;
     private readonly IProductRepository _productRepository;
     private readonly IMovementRequestLineRepository _movementRequestLineRepository;
+    private readonly ILocalEventBus _localEventBus;
 
     private readonly IMapper _mapper;
     public MovementRequestManager(
@@ -38,6 +41,7 @@ public class MovementRequestManager : BaseManager<MovementRequest>
         IWorkflowInstanceRepository workflowInstanceRepository,
         IProductRepository productRepository,
         IMovementRequestLineRepository movementRequestLineRepository,
+        ILocalEventBus localEventBus,
         IMapper mapper)
         : base(repository)
     {
@@ -51,6 +55,7 @@ public class MovementRequestManager : BaseManager<MovementRequest>
         _workflowInstanceRepository = workflowInstanceRepository;
         _productRepository = productRepository;
         _movementRequestLineRepository = movementRequestLineRepository;
+        _localEventBus = localEventBus;
     }
 
     // Yeni hareket talebi entity'si oluşturur — RequestNumber unique, FK ve enum validasyonu yapar, Status'u Pending olarak ayarlar.
@@ -161,27 +166,40 @@ public class MovementRequestManager : BaseManager<MovementRequest>
         var entity = await CreateAsync(model);
 
         // Sonra iş akışını ata (workflow definition aktifse).
-        await AssignWorkflowAsync(entity, currentUserId);
+        var workflowInstance = await AssignWorkflowAsync(entity, currentUserId);
 
         // Persist et ve generated Id ile entity'yi döndür.
-        return await Repository.InsertAsync(entity, autoSave: true);
+        var inserted = await Repository.InsertAsync(entity, autoSave: true);
+        await PublishInitialWorkflowStepAssignedAsync(workflowInstance);
+        return inserted;
     }
 
     // Birden fazla hareket talebini sırayla oluşturur, her biri için iş akışı başlatır ve toplu kaydeder.
     public async Task<List<MovementRequest>> CreateManyWithWorkflowAsync(List<CreateMovementRequestModel> models, Guid currentUserId)
     {
         var entities = new List<MovementRequest>();
+        var workflowInstances = new List<InventoryTrackingAutomation.Entities.Workflows.WorkflowInstance>();
 
         // Her model için Create + Workflow assignment uygula.
         foreach (var model in models)
         {
             var entity = await CreateAsync(model);
-            await AssignWorkflowAsync(entity, currentUserId);
+            var workflowInstance = await AssignWorkflowAsync(entity, currentUserId);
+            if (workflowInstance != null)
+            {
+                workflowInstances.Add(workflowInstance);
+            }
             entities.Add(entity);
         }
 
         // Toplu InsertManyAndGetListAsync ile veritabanına yaz.
-        return await Repository.InsertManyAndGetListAsync(entities);
+        var inserted = await Repository.InsertManyAndGetListAsync(entities);
+        foreach (var workflowInstance in workflowInstances)
+        {
+            await PublishInitialWorkflowStepAssignedAsync(workflowInstance);
+        }
+
+        return inserted;
     }
 
     // Talebi + satırlarını + workflow'u tek transaction'da oluşturur.
@@ -214,7 +232,7 @@ public class MovementRequestManager : BaseManager<MovementRequest>
         entity.Status = InventoryTrackingAutomation.Enums.MovementStatusEnum.Pending;
 
         // 4. Workflow ata (definition aktifse Status InReview'e geçer).
-        await AssignWorkflowAsync(entity, currentUserId);
+        var workflowInstance = await AssignWorkflowAsync(entity, currentUserId);
 
         // 5. Header'ı insert et — line'ların FK'sı için Id lazım.
         var insertedHeader = await Repository.InsertAsync(entity, autoSave: true);
@@ -229,6 +247,7 @@ public class MovementRequestManager : BaseManager<MovementRequest>
         }).ToList();
 
         await _movementRequestLineRepository.InsertManyAsync(lineEntities, autoSave: true);
+        await PublishInitialWorkflowStepAssignedAsync(workflowInstance);
 
         return insertedHeader;
     }
@@ -268,7 +287,7 @@ public class MovementRequestManager : BaseManager<MovementRequest>
     // Aktif MovementRequest workflow definition'ını bulur, initiator bağlamıyla iş akışını başlatır
     // ve oluşan WorkflowInstanceId'yi entity'ye yazar.
     // Initiator'ın yöneticisini bulma sorumluluğu WorkflowManager → IApproverStrategy zincirine aittir.
-    private async Task AssignWorkflowAsync(MovementRequest entity, Guid currentUserId)
+    private async Task<InventoryTrackingAutomation.Entities.Workflows.WorkflowInstance?> AssignWorkflowAsync(MovementRequest entity, Guid currentUserId)
     {
         // MovementRequest için aktif workflow definition'ı bul; yoksa workflow başlatılmaz (geriye dönük uyumluluk).
         var workflowDef = await _workflowDefinitionRepository.FindAsync(
@@ -276,7 +295,7 @@ public class MovementRequestManager : BaseManager<MovementRequest>
 
         if (workflowDef == null)
         {
-            return;
+            return null;
         }
 
         var startModel = new InventoryTrackingAutomation.Models.Workflows.StartWorkflowModel
@@ -294,5 +313,25 @@ public class MovementRequestManager : BaseManager<MovementRequest>
 
         // Workflow başarıyla atandı — talep artık inceleme sürecinde.
         entity.Status = InventoryTrackingAutomation.Enums.MovementStatusEnum.InReview;
+        return workflowInstance;
+    }
+
+    private Task PublishInitialWorkflowStepAssignedAsync(InventoryTrackingAutomation.Entities.Workflows.WorkflowInstance? workflowInstance)
+    {
+        var firstStep = workflowInstance?.Steps.FirstOrDefault();
+        if (workflowInstance == null || firstStep == null)
+        {
+            return Task.CompletedTask;
+        }
+
+        return _localEventBus.PublishAsync(new WorkflowStepAssignedEto
+        {
+            WorkflowInstanceId = workflowInstance.Id,
+            WorkflowInstanceStepId = firstStep.Id,
+            WorkflowStepDefinitionId = firstStep.WorkflowStepDefinitionId,
+            EntityType = workflowInstance.EntityType,
+            EntityId = workflowInstance.EntityId,
+            AssignedUserId = firstStep.AssignedUserId
+        });
     }
 }

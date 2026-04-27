@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authorization;
 using SystemStandards.Results;
 using InventoryTrackingAutomation.Dtos.Masters;
 using InventoryTrackingAutomation.Services.Masters;
@@ -16,7 +15,6 @@ namespace InventoryTrackingAutomation.Controllers.Masters;
 /// Ã‡alÄ±ÅŸan CRUD endpoint'leri.
 /// </summary>
 [Route("api/workers")]
-[Authorize]
 [ApiExplorerSettings(GroupName = "Masters")]
 [Tags("Workers")]
 public class WorkerController : InventoryTrackingAutomationController

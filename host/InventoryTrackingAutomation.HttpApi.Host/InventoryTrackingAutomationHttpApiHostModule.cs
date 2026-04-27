@@ -14,6 +14,7 @@ using Microsoft.OpenApi;
 using OpenIddict.Validation.AspNetCore;
 using InventoryTrackingAutomation.EntityFrameworkCore;
 using InventoryTrackingAutomation.MultiTenancy;
+using InventoryTrackingAutomation.SignalR;
 using Microsoft.AspNetCore.Extensions.DependencyInjection;
 using SystemStandards.Extensions;
 using SystemStandards.Abp;
@@ -27,6 +28,7 @@ using Volo.Abp.AspNetCore.Mvc.UI.MultiTenancy;
 using Volo.Abp.AspNetCore.Mvc.UI.Theme.Basic;
 using Volo.Abp.AspNetCore.Mvc.UI.Theme.Shared;
 using Volo.Abp.AspNetCore.Serilog;
+using Volo.Abp.AspNetCore.SignalR;
 using Volo.Abp.Auditing;
 using Volo.Abp.AuditLogging.EntityFrameworkCore;
 using Volo.Abp.Autofac;
@@ -70,6 +72,7 @@ namespace InventoryTrackingAutomation;
     typeof(AbpAspNetCoreMvcUiMultiTenancyModule),
     typeof(AbpAspNetCoreMvcUiBasicThemeModule),
     typeof(AbpAspNetCoreSerilogModule),
+    typeof(AbpAspNetCoreSignalRModule),
     typeof(AbpSwashbuckleModule),
    
     // Database
@@ -142,6 +145,7 @@ public class InventoryTrackingAutomationHttpApiHostModule : AbpModule
 
         // SystemStandards services are now registered via SystemStandardsAbpModule
 
+        context.Services.AddSingleton<InventorySignalRDebugNotificationStore>();
 
         // CRITICAL: API isteklerinde Bearer kullanıldığı için CSRF/Antiforgery filtresini kapatıyoruz
         Configure<AbpAntiForgeryOptions>(options =>

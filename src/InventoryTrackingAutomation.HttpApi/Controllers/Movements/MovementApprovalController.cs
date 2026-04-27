@@ -16,7 +16,6 @@ namespace InventoryTrackingAutomation.Controllers.Movements;
 /// Hareket talebi onay işlemleri endpoint'leri.
 /// </summary>
 [Route("api/movement-requests")]
-[Authorize]
 [ApiExplorerSettings(GroupName = "Movements")]
 [Tags("MovementApprovals")]
 public class MovementApprovalController : InventoryTrackingAutomationController

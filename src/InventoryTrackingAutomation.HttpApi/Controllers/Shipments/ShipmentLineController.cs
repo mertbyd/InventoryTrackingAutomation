@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authorization;
 using SystemStandards.Results;
 using InventoryTrackingAutomation.Dtos.Shipments;
 using InventoryTrackingAutomation.Services.Shipments;
@@ -16,7 +15,6 @@ namespace InventoryTrackingAutomation.Controllers.Shipments;
 /// Sevkiyat satÄ±rÄ± CRUD endpoint'leri.
 /// </summary>
 [Route("api/shipment-lines")]
-[Authorize]
 [ApiExplorerSettings(GroupName = "Shipments")]
 [Tags("ShipmentLines")]
 public class ShipmentLineController : InventoryTrackingAutomationController
@@ -30,7 +28,7 @@ public class ShipmentLineController : InventoryTrackingAutomationController
 
     /// <summary> Id'ye gÃ¶re tek sevkiyat satÄ±rÄ± getirir. </summary>
     [HttpGet("{id}")]
-    [Authorize(InventoryTrackingAutomationPermissions.MovementRequests.View)]
+    [Authorize(InventoryTrackingAutomationPermissions.Inventory.View)]
     public async Task<Result<ShipmentLineDto>> Get(Guid id)
     {
         var result = await _appService.GetAsync(id);
@@ -39,7 +37,7 @@ public class ShipmentLineController : InventoryTrackingAutomationController
 
     /// <summary> TÃ¼m sevkiyat satÄ±rlarÄ±nÄ± listeler. </summary>
     [HttpGet]
-    [Authorize(InventoryTrackingAutomationPermissions.MovementRequests.View)]
+    [Authorize(InventoryTrackingAutomationPermissions.Inventory.View)]
     public async Task<Result<Volo.Abp.Application.Dtos.PagedResultDto<ShipmentLineDto>>> GetList([FromQuery] Volo.Abp.Application.Dtos.PagedResultRequestDto input)
     {
         var result = await _appService.GetListAsync(input);

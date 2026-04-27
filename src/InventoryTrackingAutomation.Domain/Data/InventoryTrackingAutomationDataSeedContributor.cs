@@ -575,6 +575,21 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
     private async Task SeedRolesAndPermissionsAsync()
     {
         // Rol → izin haritası: tek doğruluk kaynağı, yeni rol/izin eklemek için sadece bu sözlük güncellenir.
+        var managedPermissions = new[]
+        {
+            InventoryTrackingAutomationPermissions.MovementRequests.View,
+            InventoryTrackingAutomationPermissions.MovementRequests.Create,
+            InventoryTrackingAutomationPermissions.MovementRequests.Edit,
+            InventoryTrackingAutomationPermissions.MovementRequests.Delete,
+            InventoryTrackingAutomationPermissions.Workflows.View,
+            InventoryTrackingAutomationPermissions.Workflows.Approve,
+            InventoryTrackingAutomationPermissions.Workflows.Reject,
+            InventoryTrackingAutomationPermissions.Inventory.View,
+            InventoryTrackingAutomationPermissions.Inventory.Manage,
+            InventoryTrackingAutomationPermissions.Masters.View,
+            InventoryTrackingAutomationPermissions.Masters.Manage
+        };
+
         var rolePermissionMap = new Dictionary<string, string[]>
         {
             [InventoryTrackingAutomationRoleConstants.Admin] = InventoryTrackingAutomationPermissions.GetAll(),
@@ -583,9 +598,10 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
             {
                 InventoryTrackingAutomationPermissions.MovementRequests.View,
                 InventoryTrackingAutomationPermissions.Workflows.View,
+                InventoryTrackingAutomationPermissions.Inventory.View,
+                InventoryTrackingAutomationPermissions.Masters.View,
                 InventoryTrackingAutomationPermissions.Workflows.Approve,
                 InventoryTrackingAutomationPermissions.Workflows.Reject,
-                InventoryTrackingAutomationPermissions.Inventory.View,
                 InventoryTrackingAutomationPermissions.Inventory.Manage
             },
 
@@ -593,34 +609,38 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
             {
                 InventoryTrackingAutomationPermissions.MovementRequests.View,
                 InventoryTrackingAutomationPermissions.Workflows.View,
+                InventoryTrackingAutomationPermissions.Inventory.View,
+                InventoryTrackingAutomationPermissions.Masters.View,
                 InventoryTrackingAutomationPermissions.Workflows.Approve,
-                InventoryTrackingAutomationPermissions.Workflows.Reject,
-                InventoryTrackingAutomationPermissions.Inventory.View
+                InventoryTrackingAutomationPermissions.Workflows.Reject
             },
 
             [InventoryTrackingAutomationRoleConstants.WarehouseWorker] = new[]
             {
                 InventoryTrackingAutomationPermissions.MovementRequests.View,
                 InventoryTrackingAutomationPermissions.Workflows.View,
-                InventoryTrackingAutomationPermissions.Workflows.Approve,
-                InventoryTrackingAutomationPermissions.Inventory.View
+                InventoryTrackingAutomationPermissions.Inventory.View,
+                InventoryTrackingAutomationPermissions.Masters.View,
+                InventoryTrackingAutomationPermissions.Workflows.Approve
             },
 
             [InventoryTrackingAutomationRoleConstants.FieldWorker] = new[]
             {
                 InventoryTrackingAutomationPermissions.MovementRequests.View,
-                InventoryTrackingAutomationPermissions.MovementRequests.Create,
                 InventoryTrackingAutomationPermissions.Workflows.View,
-                InventoryTrackingAutomationPermissions.Inventory.View
+                InventoryTrackingAutomationPermissions.Inventory.View,
+                InventoryTrackingAutomationPermissions.Masters.View,
+                InventoryTrackingAutomationPermissions.MovementRequests.Create
             },
 
             [InventoryTrackingAutomationRoleConstants.LogisticsSupervisor] = new[]
             {
                 InventoryTrackingAutomationPermissions.MovementRequests.View,
                 InventoryTrackingAutomationPermissions.Workflows.View,
+                InventoryTrackingAutomationPermissions.Inventory.View,
+                InventoryTrackingAutomationPermissions.Masters.View,
                 InventoryTrackingAutomationPermissions.Workflows.Approve,
                 InventoryTrackingAutomationPermissions.Workflows.Reject,
-                InventoryTrackingAutomationPermissions.Inventory.View,
                 InventoryTrackingAutomationPermissions.Inventory.Manage
             },
 
@@ -629,6 +649,7 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
                 InventoryTrackingAutomationPermissions.MovementRequests.View,
                 InventoryTrackingAutomationPermissions.Workflows.View,
                 InventoryTrackingAutomationPermissions.Inventory.View,
+                InventoryTrackingAutomationPermissions.Masters.View,
                 InventoryTrackingAutomationPermissions.Masters.Manage
             }
         };
@@ -647,9 +668,17 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
         // İzinleri ABP'nin RolePermissionValueProvider sabiti ile rollere ata (magic string "R" yerine).
         foreach (var (roleName, permissions) in rolePermissionMap)
         {
-            foreach (var permission in permissions)
+            var permissionsToSet = roleName == InventoryTrackingAutomationRoleConstants.Admin
+                ? InventoryTrackingAutomationPermissions.GetAll()
+                : managedPermissions;
+
+            foreach (var permission in permissionsToSet)
             {
-                await _permissionManager.SetAsync(permission, RolePermissionProviderName, roleName, true);
+                await _permissionManager.SetAsync(
+                    permission,
+                    RolePermissionProviderName,
+                    roleName,
+                    permissions.Contains(permission));
             }
         }
     }

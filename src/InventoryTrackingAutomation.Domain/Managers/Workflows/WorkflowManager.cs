@@ -122,6 +122,7 @@ public class WorkflowManager : DomainService
             );
 
             await _workflowInstanceStepRepository.InsertAsync(nextStep, autoSave: true);
+            await PublishStepAssignedAsync(instance, nextStep);
         }
         else
         {
@@ -221,6 +222,19 @@ public class WorkflowManager : DomainService
             EntityType = instance.EntityType,
             EntityId = instance.EntityId,
             FinalState = finalState
+        });
+    }
+
+    private Task PublishStepAssignedAsync(WorkflowInstance instance, WorkflowInstanceStep step)
+    {
+        return _localEventBus.PublishAsync(new WorkflowStepAssignedEto
+        {
+            WorkflowInstanceId = instance.Id,
+            WorkflowInstanceStepId = step.Id,
+            WorkflowStepDefinitionId = step.WorkflowStepDefinitionId,
+            EntityType = instance.EntityType,
+            EntityId = instance.EntityId,
+            AssignedUserId = step.AssignedUserId
         });
     }
 }

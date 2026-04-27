@@ -15,7 +15,6 @@ namespace InventoryTrackingAutomation.Controllers.Masters;
 /// Ürün CRUD endpoint'leri.
 /// </summary>
 [Route("api/products")]
-[Authorize]
 [ApiExplorerSettings(GroupName = "Masters")]
 public class ProductController : InventoryTrackingAutomationController
 {
@@ -80,4 +79,3 @@ public class ProductController : InventoryTrackingAutomationController
         return Result.Success();
     }
 }
-
