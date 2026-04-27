@@ -1,3 +1,4 @@
+using AutoMapper;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -12,83 +13,85 @@ using Volo.Abp.Uow;
 
 namespace InventoryTrackingAutomation.Application.Services.Shipments;
 
-/// <summary>
-/// Sevkiyat application servisi — HTTP endpoint'leri için orkestra katmanı.
-/// </summary>
+// Sevkiyat application servisi — HTTP endpoint'leri için ince orkestra katmanı; iş kuralları ShipmentManager'da.
 public class ShipmentAppService : InventoryTrackingAutomationAppService, IShipmentAppService
 {
+    // Read/list/persist için ana repository.
     private readonly IShipmentRepository _repository;
+    // Domain manager — ShipmentNumber uniqueness, Vehicle/Driver FK ve Status enum validasyonu.
     private readonly ShipmentManager _manager;
 
+    // Tüm bağımlılıkları DI ile alır.
+    private readonly IMapper _mapper;
     public ShipmentAppService(
         IShipmentRepository repository,
-        ShipmentManager manager)
+        ShipmentManager manager,
+        IMapper mapper)
     {
+        _mapper = mapper;
         _repository = repository;
         _manager = manager;
     }
 
-    /// <summary> Id'ye göre sevkiyat getirir. </summary>
+    // Id ile sevkiyatı getirir; yoksa EntityNotFoundException.
     public async Task<ShipmentDto> GetAsync(Guid id)
     {
-        var entity = await _manager.EnsureExistsAsync(
-            id, InventoryTrackingAutomationDomainErrorCodes.Shipments.NotFound);
-        return ObjectMapper.Map<Shipment, ShipmentDto>(entity);
+        var entity = await _manager.EnsureExistsAsync(id);
+        return _mapper.Map<Shipment, ShipmentDto>(entity);
     }
 
-    /// <summary> Sevkiyatları sayfalı listeler. </summary>
+    // Sevkiyatları sayfalı listeler.
     public async Task<PagedResultDto<ShipmentDto>> GetListAsync(PagedResultRequestDto input)
     {
         var totalCount = await _repository.GetCountAsync();
         var entities = await _repository.GetPagedListAsync(
             input.SkipCount, input.MaxResultCount, sorting: string.Empty);
         return new PagedResultDto<ShipmentDto>(
-            totalCount, ObjectMapper.Map<List<Shipment>, List<ShipmentDto>>(entities));
+            totalCount,
+            _mapper.Map<List<Shipment>, List<ShipmentDto>>(entities));
     }
 
-    /// <summary> Yeni sevkiyat oluşturur. </summary>
+    // Yeni sevkiyat oluşturur — manager iş kurallarını uygular, repository persist eder.
     [UnitOfWork]
     public async Task<ShipmentDto> CreateAsync(CreateShipmentDto input)
     {
-        var model = ObjectMapper.Map<CreateShipmentDto, CreateShipmentModel>(input);
+        var model = _mapper.Map<CreateShipmentDto, CreateShipmentModel>(input);
         var entity = await _manager.CreateAsync(model);
         var inserted = await _repository.InsertAsync(entity, autoSave: true);
-        return ObjectMapper.Map<Shipment, ShipmentDto>(inserted);
+        return _mapper.Map<Shipment, ShipmentDto>(inserted);
     }
 
-    /// <summary> Birden fazla sevkiyatı toplu oluşturur. </summary>
+    // Birden fazla sevkiyatı toplu oluşturur.
     [UnitOfWork]
     public async Task<List<ShipmentDto>> CreateManyAsync(List<CreateShipmentDto> inputs)
     {
         var entities = new List<Shipment>();
         foreach (var dto in inputs)
         {
-            var model = ObjectMapper.Map<CreateShipmentDto, CreateShipmentModel>(dto);
+            var model = _mapper.Map<CreateShipmentDto, CreateShipmentModel>(dto);
             entities.Add(await _manager.CreateAsync(model));
         }
 
         var inserted = await _repository.InsertManyAndGetListAsync(entities);
-        return ObjectMapper.Map<List<Shipment>, List<ShipmentDto>>(inserted);
+        return _mapper.Map<List<Shipment>, List<ShipmentDto>>(inserted);
     }
 
-    /// <summary> Sevkiyatı günceller. </summary>
+    // Sevkiyatı günceller — manager iş kurallarını uygular, repository persist eder.
     [UnitOfWork]
     public async Task<ShipmentDto> UpdateAsync(Guid id, UpdateShipmentDto input)
     {
-        var existing = await _manager.EnsureExistsAsync(
-            id, InventoryTrackingAutomationDomainErrorCodes.Shipments.NotFound);
-        var model = ObjectMapper.Map<UpdateShipmentDto, UpdateShipmentModel>(input);
+        var existing = await _manager.EnsureExistsAsync(id);
+        var model = _mapper.Map<UpdateShipmentDto, UpdateShipmentModel>(input);
         var updated = await _manager.UpdateAsync(existing, model);
         var saved = await _repository.UpdateAsync(updated, autoSave: true);
-        return ObjectMapper.Map<Shipment, ShipmentDto>(saved);
+        return _mapper.Map<Shipment, ShipmentDto>(saved);
     }
 
-    /// <summary> Sevkiyatı soft delete ile siler. </summary>
+    // Sevkiyatı soft delete ile siler.
     [UnitOfWork]
     public async Task DeleteAsync(Guid id)
     {
-        await _manager.EnsureExistsAsync(
-            id, InventoryTrackingAutomationDomainErrorCodes.Shipments.NotFound);
+        await _manager.EnsureExistsAsync(id);
         await _repository.SoftDeleteAsync(id);
     }
 }

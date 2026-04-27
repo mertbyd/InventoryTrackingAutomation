@@ -1,3 +1,5 @@
+using AutoMapper;
+using System;
 using System.Threading.Tasks;
 using InventoryTrackingAutomation.Entities.Masters;
 using InventoryTrackingAutomation.Interface.Lookups;
@@ -17,12 +19,15 @@ public class WorkerManager : BaseManager<Worker>
     /// <summary>
     /// WorkerManager constructor'ı.
     /// </summary>
+    private readonly IMapper _mapper;
     public WorkerManager(
         IWorkerRepository repository,
         IDepartmentRepository departmentRepository,
-        ISiteRepository siteRepository)
+        ISiteRepository siteRepository,
+        IMapper mapper)
         : base(repository)
     {
+        _mapper = mapper;
         _departmentRepository = departmentRepository;
         _siteRepository = siteRepository;
     }
@@ -34,22 +39,21 @@ public class WorkerManager : BaseManager<Worker>
     {
         await EnsureExistsInAsync(
             _departmentRepository,
-            model.DepartmentId,
-            InventoryTrackingAutomationDomainErrorCodes.Departments.NotFound);
+            model.DepartmentId);
 
         await EnsureExistsInAsync(
             _siteRepository,
-            model.DefaultSiteId,
-            InventoryTrackingAutomationDomainErrorCodes.Sites.NotFound);
+            model.DefaultSiteId);
 
         await EnsureExistsInAsync(
             Repository,
-            model.ManagerId,
-            InventoryTrackingAutomationDomainErrorCodes.Workers.NotFound);
+            model.ManagerId);
 
         await EnsureValidEnumAsync(model.WorkerType, InventoryTrackingAutomation.Settings.InventoryTrackingAutomationSettings.Masters.AllowedWorkerTypes);
 
-        return MapAndAssignId(model);
+        var entity = new Worker(GuidGenerator.Create());
+        _mapper.Map(model, entity);
+        return entity;
     }
 
     /// <summary>
@@ -61,29 +65,42 @@ public class WorkerManager : BaseManager<Worker>
 
         await EnsureExistsInAsync(
             _departmentRepository,
-            model.DepartmentId,
-            InventoryTrackingAutomationDomainErrorCodes.Departments.NotFound);
+            model.DepartmentId);
 
         await EnsureExistsInAsync(
             _siteRepository,
-            model.DefaultSiteId,
-            InventoryTrackingAutomationDomainErrorCodes.Sites.NotFound);
+            model.DefaultSiteId);
 
         await EnsureExistsInAsync(
             Repository,
-            model.ManagerId,
-            InventoryTrackingAutomationDomainErrorCodes.Workers.NotFound);
+            model.ManagerId);
 
         await EnsureValidEnumAsync(model.WorkerType, InventoryTrackingAutomation.Settings.InventoryTrackingAutomationSettings.Masters.AllowedWorkerTypes);
 
-        return MapForUpdate(model, existing);
+        _mapper.Map(model, existing);
+        return existing;
     }
 
-    private void EnsureNotSelfAssigned(System.Guid existingWorkerId, System.Guid? assignedManagerId)
+    private void EnsureNotSelfAssigned(Guid existingWorkerId, Guid? assignedManagerId)
     {
         if (assignedManagerId.HasValue && assignedManagerId.Value == existingWorkerId)
         {
-            throw new Volo.Abp.BusinessException(InventoryTrackingAutomationDomainErrorCodes.Workers.SelfAssignmentNotAllowed);
+            throw new Volo.Abp.BusinessException(InventoryTrackingAutomationErrorCodes.Workers.SelfAssignmentNotAllowed);
         }
     }
+
+    // Verilen kullanıcının yöneticisinin User Id'sini Worker zinciri üzerinden çözer (User → Worker → Manager Worker → Manager User).
+    // Worker, Manager veya Manager User yoksa null döner. Workflow ve onay zinciri tüm tüketicilerinde tek doğruluk kaynağı.
+    public async Task<Guid?> GetManagerUserIdAsync(Guid userId)
+    {
+        var worker = await Repository.FindAsync(w => w.UserId == userId);
+        if (worker?.ManagerId == null)
+        {
+            return null;
+        }
+
+        var managerWorker = await Repository.FindAsync(worker.ManagerId.Value);
+        return managerWorker?.UserId;
+    }
 }
+

@@ -1,0 +1,91 @@
+name: Docker Build
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*.*.*'
+    paths:
+      - 'host/**'
+      - 'src/**'
+      - '*.sln'
+      - '*.props'
+      - 'global.json'
+      - 'NuGet.Config'
+      - '.github/workflows/docker-build.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  REGISTRY: ghcr.io
+  HTTP_API_IMAGE: ghcr.io/${{ github.repository_owner }}/inventory-httpapi
+  AUTH_SERVER_IMAGE: ghcr.io/${{ github.repository_owner }}/inventory-authserver
+
+jobs:
+  build-push:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Docker metadata for HttpApi
+        id: httpapi-meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.HTTP_API_IMAGE }}
+          tags: |
+            type=sha,prefix=sha-
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=ref,event=tag
+
+      - name: Docker metadata for AuthServer
+        id: authserver-meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.AUTH_SERVER_IMAGE }}
+          tags: |
+            type=sha,prefix=sha-
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=ref,event=tag
+
+      - name: Build and push HttpApi image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: host/InventoryTrackingAutomation.HttpApi.Host/Dockerfile
+          push: true
+          build-args: |
+            GITHUB_ACTOR=${{ github.actor }}
+          secrets: |
+            github_token=${{ secrets.GITHUB_TOKEN }}
+          tags: ${{ steps.httpapi-meta.outputs.tags }}
+          labels: ${{ steps.httpapi-meta.outputs.labels }}
+
+      - name: Build and push AuthServer image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: host/InventoryTrackingAutomation.AuthServer/Dockerfile
+          push: true
+          build-args: |
+            GITHUB_ACTOR=${{ github.actor }}
+          secrets: |
+            github_token=${{ secrets.GITHUB_TOKEN }}
+          tags: ${{ steps.authserver-meta.outputs.tags }}
+          labels: ${{ steps.authserver-meta.outputs.labels }}

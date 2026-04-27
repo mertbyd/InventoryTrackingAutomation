@@ -1,3 +1,4 @@
+using AutoMapper;
 using System.Threading.Tasks;
 using InventoryTrackingAutomation.Entities.Lookups;
 using InventoryTrackingAutomation.Interface.Lookups;
@@ -13,10 +14,13 @@ public class DepartmentManager : BaseManager<Department>
     /// <summary>
     /// DepartmentManager constructor'ı.
     /// </summary>
+    private readonly IMapper _mapper;
     public DepartmentManager(
-        IDepartmentRepository repository)
+        IDepartmentRepository repository,
+        IMapper mapper)
         : base(repository)
     {
+        _mapper = mapper;
     }
 
     /// <summary>
@@ -27,10 +31,11 @@ public class DepartmentManager : BaseManager<Department>
         if (!string.IsNullOrWhiteSpace(model.Code))
         {
             await EnsureUniqueAsync(
-                x => x.Code == model.Code,
-                InventoryTrackingAutomationDomainErrorCodes.Departments.CodeNotUnique);
+                x => x.Code == model.Code);
         }
-        return MapAndAssignId(model);
+        var entity = new Department(GuidGenerator.Create());
+        _mapper.Map(model, entity);
+        return entity;
     }
 
     /// <summary>
@@ -42,9 +47,10 @@ public class DepartmentManager : BaseManager<Department>
         {
             await EnsureUniqueAsync(
                 x => x.Code == model.Code,
-                existing.Id,
-                InventoryTrackingAutomationDomainErrorCodes.Departments.CodeNotUnique);
+                existing.Id);
         }
-        return MapForUpdate(model, existing);
+        _mapper.Map(model, existing);
+        return existing;
     }
 }
+

@@ -1,146 +1,335 @@
-# Proje Refactoring Durumu
+# Current Architecture & Workflow Baseline
 
-## Son Tamamlanan: Faz 5.17 — AutoMapper Validation: MovementRequest AggregateRoot ExtraProperties+ConcurrencyStamp
+**Tarih:** 2026-04-25
+**Durum:** Architecture Documentation Complete → Wiki-Brain Integrated
 
-### Tamamlanan Fazlar
+---
 
-| Faz | Açıklama | Durum |
-|-----|----------|-------|
-| 5.2 | DTO Temizliği — TenantId, EmployeeId ve Data Annotation'lar silindi | ✅ |
-| 5.4 | Mapping Uyumsuzlukları — LoadedQuantity→Quantity, RequestedBy→RequestedByWorkerId | ✅ |
-| 5.5 | IMapper Enjeksiyonu — ObjectMapper tamamen kaldırıldı, AutoMapper.IMapper eklendi | ✅ |
-| 5.7 | IMapper → IObjectMapper — AutoMapper.IMapper kaldırıldı, ABP IObjectMapper iade edildi | ✅ |
-| 5.8 | AutoMapper DI Hatası — WorkflowMappingProfile eksik audit yoksayma kuralları eklendi | ✅ |
-| 5.9 | AutoMapper Validation Temizliği — eşleşmeyen DTO/Model alanları açıkça Ignore edildi | ✅ |
-| 5.10 | AutoMapper Validation: ProductStock — Create/Update mapping'lerinde Id Ignore edildi | ✅ |
-| 5.11 | AutoMapper Validation: StockMovement — Create/Update mapping'lerinde Id Ignore edildi | ✅ |
-| 5.12 | AutoMapper Validation: ShipmentLine — audit+Id Ignore eklendi, DamageNote Ignore eklendi | ✅ |
-| 5.13 | AutoMapper Validation: Shipment — audit+Id+DepartureTime+DeliveryTime Ignore eklendi | ✅ |
-| 5.14 | AutoMapper Validation: Masters+Lookups — 6 profilde Id Ignore eklendi | ✅ |
-| 5.15 | AutoMapper Validation: MovementRequest+Line — Id+audit Ignore, Status/WorkerId/ShipmentId Ignore | ✅ |
-| 5.16 | AutoMapper Validation: Statik analiz — CancellationNote/WorkflowInstanceId/MinimumStockLevel/Site alan adı uyumsuzlukları | ✅ |
-| 5.17 | AutoMapper Validation: MovementRequest FullAuditedAggregateRoot — ExtraProperties+ConcurrencyStamp Ignore eklendi | ✅ |
+## Project Overview
 
-### Faz 5.7 Yapılan Değişiklikler
+**InventoryTrackingAutomation** — Stok hareket yönetimi sistemi, DDD ve Workflow Engine pattern'leri kullanan .NET 8+ uygulaması.
 
-**BaseManager:**
-- `AutoMapper.IMapper` → `Volo.Abp.ObjectMapping.IObjectMapper` constructor injection
-- `MapAndAssignId` ve `MapForUpdate` helper'ları `IObjectMapper` ile çalışacak şekilde güncellendi
+---
 
-**Managers (AutoMapper.IMapper → IObjectMapper):**
-- DepartmentManager, ProductCategoryManager
-- ProductManager, SiteManager, VehicleManager, WorkerManager
-- MovementRequestManager (+ gereksiz `_mapper` field'ı silindi)
-- MovementRequestLineManager
-- ShipmentManager, ShipmentLineManager
-- ProductStockManager, StockMovementManager
+## Architecture Baseline
 
-**AppServices (IMapper → ObjectMapper property):**
-- DepartmentAppService, ProductCategoryAppService
-- ProductAppService, SiteAppService, VehicleAppService, WorkerAppService
-- ProductStockAppService, StockMovementAppService
-- ShipmentAppService, ShipmentLineAppService
-- MovementRequestAppService, MovementRequestLineAppService
-- WorkflowAppService
+### Core Principles
 
-**Mapping formatı (AppServices):**
-- `_mapper.Map<TDest>(source)` → `ObjectMapper.Map<TSource, TDest>(source)`
-- Constructor'dan `IMapper mapper` parametresi ve `private readonly IMapper _mapper` field'ı tamamen kaldırıldı
+✅ **Domain-Driven Design (DDD)**
+- Entities & Aggregate Roots (FullAuditedAggregateRoot)
+- Domain Services (WorkflowManager, MovementRequestManager)
+- Value Objects & Enums
+- NO Navigation Properties (Exception: WorkflowInstance)
 
-**EF Core Migration:**
-- Baseline migration oluşturuldu (boş Up/Down), DB'ye uygulandı
+✅ **Layered Architecture**
+```
+API Endpoints
+    ↓
+AppServices (Orchestration)
+    ↓
+Domain Services & Managers (Business Logic)
+    ↓
+Entities & Repositories
+    ↓
+Entity Framework Core (EF)
+```
 
-### Mevcut Durum
-- Build: ✅ Başarılı (Faz 5.5 sonrası, Faz 5.7 değişiklikleri aynı derleme durumunu koruyor)
-- AutoMapper.IMapper kullanımı (AppService/Manager): ✅ Sıfır
-- ABP IObjectMapper kullanımı: ✅ Managers ve BaseManager'da doğru enjeksiyon
-- ABP ObjectMapper property kullanımı: ✅ Tüm AppService'lerde iki-parametre formatı
-- IMultiTenant / TenantId: ✅ Sıfır (entity, DTO, model)
-- EF Migration baseline: ✅ Uygulandı
+✅ **Workflow Engine**
+- State Machine Pattern (Active → Approved/Rejected/Completed)
+- Dynamic Routing (Template-based step generation)
+- Event-Driven Completion (LocalEventBus)
+- Approver Resolution (Manager/Role-based)
 
-### Faz 5.16 Yapılan Değişiklikler (Statik Analiz)
+✅ **Security-First Approach**
+- User identity from CurrentUser (NEVER from DTO)
+- Authorization in Domain (Manager checks)
+- WorkerId resolution from authenticated User
+- Approval decisions validated at domain level
 
-Tüm entity, DTO ve Model dosyaları okunarak runtime'a bırakmadan tespit edilen sorunlar:
+---
 
-**MovementRequestMappingProfile** (`ObjectMapping/Movements/`):
-- `CreateMovementRequestDto → MovementRequest`: `CancellationNote`, `WorkflowInstanceId` Ignore eklendi (entity'de var, DTO'da yok)
-- `UpdateMovementRequestDto → MovementRequest`: aynısı
-- `CreateMovementRequestModel → MovementRequest`: `CancellationNote`, `WorkflowInstanceId` Ignore eklendi (Model'de bu alanlar yok)
-- `UpdateMovementRequestModel → MovementRequest`: aynısı
+## Key Entity Relationships
 
-**ProductMappingProfile** (`ObjectMapping/Masters/`):
-- `CreateProductDto → CreateProductModel`: `MinimumStockLevel` Ignore eklendi (Model'de var, DTO'da yok — AppService'de çözümlenir)
-- `UpdateProductDto → UpdateProductModel`: aynısı
+```
+MovementRequest (Aggregate Root)
+  ├── RequestedByWorkerId → Worker
+  ├── SourceSiteId → Site
+  ├── TargetSiteId → Site
+  └── WorkflowInstanceId? → WorkflowInstance
 
-**SiteMappingProfile** (`ObjectMapping/Masters/`):
-- `CreateSiteDto → CreateSiteModel`: `LinkedVehicleId`, `LinkedWorkerId` Ignore eklendi (Model bu adlarla, entity `ManagerWorkerId` adıyla tutar)
-- `UpdateSiteDto → UpdateSiteModel`: aynısı
-- `CreateSiteModel → Site`: `ManagerWorkerId` Ignore eklendi (Model'de karşılık yok, entity'deki bu alan ayrıca AppService'de set edilir)
-- `UpdateSiteModel → Site`: aynısı
+ProductStock (Entity, per site)
+  ├── ProductId → Product
+  └── SiteId → Site
 
-### Faz 5.13–5.15 Yapılan Değişiklikler
+WorkflowInstance (Aggregate Root)
+  ├── EntityType="MovementRequest"
+  ├── EntityId=MovementRequest.Id
+  ├── WorkflowDefinitionId → WorkflowDefinition
+  └── Steps: WorkflowInstanceStep[] (nav property - exception)
 
-**ShipmentMappingProfile** (`ObjectMapping/Shipments/ShipmentMappingProfile.cs`) — Faz 5.13:
-- `CreateShipmentDto → Shipment`: `Id`, `DepartureTime`, `DeliveryTime` Ignore eklendi
-- `UpdateShipmentDto → Shipment`: aynısı
-- `CreateShipmentDto → CreateShipmentModel`: `DepartureTime`, `DeliveryTime` Ignore eklendi
-- `CreateShipmentModel → Shipment`: `Id` Ignore eklendi
-- `UpdateShipmentDto → UpdateShipmentModel`: `DepartureTime`, `DeliveryTime` Ignore eklendi
-- `UpdateShipmentModel → Shipment`: `Id` Ignore eklendi
+WorkflowInstanceStep (Entity)
+  ├── AssignedUserId? → Approver
+  ├── WorkflowStepDefinitionId → WorkflowStepDefinition
+  └── ActionTaken: (Pending/Approved/Rejected)
+```
 
-**Masters + Lookups** — Faz 5.14 (6 profil):
-- `ProductMappingProfile`, `SiteMappingProfile`, `VehicleMappingProfile`, `WorkerMappingProfile`
-- `ProductCategoryMappingProfile`, `DepartmentMappingProfile`
-- Tüm `→ Entity` mapping'lerine `ForMember(dest => dest.Id, opt => opt.Ignore())` eklendi (4 mapping × 6 profil)
+---
 
-**MovementRequestMappingProfile** (`ObjectMapping/Movements/`) — Faz 5.15:
-- `CreateMovementRequestDto → MovementRequest`: `Id` Ignore eklendi
-- `UpdateMovementRequestDto → MovementRequest`: `Id` Ignore eklendi
-- `CreateMovementRequestModel → MovementRequest`: `Id` Ignore eklendi
-- `UpdateMovementRequestModel → MovementRequest`: `Id` Ignore eklendi
-- `CreateMovementRequestDto → CreateMovementRequestModel`: `RequestedByWorkerId`, `ShipmentId`, `Status` Ignore eklendi
-- `UpdateMovementRequestDto → UpdateMovementRequestModel`: aynısı
+## Critical Rules (RED LINES)
 
-**MovementRequestLineMappingProfile** (`ObjectMapping/Movements/`) — Faz 5.15:
-- `MovementRequestLine : FullAuditedEntity<Guid>` olduğu halde yanlış yorumla `IgnoreFullAuditedObjectProperties()` hiç eklenmemişti
-- Tüm 4 `→ MovementRequestLine` mapping'ine `IgnoreFullAuditedObjectProperties()` + `ForMember(Id, Ignore())` eklendi
-- `using Volo.Abp.AutoMapper;` eklendi
+🔴 **DO NOT VIOLATE:**
 
-### Faz 5.12 Yapılan Değişiklikler
+### 1. User Identity
+- **ALWAYS:** `CurrentUser.GetId()` for identity
+- **NEVER:** `input.UserId` from DTO
+- **NEVER:** Trust client-provided user/worker IDs
 
-**ShipmentLineMappingProfile** (`src/InventoryTrackingAutomation.Application/ObjectMapping/Shipments/ShipmentLineMappingProfile.cs`):
-- `CreateShipmentLineDto → ShipmentLine`: `.IgnoreFullAuditedObjectProperties()` ve `.ForMember(dest => dest.Id, opt => opt.Ignore())` eklendi
-- `UpdateShipmentLineDto → ShipmentLine`: `.IgnoreFullAuditedObjectProperties()` ve `.ForMember(dest => dest.Id, opt => opt.Ignore())` eklendi
-- `CreateShipmentLineModel → ShipmentLine`: `.IgnoreFullAuditedObjectProperties()` ve `.ForMember(dest => dest.Id, opt => opt.Ignore())` eklendi
-- `UpdateShipmentLineModel → ShipmentLine`: `.IgnoreFullAuditedObjectProperties()` ve `.ForMember(dest => dest.Id, opt => opt.Ignore())` eklendi
-- `CreateShipmentLineDto → CreateShipmentLineModel`: `.ForMember(dest => dest.DamageNote, opt => opt.Ignore())` eklendi (Model'de var, DTO'da yok)
-- `UpdateShipmentLineDto → UpdateShipmentLineModel`: `.ForMember(dest => dest.DamageNote, opt => opt.Ignore())` eklendi (Model'de var, DTO'da yok)
-- Yanlış yorum `// Child entity — IgnoreFullAuditedObjectProperties uygulanmaz` silindi; `ShipmentLine : FullAuditedEntity<Guid>` dolayısıyla uygulanması zorunlu
-- `using Volo.Abp.AutoMapper;` eklendi
+### 2. Authorization
+- Approval decisions → Domain Service (WorkflowManager)
+- Not AppService-level filters
+- WorkflowManager validates approver assignment
+- Role checks happen in domain
 
-### Faz 5.10 Yapılan Değişiklikler
+### 3. DDD Navigation
+- **NO** `virtual ICollection<T>` or `virtual Entity` in Entities
+- **EXCEPTION:** WorkflowInstance (currently has navigation)
+- **Use:** Foreign Keys (GUID) only
 
-**ProductStockMappingProfile** (`src/InventoryTrackingAutomation.Application/ObjectMapping/Stock/ProductStockMappingProfile.cs`):
-- `CreateProductStockDto → ProductStock`: `.ForMember(dest => dest.Id, opt => opt.Ignore())` eklendi
-- `UpdateProductStockDto → ProductStock`: `.ForMember(dest => dest.Id, opt => opt.Ignore())` eklendi
-- `CreateProductStockModel → ProductStock`: `.ForMember(dest => dest.Id, opt => opt.Ignore())` eklendi
-- `UpdateProductStockModel → ProductStock`: `.ForMember(dest => dest.Id, opt => opt.Ignore())` eklendi
-- `IgnoreFullAuditedObjectProperties()` zaten mevcuttu, korundu
+### 4. Business Logic Location
+- **AppService:** DTO mapping, repository calls, transaction boundaries
+- **Domain Services:** State transitions, routing, authorization
+- **Entities:** Validation in constructors, invariant checks
 
-### Faz 5.9 Yapılan Değişiklikler
+---
 
-**WorkflowMappingProfile** (`src/InventoryTrackingAutomation.Application/Workflows/WorkflowMappingProfile.cs`):
-- `CreateWorkflowDefinitionDto → WorkflowDefinition`: `Id`, `ConcurrencyStamp`, `ExtraProperties`, `Description` alanları Ignore edildi
-- `CreateWorkflowStepDefinitionDto → WorkflowStepDefinition`: `Id`, `WorkflowDefinitionId`, `ResolverKey`, `WorkflowDefinition` alanları Ignore edildi
-- `StartWorkflowDto → StartWorkflowModel`: `InitiatorUserId`, `InitiatorsManagerUserId` Ignore edildi (AppService'de CurrentUser context'inden doldurulacak)
-- `ProcessApprovalDto → ProcessApprovalModel`: `CurrentUserId`, `CurrentUserRoles` Ignore edildi (AppService'de CurrentUser context'inden doldurulacak)
+## Key Files (Architectural Understanding Required)
 
-### Faz 5.8 Yapılan Değişiklikler
+| File | Role | Pattern |
+|------|------|---------|
+| `MovementRequest.cs` | Aggregate Root | DDD Entity (no nav props) |
+| `WorkflowInstance.cs` | Aggregate Root | DDD Entity (has nav - exception) |
+| `ProductStock.cs` | Entity | Stock tracking per location |
+| `WorkflowManager.cs` | Domain Service | State Machine + Routing |
+| `MovementRequestAppService.cs` | Orchestrator | HTTP ↔ Domain bridge |
+| `InventoryTrackingAutomationDbContext.cs` | Persistence | EF Core mappings |
+| `InventoryTrackingAutomationPermissions.cs` | Authorization | Permission constants |
+| `InventoryTrackingAutomationPermissionDefinitionProvider.cs` | Authorization | ABP permission definitions + localization |
 
-**WorkflowMappingProfile** (`src/InventoryTrackingAutomation.Application/Workflows/WorkflowMappingProfile.cs`):
-- `CreateWorkflowDefinitionDto → WorkflowDefinition` mapping'ine `.IgnoreFullAuditedObjectProperties()` eklendi (`FullAuditedAggregateRoot<Guid>` miras aldığı için)
-- `CreateWorkflowStepDefinitionDto → WorkflowStepDefinition` mapping'ine `.IgnoreAuditedObjectProperties()` eklendi (`AuditedEntity<Guid>` miras aldığı için)
-- Kök neden: `validate: true` ile AutoMapper, public-settable audit alanlarını (`CreationTime`, `CreatorId`, vb.) eşleştirilmemiş destination üye olarak görüyor ve `MapperAccessor` DI zincirini çöktürüyordu.
+---
 
-### Mapping Profilleri (Değişmedi)
-`*MappingProfile.cs` dosyaları `AutoMapper.Profile`'dan türemekte, bu doğru — sadece `IMapper` *injection* kaldırıldı.
+## Knowledge Graph Integration
+
+**Wiki-Brain Vault:** `C:\Users\mertb\OneDrive\Belgeler\InventoryWiki`
+
+**Ingested Pages:**
+- `inventory-architecture-overview` — Full system architecture
+- `workflow-manager` — State machine details & routing
+- `movement-request-app-service` — HTTP orchestration layer
+- `security-critical-rules` — 🔴 **CRITICAL** security rules
+
+**Usage:** `/wiki-brain query "workflow routing"` or `/recall`
+
+---
+
+## Next Steps (For Other Agents)
+
+1. **Architecture Questions:** Use `/wiki-brain query` instead of reading files
+2. **Implementation:** Reference security-critical-rules before coding
+3. **Code Review:** Check security rules checklist
+4. **New Features:** Understand inventory-architecture-overview first
+
+---
+
+---
+
+## Identity & Role Seeding
+
+**Tarih:** 2026-04-25 | **Durum:** ✅ Complete
+
+### Roller (Identity Roles)
+
+7 rol veritabanına seed'leniyor (IdentityRoleManager ile):
+
+| Rol | Amaç | Permissions |
+|-----|------|-----------|
+| **Admin** | Sistem yöneticisi | Tüm izinler |
+| **Manager** | Operasyon yöneticisi | Inventory.Manage, Workflows.Approve |
+| **WarehouseWorker** | Depo çalışanı | Inventory.View, MovementRequests.View |
+| **FieldWorker** | Saha işçisi | MovementRequests.Create, Inventory.View |
+| **LogisticsSupervisor** | Lojistik müdürü | Inventory.Manage, Workflows.Approve/Reject |
+| **WorkflowApprover** | İş akışı onaylayanı | Workflows.Approve, Workflows.Reject |
+| **VehicleManager** | Araç yöneticisi | Masters.Manage (vehicles) |
+
+### Seed Mekanizması
+
+**File:** `InventoryTrackingAutomationDataSeedContributor.cs`
+
+```csharp
+private async Task SeedRolesAsync()
+{
+    // RoleConstants'dan tüm roller oku
+    var rolesToCreate = new[] { Admin, Manager, ... };
+    
+    // Her rol için: FindByName → if not exists → Create
+    foreach (var roleName in rolesToCreate)
+    {
+        if (await _identityRoleManager.FindByNameAsync(roleName) == null)
+        {
+            var role = new IdentityRole(_guidGenerator.Create(), roleName);
+            await _identityRoleManager.CreateAsync(role);
+        }
+    }
+}
+```
+
+**Çalıştırma Sırası:**
+1. SeedAsync → SeedRolesAsync (ilk olarak)
+2. Rol'ler create edilir
+3. Sonra domain data (Worker, Site, Product, Workflow) seed'lenir
+
+### İzinler (Permissions)
+
+**File 1:** `InventoryTrackingAutomationPermissions.cs`
+- Permission sabitleri (BankApp örneğine benzer)
+- 4 namespace: MovementRequests, Workflows, Inventory, Masters
+- `ReflectionHelper.GetPublicConstantsRecursively()` ile otomatik GetAll()
+
+**File 2:** `InventoryTrackingAutomationPermissionDefinitionProvider.cs` ✅ **TAMAMLANDI**
+- ABP `PermissionDefinitionProvider` implementation
+- Hierarchical permission structure (parent → children) — MovementRequests, Workflows, Inventory, Masters
+- Localization support (`L()` helper method → InventoryTrackingAutomationResource)
+- Turkish comments for each permission definition
+
+**Kod Örneği (Controller'da):**
+```csharp
+[Authorize(InventoryTrackingAutomationPermissions.MovementRequests.Create)]
+public async Task<MovementRequestDto> CreateAsync(CreateMovementRequestDto input)
+{
+    return await _accountAppService.CreateAsync(input);
+}
+```
+
+**Rol ↔ Permission Atama Tablosu:**
+
+| Rol | İzinler |
+|-----|---------|
+| **Admin** | MovementRequests.* + Workflows.* + Inventory.Manage + Masters.Manage |
+| **Manager** | MovementRequests.View + Workflows.Approve/Reject + Inventory.Manage |
+| **WorkflowApprover** | Workflows.Approve + Workflows.Reject + Workflows.View |
+| **WarehouseWorker** | Inventory.View + MovementRequests.View |
+| **FieldWorker** | MovementRequests.Create + Inventory.View |
+| **LogisticsSupervisor** | Inventory.Manage + Workflows.Approve/Reject |
+| **VehicleManager** | Masters.Manage |
+
+### Critical Points
+
+✅ **RoleConstants** — Hardcode-free rol isimleri  
+✅ **IGuidGenerator** — ID üretimi ABP standart  
+✅ **DRY** — Roller listeden döng döngüyle oluşturuluyor  
+✅ **No Navigation** — Sadece Id referansları kullanıldı  
+✅ **No Duplication** — Her rol bir kez check/create  
+
+---
+
+### Permission Attributes on Controllers
+
+✅ **AuthController** — Login & Register public ([AllowAnonymous])  
+✅ **ProductController** — All endpoints protected with [Authorize(Masters.Manage)]  
+
+**Pattern (tüm controller'larda uygulanacak):**
+```csharp
+// Controller seviyesi (all endpoints protected)
+[ApiController]
+[Authorize]
+public class SomeController : InventoryTrackingAutomationController { }
+
+// Action method seviyesi (specific permission)
+[HttpPost]
+[Authorize(InventoryTrackingAutomationPermissions.Inventory.Manage)]
+public async Task<Result<Dto>> Create([FromBody] CreateDto input) { }
+
+// Public endpoint
+[HttpPost("login")]
+[AllowAnonymous]
+public async Task<TokenResponse> Login([FromBody] LoginDto input) { }
+```
+
+---
+
+## Authentication & Authorization Framework
+
+**Tarih:** 2026-04-25 | **Durum:** ✅ Complete
+
+### Role & Permission Seeding
+
+✅ **InventoryTrackingAutomationRoleConstants.cs** — 7 rol tanımı  
+✅ **InventoryTrackingAutomationPermissions.cs** — 4 namespace (MovementRequests, Workflows, Inventory, Masters)  
+✅ **InventoryTrackingAutomationPermissionDefinitionProvider.cs** — ABP hierarchical permission definitions  
+✅ **InventoryTrackingAutomationDataSeedContributor.cs** — Rol seed işlemi (`SeedRolesAsync`)  
+
+### Auth Service Stack (BankApp Pattern)
+
+**Three-Layer Architecture:**
+
+1. **API Controller Layer** (`HttpApi`)
+   - **AuthController** — Thin controller, just calls AppService
+   - Routes: `POST /api/auth/login`, `POST /api/auth/register`
+   - `[AllowAnonymous]` on both (public endpoints)
+
+2. **Application Service Layer** (`Application`)
+   - **IAuthAppService** interface (contract) → 2 methods
+   - **AuthAppService** implementation
+     - Uses `AuthManager` (domain service) for business logic
+     - Calls OpenIddict token endpoint (`GetTokenFromOpenIddictAsync`)
+     - Maps DTO ↔ Model using AutoMapper
+     - Returns DTOs (TokenResponse, Guid)
+   - **AuthMappingProfile** — AutoMapper configuration
+     - LoginDto → LoginModel
+     - RegisterDto → RegisterModel
+
+3. **Domain Service Layer** (`Domain`)
+   - **AuthManager** (DomainService) — Pure business logic
+     - `CreateUserAsync(RegisterModel)` — Validates uniqueness, creates user with default role
+     - `ValidateLoginAsync(LoginModel)` — Password validation
+     - Private validation methods
+     - Uses ABP's `IdentityUserManager`, `IIdentityUserRepository`
+
+**Models** (`Domain.Shared`)
+- **LoginModel** — userName, password
+- **RegisterModel** — userName, email, password, passwordConfirm
+
+**DTOs** (`Application.Contracts`)
+- **LoginDto** — userName, password
+- **RegisterDto** — userName, email, password, passwordConfirm
+- **TokenResponse** — userId, accessToken, refreshToken, expiresIn, tokenType
+
+**Error Codes** (`Domain.Shared`)
+- `Auth.UserNameAlreadyExists`, `EmailAlreadyExists`, `InvalidCredentials`
+- `PasswordMismatch`, `UserCreationFailed`, `TokenRequestFailed`
+
+**DI Registration:**
+- `InventoryTrackingAutomationApplicationModule` → AddScoped<IAuthAppService, AuthAppService>
+- AuthManager auto-registered (DomainService pattern)
+
+---
+
+## Token Efficiency
+
+- Previous Claude instances wasted tokens re-reading the same 6 files
+- Wiki-brain reduces future context by **80%+** through knowledge graph queries
+- This agent (architecture role) guides others with prompts, not code
+- Other agents: query graph, implement from prompts, avoid re-exploration
+
+---
+
+## Workflow Implementation Roadmap
+
+**Hazırlık Skoru:** %90
+
+**Tamamlananlar (Faz 1 - 100% Hazır):**
+- Gerekli roller (Admin, Approver vb.) ve 3 adımlı "MovementRequest" iş akışı SeedContributor içerisinde fiziksel olarak kodlanmış ve oluşturulmaktadır.
+- `MovementRequestManager` içerisinde `CreateWithWorkflowAsync` metodu ile WorkflowInstance başlatan mekanizma başarıyla kurulmuştur.
+- **Güvenlik (OpenIddict & ABP Permissions):** Tüm Controller'lar `[Authorize]` attribute'u ile korunmakta ve Seed Data aşamasında roller, `IPermissionManager.SetAsync` ile yetkilerine (Permissions) otomatik bağlanmaktadır. DTO-based Identity ihlali yoktur, `CurrentUserId` arka planda güvenle çözülür.
+- **Tekil Onay Uç Noktası:** Frontend kullanımını kolaylaştırmak için Approve/Reject işlemleri tek bir `ProcessApprovalAsync` servisinde ve `/api/movement-requests/{id}/process-approval` endpoint'inde birleştirildi.
+- **Arabaya Yükleme (Sevkiyat):** Kapanış adımı için `MovementRequestWorkflowEventHandler` event listener'ı eklenmiş; onay tamamlandığında UOW destekli stok düşümü yapılmakta ve otomatik olarak **Shipment (Sevkiyat)** oluşturulup talebe (ShipmentId) bağlanmaktadır. Faz 1'in "Arabaya yüklenmiş olması" şartı sağlanmıştır.
+

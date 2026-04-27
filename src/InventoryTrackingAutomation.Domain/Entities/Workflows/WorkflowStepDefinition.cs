@@ -5,6 +5,7 @@ namespace InventoryTrackingAutomation.Entities.Workflows;
 
 /// <summary>
 /// İş akışı şablonundaki bir adımı temsil eden entity.
+/// Onaycı çözümleme tamamen ResolverKey üzerinden yapılır (configuration-based).
 /// </summary>
 public class WorkflowStepDefinition : AuditedEntity<Guid>
 {
@@ -20,18 +21,15 @@ public class WorkflowStepDefinition : AuditedEntity<Guid>
 
     /// <summary>
     /// Bu adımı onaylayabilecek olan rol adı (Örn: "DepartmentManager").
-    /// Eğer IsManagerApprovalRequired true ise null olabilir.
+    /// ResolverKey boşsa rol bazlı yetkilendirme yapılır.
     /// </summary>
     public string? RequiredRoleName { get; private set; }
 
     /// <summary>
-    /// Bu adımda, talebi başlatan kişinin kendi yöneticisinin onayı gerekip gerekmediğini belirtir.
-    /// </summary>
-    public bool IsManagerApprovalRequired { get; private set; }
-
-    /// <summary>
-    /// Özel bir çözümleme mantığı gerekiyorsa buraya anahtar (Örn: "SourceSiteManager") yazılır.
+    /// Onaycı çözümleme mantığının anahtarı.
+    /// Örnekler: "InitiatorManager", "SourceSiteManager", "TargetSiteManager".
     /// DefaultWorkflowApproverResolver bu anahtara bakarak dinamik onaycıyı bulur.
+    /// Null/boş ise sadece RequiredRoleName ve rol bazlı yetki kontrol edilir.
     /// </summary>
     public string? ResolverKey { get; private set; }
 
@@ -44,13 +42,12 @@ public class WorkflowStepDefinition : AuditedEntity<Guid>
     {
     }
 
-    public WorkflowStepDefinition(Guid id, Guid workflowDefinitionId, int stepOrder, string? requiredRoleName, bool isManagerApprovalRequired, string? resolverKey = null)
+    public WorkflowStepDefinition(Guid id, Guid workflowDefinitionId, int stepOrder, string? requiredRoleName, string? resolverKey = null)
         : base(id)
     {
         WorkflowDefinitionId = workflowDefinitionId;
         StepOrder = stepOrder;
         RequiredRoleName = requiredRoleName;
-        IsManagerApprovalRequired = isManagerApprovalRequired;
         ResolverKey = resolverKey;
     }
 }

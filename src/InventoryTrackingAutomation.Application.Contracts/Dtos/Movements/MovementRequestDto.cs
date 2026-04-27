@@ -13,6 +13,7 @@ public class MovementRequestDto : FullAuditedEntityDto<Guid>
     public Guid RequestedByWorkerId { get; set; }         // Talebi oluşturan çalışan Id.
     public Guid SourceSiteId { get; set; }                // Kaynak lokasyon Id.
     public Guid TargetSiteId { get; set; }                // Hedef lokasyon Id.
+    public Guid? RequestedVehicleId { get; set; }          // Talep edilen sevkiyat aracı Id.
     public MovementStatusEnum Status { get; set; }        // Talep durumu. Örnek: MovementStatusEnum.Pending
     public MovementPriorityEnum Priority { get; set; }    // Öncelik. Örnek: MovementPriorityEnum.Normal
     public string RequestNote { get; set; }               // Talep gerekçesi.

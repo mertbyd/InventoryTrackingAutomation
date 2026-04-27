@@ -1,3 +1,4 @@
+using AutoMapper;
 using System.Threading.Tasks;
 using InventoryTrackingAutomation.Entities.Masters;
 using InventoryTrackingAutomation.Interface.Masters;
@@ -13,10 +14,13 @@ public class VehicleManager : BaseManager<Vehicle>
     /// <summary>
     /// VehicleManager constructor'ı.
     /// </summary>
+    private readonly IMapper _mapper;
     public VehicleManager(
-        IVehicleRepository repository)
+        IVehicleRepository repository,
+        IMapper mapper)
         : base(repository)
     {
+        _mapper = mapper;
     }
 
     /// <summary>
@@ -27,13 +31,14 @@ public class VehicleManager : BaseManager<Vehicle>
         if (!string.IsNullOrWhiteSpace(model.PlateNumber))
         {
             await EnsureUniqueAsync(
-                x => x.PlateNumber == model.PlateNumber,
-                InventoryTrackingAutomationDomainErrorCodes.Vehicles.PlateNumberNotUnique);
+                x => x.PlateNumber == model.PlateNumber);
         }
 
         await EnsureValidEnumAsync(model.VehicleType, InventoryTrackingAutomation.Settings.InventoryTrackingAutomationSettings.Masters.AllowedVehicleTypes);
 
-        return MapAndAssignId(model);
+        var entity = new Vehicle(GuidGenerator.Create());
+        _mapper.Map(model, entity);
+        return entity;
     }
 
     /// <summary>
@@ -45,12 +50,13 @@ public class VehicleManager : BaseManager<Vehicle>
         {
             await EnsureUniqueAsync(
                 x => x.PlateNumber == model.PlateNumber,
-                existing.Id,
-                InventoryTrackingAutomationDomainErrorCodes.Vehicles.PlateNumberNotUnique);
+                existing.Id);
         }
 
         await EnsureValidEnumAsync(model.VehicleType, InventoryTrackingAutomation.Settings.InventoryTrackingAutomationSettings.Masters.AllowedVehicleTypes);
 
-        return MapForUpdate(model, existing);
+        _mapper.Map(model, existing);
+        return existing;
     }
 }
+

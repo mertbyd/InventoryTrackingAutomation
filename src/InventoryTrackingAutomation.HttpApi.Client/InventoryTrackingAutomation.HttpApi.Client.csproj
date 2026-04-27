@@ -3,12 +3,12 @@
   <Import Project="..\..\common.props" />
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <RootNamespace>InventoryTrackingAutomation</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Volo.Abp.Http.Client" Version="7.0.3" />
+    <PackageReference Include="Volo.Abp.Http.Client" Version="10.3.0" />
     <ProjectReference Include="..\InventoryTrackingAutomation.Application.Contracts\InventoryTrackingAutomation.Application.Contracts.csproj" />
   </ItemGroup>
 

@@ -1,9 +1,12 @@
-﻿using System;
+using InventoryTrackingAutomation.Permissions;
+using Microsoft.AspNetCore.Authorization;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using SystemStandards.Results;
 using InventoryTrackingAutomation.Dtos.Masters;
 using InventoryTrackingAutomation.Services.Masters;
 
@@ -13,7 +16,7 @@ namespace InventoryTrackingAutomation.Controllers.Masters;
 /// AraÃ§ CRUD endpoint'leri.
 /// </summary>
 [Route("api/vehicles")]
-//[Authorize]
+[Authorize]
 [ApiExplorerSettings(GroupName = "Masters")]
 [Tags("Vehicles")]
 public class VehicleController : InventoryTrackingAutomationController
@@ -27,26 +30,57 @@ public class VehicleController : InventoryTrackingAutomationController
 
     /// <summary> Id'ye gÃ¶re tek araÃ§ getirir. </summary>
     [HttpGet("{id}")]
-    public async Task<VehicleDto> Get(Guid id) => await _appService.GetAsync(id);
+    [Authorize(InventoryTrackingAutomationPermissions.Masters.View)]
+    public async Task<Result<VehicleDto>> Get(Guid id)
+    {
+        var result = await _appService.GetAsync(id);
+        return result;
+    }
 
     /// <summary> TÃ¼m araÃ§larÄ± listeler. </summary>
     [HttpGet]
-    public async Task<Volo.Abp.Application.Dtos.PagedResultDto<VehicleDto>> GetList([FromQuery] Volo.Abp.Application.Dtos.PagedResultRequestDto input) => await _appService.GetListAsync(input);
+    [Authorize(InventoryTrackingAutomationPermissions.Masters.View)]
+    public async Task<Result<Volo.Abp.Application.Dtos.PagedResultDto<VehicleDto>>> GetList([FromQuery] Volo.Abp.Application.Dtos.PagedResultRequestDto input)
+    {
+        var result = await _appService.GetListAsync(input);
+        return result;
+    }
 
     /// <summary> Yeni araÃ§ oluÅŸturur. </summary>
     [HttpPost]
-    public async Task<VehicleDto> Create([FromBody] CreateVehicleDto input) => await _appService.CreateAsync(input);
+    [Authorize(InventoryTrackingAutomationPermissions.Masters.Manage)]
+    public async Task<Result<VehicleDto>> Create([FromBody] CreateVehicleDto input)
+    {
+        var result = await _appService.CreateAsync(input);
+        return result;
+    }
 
     /// <summary> Birden fazla aracÄ± toplu oluÅŸturur. </summary>
     [HttpPost("bulk")]
-    public async Task<List<VehicleDto>> CreateMany([FromBody] List<CreateVehicleDto> inputs) => await _appService.CreateManyAsync(inputs);
+    [Authorize(InventoryTrackingAutomationPermissions.Masters.Manage)]
+    public async Task<Result<List<VehicleDto>>> CreateMany([FromBody] List<CreateVehicleDto> inputs)
+    {
+        var result = await _appService.CreateManyAsync(inputs);
+        return result;
+    }
 
     /// <summary> AracÄ± gÃ¼nceller. </summary>
     [HttpPut("{id}")]
-    public async Task<VehicleDto> Update(Guid id, [FromBody] UpdateVehicleDto input) => await _appService.UpdateAsync(id, input);
+    [Authorize(InventoryTrackingAutomationPermissions.Masters.Manage)]
+    public async Task<Result<VehicleDto>> Update(Guid id, [FromBody] UpdateVehicleDto input)
+    {
+        var result = await _appService.UpdateAsync(id, input);
+        return result;
+    }
 
     /// <summary> AracÄ± soft delete ile siler. </summary>
     [HttpDelete("{id}")]
-    public async Task Delete(Guid id) => await _appService.DeleteAsync(id);
+    [Authorize(InventoryTrackingAutomationPermissions.Masters.Manage)]
+    public async Task<Result> Delete(Guid id)
+    {
+        await _appService.DeleteAsync(id);
+        return Result.Success();
+    }
 }
+
 

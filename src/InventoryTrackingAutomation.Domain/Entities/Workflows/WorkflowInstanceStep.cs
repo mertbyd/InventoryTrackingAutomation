@@ -20,7 +20,7 @@ public class WorkflowInstanceStep : AuditedEntity<Guid>
     public Guid WorkflowStepDefinitionId { get; private set; }
 
     /// <summary>
-    /// Bu adımı onaylamak üzere atanmış spesifik kullanıcı Id'si (Eğer IsManagerApprovalRequired ise dolu olur).
+    /// Bu adımı onaylamak üzere atanmış spesifik kullanıcı Id'si (ResolverKey üzerinden çözüldüğünde dolu olur).
     /// </summary>
     public Guid? AssignedUserId { get; private set; }
 

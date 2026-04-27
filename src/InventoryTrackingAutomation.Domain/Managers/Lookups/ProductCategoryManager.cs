@@ -1,3 +1,4 @@
+using AutoMapper;
 using System.Threading.Tasks;
 using InventoryTrackingAutomation.Entities.Lookups;
 using InventoryTrackingAutomation.Interface.Lookups;
@@ -13,10 +14,13 @@ public class ProductCategoryManager : BaseManager<ProductCategory>
     /// <summary>
     /// ProductCategoryManager constructor'ı.
     /// </summary>
+    private readonly IMapper _mapper;
     public ProductCategoryManager(
-        IProductCategoryRepository repository)
+        IProductCategoryRepository repository,
+        IMapper mapper)
         : base(repository)
     {
+        _mapper = mapper;
     }
 
     /// <summary>
@@ -27,17 +31,17 @@ public class ProductCategoryManager : BaseManager<ProductCategory>
         if (!string.IsNullOrWhiteSpace(model.Code))
         {
             await EnsureUniqueAsync(
-                x => x.Code == model.Code,
-                InventoryTrackingAutomationDomainErrorCodes.ProductCategories.CodeNotUnique);
+                x => x.Code == model.Code);
         }
         if (model.ParentId.HasValue)
         {
             await EnsureExistsInAsync(
                 Repository,
-                model.ParentId.Value,
-                InventoryTrackingAutomationDomainErrorCodes.ProductCategories.NotFound);
+                model.ParentId.Value);
         }
-        return MapAndAssignId(model);
+        var entity = new ProductCategory(GuidGenerator.Create());
+        _mapper.Map(model, entity);
+        return entity;
     }
 
     /// <summary>
@@ -49,16 +53,16 @@ public class ProductCategoryManager : BaseManager<ProductCategory>
         {
             await EnsureUniqueAsync(
                 x => x.Code == model.Code,
-                existing.Id,
-                InventoryTrackingAutomationDomainErrorCodes.ProductCategories.CodeNotUnique);
+                existing.Id);
         }
         if (model.ParentId.HasValue && existing.ParentId != model.ParentId)
         {
             await EnsureExistsInAsync(
                 Repository,
-                model.ParentId.Value,
-                InventoryTrackingAutomationDomainErrorCodes.ProductCategories.NotFound);
+                model.ParentId.Value);
         }
-        return MapForUpdate(model, existing);
+        _mapper.Map(model, existing);
+        return existing;
     }
 }
+

@@ -1,3 +1,4 @@
+using AutoMapper;
 using System.Threading.Tasks;
 using InventoryTrackingAutomation.Entities.Stock;
 using InventoryTrackingAutomation.Interface.Masters;
@@ -17,12 +18,15 @@ public class ProductStockManager : BaseManager<ProductStock>
     /// <summary>
     /// ProductStockManager constructor'ı.
     /// </summary>
+    private readonly IMapper _mapper;
     public ProductStockManager(
         IProductStockRepository repository,
         IProductRepository productRepository,
-        ISiteRepository siteRepository)
+        ISiteRepository siteRepository,
+        IMapper mapper)
         : base(repository)
     {
+        _mapper = mapper;
         _productRepository = productRepository;
         _siteRepository = siteRepository;
     }
@@ -34,19 +38,18 @@ public class ProductStockManager : BaseManager<ProductStock>
     {
         await EnsureExistsInAsync(
             _productRepository,
-            model.ProductId,
-            InventoryTrackingAutomationDomainErrorCodes.Products.NotFound);
+            model.ProductId);
 
         await EnsureExistsInAsync(
             _siteRepository,
-            model.SiteId,
-            InventoryTrackingAutomationDomainErrorCodes.Sites.NotFound);
+            model.SiteId);
 
         await EnsureUniqueAsync(
-            x => x.ProductId == model.ProductId && x.SiteId == model.SiteId,
-            InventoryTrackingAutomationDomainErrorCodes.ProductStocks.AlreadyExistsForProductAndSite);
+            x => x.ProductId == model.ProductId && x.SiteId == model.SiteId);
 
-        return MapAndAssignId(model);
+        var entity = new ProductStock(GuidGenerator.Create());
+        _mapper.Map(model, entity);
+        return entity;
     }
 
     /// <summary>
@@ -58,18 +61,18 @@ public class ProductStockManager : BaseManager<ProductStock>
         {
             await EnsureExistsInAsync(
                 _productRepository,
-                model.ProductId,
-                InventoryTrackingAutomationDomainErrorCodes.Products.NotFound);
+                model.ProductId);
         }
 
         if (existing.SiteId != model.SiteId)
         {
             await EnsureExistsInAsync(
                 _siteRepository,
-                model.SiteId,
-                InventoryTrackingAutomationDomainErrorCodes.Sites.NotFound);
+                model.SiteId);
         }
 
-        return MapForUpdate(model, existing);
+        _mapper.Map(model, existing);
+        return existing;
     }
 }
+

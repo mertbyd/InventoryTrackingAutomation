@@ -1,9 +1,12 @@
-﻿using System;
+using InventoryTrackingAutomation.Permissions;
+using Microsoft.AspNetCore.Authorization;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using SystemStandards.Results;
 using InventoryTrackingAutomation.Dtos.Movements;
 using InventoryTrackingAutomation.Services.Movements;
 
@@ -13,7 +16,7 @@ namespace InventoryTrackingAutomation.Controllers.Movements;
 /// Hareket talebi satÄ±rÄ± CRUD endpoint'leri.
 /// </summary>
 [Route("api/movement-request-lines")]
-//[Authorize]
+[Authorize]
 [ApiExplorerSettings(GroupName = "Movements")]
 [Tags("MovementRequestLines")]
 public class MovementRequestLineController : InventoryTrackingAutomationController
@@ -27,26 +30,57 @@ public class MovementRequestLineController : InventoryTrackingAutomationControll
 
     /// <summary> Id'ye gÃ¶re tek hareket talebi satÄ±rÄ± getirir. </summary>
     [HttpGet("{id}")]
-    public async Task<MovementRequestLineDto> Get(Guid id) => await _appService.GetAsync(id);
+    [Authorize(InventoryTrackingAutomationPermissions.MovementRequests.View)]
+    public async Task<Result<MovementRequestLineDto>> Get(Guid id)
+    {
+        var result = await _appService.GetAsync(id);
+        return result;
+    }
 
     /// <summary> TÃ¼m hareket talebi satÄ±rlarÄ±nÄ± listeler. </summary>
     [HttpGet]
-    public async Task<Volo.Abp.Application.Dtos.PagedResultDto<MovementRequestLineDto>> GetList([FromQuery] Volo.Abp.Application.Dtos.PagedResultRequestDto input) => await _appService.GetListAsync(input);
+    [Authorize(InventoryTrackingAutomationPermissions.MovementRequests.View)]
+    public async Task<Result<Volo.Abp.Application.Dtos.PagedResultDto<MovementRequestLineDto>>> GetList([FromQuery] Volo.Abp.Application.Dtos.PagedResultRequestDto input)
+    {
+        var result = await _appService.GetListAsync(input);
+        return result;
+    }
 
     /// <summary> Yeni hareket talebi satÄ±rÄ± oluÅŸturur. </summary>
     [HttpPost]
-    public async Task<MovementRequestLineDto> Create([FromBody] CreateMovementRequestLineDto input) => await _appService.CreateAsync(input);
+    [Authorize(InventoryTrackingAutomationPermissions.MovementRequests.Create)]
+    public async Task<Result<MovementRequestLineDto>> Create([FromBody] CreateMovementRequestLineDto input)
+    {
+        var result = await _appService.CreateAsync(input);
+        return result;
+    }
 
     /// <summary> Birden fazla hareket talebi satÄ±rÄ±nÄ± toplu oluÅŸturur. </summary>
     [HttpPost("bulk")]
-    public async Task<List<MovementRequestLineDto>> CreateMany([FromBody] List<CreateMovementRequestLineDto> inputs) => await _appService.CreateManyAsync(inputs);
+    [Authorize(InventoryTrackingAutomationPermissions.MovementRequests.Create)]
+    public async Task<Result<List<MovementRequestLineDto>>> CreateMany([FromBody] List<CreateMovementRequestLineDto> inputs)
+    {
+        var result = await _appService.CreateManyAsync(inputs);
+        return result;
+    }
 
     /// <summary> Hareket talebi satÄ±rÄ±nÄ± gÃ¼nceller. </summary>
     [HttpPut("{id}")]
-    public async Task<MovementRequestLineDto> Update(Guid id, [FromBody] UpdateMovementRequestLineDto input) => await _appService.UpdateAsync(id, input);
+    [Authorize(InventoryTrackingAutomationPermissions.MovementRequests.Edit)]
+    public async Task<Result<MovementRequestLineDto>> Update(Guid id, [FromBody] UpdateMovementRequestLineDto input)
+    {
+        var result = await _appService.UpdateAsync(id, input);
+        return result;
+    }
 
     /// <summary> Hareket talebi satÄ±rÄ±nÄ± soft delete ile siler. </summary>
     [HttpDelete("{id}")]
-    public async Task Delete(Guid id) => await _appService.DeleteAsync(id);
+    [Authorize(InventoryTrackingAutomationPermissions.MovementRequests.Edit)]
+    public async Task<Result> Delete(Guid id)
+    {
+        await _appService.DeleteAsync(id);
+        return Result.Success();
+    }
 }
+
 

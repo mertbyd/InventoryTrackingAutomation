@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Volo.Abp.EntityFrameworkCore;
 using Volo.Abp.Modularity;
@@ -60,7 +60,7 @@ public class InventoryTrackingAutomationEntityFrameworkCoreModule : AbpModule
         ConfigureAllSchemas(configuration);
     }
 
-    private void ConfigureAllSchemas(IConfiguration configuration)
+    public static void ConfigureAllSchemas(IConfiguration configuration)
     {
         ConfigureAbpSchemasStatic();
 
@@ -116,6 +116,10 @@ public class InventoryTrackingAutomationEntityFrameworkCoreModule : AbpModule
         var shipmentSchema = schemas["Inventory.Shipment"];
         if (!string.IsNullOrEmpty(shipmentSchema))
             InventoryTrackingAutomationDbProperties.ShipmentSchema = shipmentSchema;
+
+        var workflowSchema = schemas["Inventory.Workflow"];
+        if (!string.IsNullOrEmpty(workflowSchema))
+            InventoryTrackingAutomationDbProperties.WorkflowSchema = workflowSchema;
     }
 
     public override void ConfigureServices(ServiceConfigurationContext context)

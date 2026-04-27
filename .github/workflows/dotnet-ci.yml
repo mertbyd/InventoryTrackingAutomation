@@ -1,0 +1,133 @@
+name: .NET CI
+
+on:
+  push:
+    branches:
+      - main
+      - master
+      - feature/**
+      - hotfix/**
+    paths:
+      - '**/*.cs'
+      - '**/*.csproj'
+      - '**/*.props'
+      - '**/*.targets'
+      - 'global.json'
+      - 'NuGet.Config'
+      - '.github/workflows/dotnet-ci.yml'
+  pull_request:
+    branches:
+      - main
+      - master
+    types: [opened, synchronize, reopened, ready_for_review]
+    paths:
+      - '**/*.cs'
+      - '**/*.csproj'
+      - '**/*.props'
+      - '**/*.targets'
+      - 'global.json'
+      - 'NuGet.Config'
+      - '.github/workflows/dotnet-ci.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: read
+  checks: write
+
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+  DOTNET_NOLOGO: "true"
+  SOLUTION_FILE: InventoryTrackingAutomation.sln
+  BUILD_CONFIGURATION: Release
+
+jobs:
+  build-test:
+    name: .NET build and test
+    if: ${{ github.event_name != 'pull_request' || !github.event.pull_request.draft }}
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/*.props', '**/*.targets', 'NuGet.Config', 'global.json') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Authenticate to GitHub Packages
+        run: |
+          dotnet nuget remove source SystemStandardsLocal --configfile NuGet.Config || true
+          dotnet nuget remove source github --configfile NuGet.Config || true
+          dotnet nuget add source "https://nuget.pkg.github.com/mertbyd/index.json" \
+            --name github \
+            --username "${{ github.actor }}" \
+            --password "${{ secrets.GITHUB_TOKEN }}" \
+            --store-password-in-clear-text \
+            --configfile NuGet.Config
+
+      - name: Restore
+        run: dotnet restore "$SOLUTION_FILE"
+
+      - name: Check vulnerable packages
+        run: |
+          set -o pipefail
+          dotnet list "$SOLUTION_FILE" package --vulnerable --include-transitive 2>&1 | tee vuln.log
+          ! grep -q "has the following vulnerable packages" vuln.log
+
+      - name: Build
+        run: dotnet build "$SOLUTION_FILE" --configuration "$BUILD_CONFIGURATION" --no-restore -p:ContinuousIntegrationBuild=true
+
+      - name: Check pending model changes
+        run: |
+          dotnet tool install dotnet-ef --version 10.0.* --tool-path ./.dotnet-tools
+          ./.dotnet-tools/dotnet-ef migrations has-pending-model-changes \
+            --project src/InventoryTrackingAutomation.EntityFrameworkCore \
+            --startup-project host/InventoryTrackingAutomation.HttpApi.Host
+
+      - name: Test
+        run: >
+          dotnet test "$SOLUTION_FILE"
+          --configuration "$BUILD_CONFIGURATION"
+          --no-build
+          --logger "trx;LogFileName=test-results.trx"
+          --collect:"XPlat Code Coverage"
+          --results-directory ./TestResults
+
+      - name: Publish test results
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: .NET Tests
+          path: TestResults/**/*.trx
+          reporter: dotnet-trx
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./TestResults/**/coverage.cobertura.xml
+          flags: backend
+          token: ${{ secrets.CODECOV_TOKEN }}

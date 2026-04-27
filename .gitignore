@@ -260,3 +260,15 @@ host/InventoryTrackingAutomation.Blazor.Server.Host/Logs/logs.txt
 
 # Use abp install-libs to restore.
 **/wwwroot/libs/*
+
+# Secrets — never commit
+**/appsettings.secrets.json
+**/appsettings.*.secrets.json
+
+# Claude Code worktrees & Codex build artifacts
+.claude/worktrees/
+.codex-build/
+.dotnet-cli-home/
+
+# Temp files
+scratch.cs

@@ -10,5 +10,10 @@ public class WorkflowStepDefinitionDto
     public Guid Id { get; set; }
     public int StepOrder { get; set; }
     public string? RequiredRoleName { get; set; }
-    public bool IsManagerApprovalRequired { get; set; }
+
+    /// <summary>
+    /// Onaycı çözümleme anahtarı. Örnekler: "InitiatorManager", "SourceSiteManager", "TargetSiteManager".
+    /// Null/boş ise sadece RequiredRoleName temelli rol bazlı yetki kontrolü yapılır.
+    /// </summary>
+    public string? ResolverKey { get; set; }
 }

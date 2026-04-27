@@ -1,54 +1,35 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using InventoryTrackingAutomation.Entities.Workflows;
 using InventoryTrackingAutomation.Interface.Workflows;
-using InventoryTrackingAutomation.Interface.Movements;
-using InventoryTrackingAutomation.Interface.Masters;
+using InventoryTrackingAutomation.Managers.Workflows.Approvers;
 using Volo.Abp.DependencyInjection;
 
 namespace InventoryTrackingAutomation.Managers.Workflows;
 
-/// <summary>
-/// Workflow motorunun onaycı çözümleyici kancasının (hook) varsayılan implementasyonu.
-/// </summary>
+// Strategy-registry tabanlı onaycı çözümleyici — DI ile gelen tüm IApproverStrategy implementasyonlarını
+// ResolverKey'e göre indeksler ve adımın anahtarına göre ilgili strategy'i çalıştırır.
+// Yeni resolver eklemek için sadece yeni bir IApproverStrategy implementasyonu eklenir; bu sınıfa dokunulmaz.
 public class DefaultWorkflowApproverResolver : IWorkflowApproverResolver, ITransientDependency
 {
-    private readonly IMovementRequestRepository _movementRequestRepository;
-    private readonly ISiteRepository _siteRepository;
-    private readonly IWorkerRepository _workerRepository;
+    private readonly IReadOnlyDictionary<string, IApproverStrategy> _strategies;
 
-    public DefaultWorkflowApproverResolver(
-        IMovementRequestRepository movementRequestRepository,
-        ISiteRepository siteRepository,
-        IWorkerRepository workerRepository)
+    public DefaultWorkflowApproverResolver(IEnumerable<IApproverStrategy> strategies)
     {
-        _movementRequestRepository = movementRequestRepository;
-        _siteRepository = siteRepository;
-        _workerRepository = workerRepository;
+        _strategies = strategies.ToDictionary(s => s.Key, StringComparer.Ordinal);
     }
 
-    public async Task<Guid?> ResolveApproverAsync(string entityType, Guid entityId, WorkflowStepDefinition stepDefinition)
+    public Task<Guid?> ResolveApproverAsync(ApproverContext context, WorkflowStepDefinition stepDefinition)
     {
         if (string.IsNullOrEmpty(stepDefinition.ResolverKey))
         {
-            return null; // Çözümleyici yoksa null dön.
+            return Task.FromResult<Guid?>(null);
         }
 
-        if (stepDefinition.ResolverKey == "SourceSiteManager" && entityType == "MovementRequest")
-        {
-            var request = await _movementRequestRepository.FindAsync(entityId);
-            if (request != null && request.SourceSiteId != Guid.Empty)
-            {
-                var site = await _siteRepository.FindAsync(request.SourceSiteId);
-                if (site != null && site.ManagerWorkerId.HasValue)
-                {
-                    // Site.ManagerWorkerId bir Worker Id'sidir. Bize UserId lazım olabilir.
-                    var worker = await _workerRepository.FindAsync(site.ManagerWorkerId.Value);
-                    return worker?.UserId;
-                }
-            }
-        }
-
-        return null;
+        return _strategies.TryGetValue(stepDefinition.ResolverKey, out var strategy)
+            ? strategy.ResolveAsync(context)
+            : Task.FromResult<Guid?>(null);
     }
 }

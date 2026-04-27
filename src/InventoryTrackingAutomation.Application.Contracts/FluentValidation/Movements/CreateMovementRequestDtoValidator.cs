@@ -19,5 +19,8 @@ public class CreateMovementRequestDtoValidator : AbstractValidator<CreateMovemen
 
         RuleFor(x => x.Priority)
             .IsInEnum();
+
+        RuleFor(x => x.RequestedVehicleId)
+            .NotEmpty();
     }
 }

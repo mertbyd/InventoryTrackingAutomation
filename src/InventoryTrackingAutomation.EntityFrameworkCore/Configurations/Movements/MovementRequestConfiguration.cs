@@ -35,6 +35,11 @@ public class MovementRequestConfiguration : IEntityTypeConfiguration<MovementReq
             .HasForeignKey(x => x.TargetSiteId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        builder.HasOne<Vehicle>()
+            .WithMany()
+            .HasForeignKey(x => x.RequestedVehicleId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         builder.HasOne<Shipment>()
             .WithMany()
             .HasForeignKey(x => x.ShipmentId)

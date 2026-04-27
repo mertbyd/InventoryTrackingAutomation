@@ -1,3 +1,4 @@
+using AutoMapper;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -12,83 +13,85 @@ using Volo.Abp.Uow;
 
 namespace InventoryTrackingAutomation.Application.Services.Movements;
 
-/// <summary>
-/// Hareket talebi satırı application servisi — HTTP endpoint'leri için orkestra katmanı.
-/// </summary>
+// Hareket talebi satırı application servisi — HTTP endpoint'leri için ince orkestra katmanı; iş kuralları MovementRequestLineManager'da.
 public class MovementRequestLineAppService : InventoryTrackingAutomationAppService, IMovementRequestLineAppService
 {
+    // Read/list/persist için ana repository.
     private readonly IMovementRequestLineRepository _repository;
+    // Domain manager — MovementRequestId ve ProductId FK kontrolleri.
     private readonly MovementRequestLineManager _manager;
 
+    // Tüm bağımlılıkları DI ile alır.
+    private readonly IMapper _mapper;
     public MovementRequestLineAppService(
         IMovementRequestLineRepository repository,
-        MovementRequestLineManager manager)
+        MovementRequestLineManager manager,
+        IMapper mapper)
     {
+        _mapper = mapper;
         _repository = repository;
         _manager = manager;
     }
 
-    /// <summary> Id'ye göre hareket talebi satırı getirir. </summary>
+    // Id ile hareket talebi satırını getirir; yoksa EntityNotFoundException.
     public async Task<MovementRequestLineDto> GetAsync(Guid id)
     {
-        var entity = await _manager.EnsureExistsAsync(
-            id, InventoryTrackingAutomationDomainErrorCodes.MovementRequestLines.NotFound);
-        return ObjectMapper.Map<MovementRequestLine, MovementRequestLineDto>(entity);
+        var entity = await _manager.EnsureExistsAsync(id);
+        return _mapper.Map<MovementRequestLine, MovementRequestLineDto>(entity);
     }
 
-    /// <summary> Hareket talebi satırlarını sayfalı listeler. </summary>
+    // Hareket talebi satırlarını sayfalı listeler.
     public async Task<PagedResultDto<MovementRequestLineDto>> GetListAsync(PagedResultRequestDto input)
     {
         var totalCount = await _repository.GetCountAsync();
         var entities = await _repository.GetPagedListAsync(
             input.SkipCount, input.MaxResultCount, sorting: string.Empty);
         return new PagedResultDto<MovementRequestLineDto>(
-            totalCount, ObjectMapper.Map<List<MovementRequestLine>, List<MovementRequestLineDto>>(entities));
+            totalCount,
+            _mapper.Map<List<MovementRequestLine>, List<MovementRequestLineDto>>(entities));
     }
 
-    /// <summary> Yeni hareket talebi satırı oluşturur. </summary>
+    // Yeni hareket talebi satırı oluşturur — manager iş kurallarını uygular, repository persist eder.
     [UnitOfWork]
     public async Task<MovementRequestLineDto> CreateAsync(CreateMovementRequestLineDto input)
     {
-        var model = ObjectMapper.Map<CreateMovementRequestLineDto, CreateMovementRequestLineModel>(input);
+        var model = _mapper.Map<CreateMovementRequestLineDto, CreateMovementRequestLineModel>(input);
         var entity = await _manager.CreateAsync(model);
         var inserted = await _repository.InsertAsync(entity, autoSave: true);
-        return ObjectMapper.Map<MovementRequestLine, MovementRequestLineDto>(inserted);
+        return _mapper.Map<MovementRequestLine, MovementRequestLineDto>(inserted);
     }
 
-    /// <summary> Birden fazla hareket talebi satırını toplu oluşturur. </summary>
+    // Birden fazla hareket talebi satırını toplu oluşturur.
     [UnitOfWork]
     public async Task<List<MovementRequestLineDto>> CreateManyAsync(List<CreateMovementRequestLineDto> inputs)
     {
         var entities = new List<MovementRequestLine>();
         foreach (var dto in inputs)
         {
-            var model = ObjectMapper.Map<CreateMovementRequestLineDto, CreateMovementRequestLineModel>(dto);
+            var model = _mapper.Map<CreateMovementRequestLineDto, CreateMovementRequestLineModel>(dto);
             entities.Add(await _manager.CreateAsync(model));
         }
 
         var inserted = await _repository.InsertManyAndGetListAsync(entities);
-        return ObjectMapper.Map<List<MovementRequestLine>, List<MovementRequestLineDto>>(inserted);
+        return _mapper.Map<List<MovementRequestLine>, List<MovementRequestLineDto>>(inserted);
     }
 
-    /// <summary> Hareket talebi satırını günceller. </summary>
+    // Hareket talebi satırını günceller — manager iş kurallarını uygular, repository persist eder.
     [UnitOfWork]
     public async Task<MovementRequestLineDto> UpdateAsync(Guid id, UpdateMovementRequestLineDto input)
     {
-        var existing = await _manager.EnsureExistsAsync(
-            id, InventoryTrackingAutomationDomainErrorCodes.MovementRequestLines.NotFound);
-        var model = ObjectMapper.Map<UpdateMovementRequestLineDto, UpdateMovementRequestLineModel>(input);
+        var existing = await _manager.EnsureExistsAsync(id);
+        var model = _mapper.Map<UpdateMovementRequestLineDto, UpdateMovementRequestLineModel>(input);
         var updated = await _manager.UpdateAsync(existing, model);
         var saved = await _repository.UpdateAsync(updated, autoSave: true);
-        return ObjectMapper.Map<MovementRequestLine, MovementRequestLineDto>(saved);
+        return _mapper.Map<MovementRequestLine, MovementRequestLineDto>(saved);
     }
 
-    /// <summary> Hareket talebi satırını soft delete ile siler. </summary>
+    // Hareket talebi satırını soft delete ile siler.
     [UnitOfWork]
     public async Task DeleteAsync(Guid id)
     {
-        await _manager.EnsureExistsAsync(
-            id, InventoryTrackingAutomationDomainErrorCodes.MovementRequestLines.NotFound);
+        await _manager.EnsureExistsAsync(id);
         await _repository.SoftDeleteAsync(id);
     }
 }

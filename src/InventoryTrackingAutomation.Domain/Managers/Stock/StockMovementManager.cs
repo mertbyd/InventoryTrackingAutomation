@@ -1,3 +1,4 @@
+using AutoMapper;
 using System.Threading.Tasks;
 using InventoryTrackingAutomation.Entities.Stock;
 using InventoryTrackingAutomation.Interface.Masters;
@@ -17,12 +18,15 @@ public class StockMovementManager : BaseManager<StockMovement>
     /// <summary>
     /// StockMovementManager constructor'ı.
     /// </summary>
+    private readonly IMapper _mapper;
     public StockMovementManager(
         IStockMovementRepository repository,
         IProductRepository productRepository,
-        ISiteRepository siteRepository)
+        ISiteRepository siteRepository,
+        IMapper mapper)
         : base(repository)
     {
+        _mapper = mapper;
         _productRepository = productRepository;
         _siteRepository = siteRepository;
     }
@@ -34,17 +38,17 @@ public class StockMovementManager : BaseManager<StockMovement>
     {
         await EnsureExistsInAsync(
             _productRepository,
-            model.ProductId,
-            InventoryTrackingAutomationDomainErrorCodes.Products.NotFound);
+            model.ProductId);
 
         await EnsureExistsInAsync(
             _siteRepository,
-            model.SiteId,
-            InventoryTrackingAutomationDomainErrorCodes.Sites.NotFound);
+            model.SiteId);
 
         await EnsureValidEnumAsync(model.MovementType, InventoryTrackingAutomation.Settings.InventoryTrackingAutomationSettings.Stock.AllowedStockMovementTypes);
 
-        return MapAndAssignId(model);
+        var entity = new StockMovement(GuidGenerator.Create());
+        _mapper.Map(model, entity);
+        return entity;
     }
 
     /// <summary>
@@ -56,20 +60,20 @@ public class StockMovementManager : BaseManager<StockMovement>
         {
             await EnsureExistsInAsync(
                 _productRepository,
-                model.ProductId,
-                InventoryTrackingAutomationDomainErrorCodes.Products.NotFound);
+                model.ProductId);
         }
 
         if (existing.SiteId != model.SiteId)
         {
             await EnsureExistsInAsync(
                 _siteRepository,
-                model.SiteId,
-                InventoryTrackingAutomationDomainErrorCodes.Sites.NotFound);
+                model.SiteId);
         }
 
         await EnsureValidEnumAsync(model.MovementType, InventoryTrackingAutomation.Settings.InventoryTrackingAutomationSettings.Stock.AllowedStockMovementTypes);
 
-        return MapForUpdate(model, existing);
+        _mapper.Map(model, existing);
+        return existing;
     }
 }
+

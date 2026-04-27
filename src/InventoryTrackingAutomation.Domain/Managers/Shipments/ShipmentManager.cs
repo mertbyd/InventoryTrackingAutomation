@@ -1,3 +1,4 @@
+using AutoMapper;
 using System.Threading.Tasks;
 using InventoryTrackingAutomation.Entities.Shipments;
 using InventoryTrackingAutomation.Enums;
@@ -18,12 +19,15 @@ public class ShipmentManager : BaseManager<Shipment>
     /// <summary>
     /// ShipmentManager constructor'ı.
     /// </summary>
+    private readonly IMapper _mapper;
     public ShipmentManager(
         IShipmentRepository repository,
         IVehicleRepository vehicleRepository,
-        IWorkerRepository workerRepository)
+        IWorkerRepository workerRepository,
+        IMapper mapper)
         : base(repository)
     {
+        _mapper = mapper;
         _vehicleRepository = vehicleRepository;
         _workerRepository = workerRepository;
     }
@@ -36,21 +40,19 @@ public class ShipmentManager : BaseManager<Shipment>
         if (!string.IsNullOrWhiteSpace(model.ShipmentNumber))
         {
             await EnsureUniqueAsync(
-                x => x.ShipmentNumber == model.ShipmentNumber,
-                InventoryTrackingAutomationDomainErrorCodes.Shipments.ShipmentNumberNotUnique);
+                x => x.ShipmentNumber == model.ShipmentNumber);
         }
 
         await EnsureExistsInAsync(
             _vehicleRepository,
-            model.VehicleId,
-            InventoryTrackingAutomationDomainErrorCodes.Vehicles.NotFound);
+            model.VehicleId);
 
         await EnsureExistsInAsync(
             _workerRepository,
-            model.DriverWorkerId,
-            InventoryTrackingAutomationDomainErrorCodes.Workers.NotFound);
+            model.DriverWorkerId);
 
-        var entity = MapAndAssignId(model);
+        var entity = new Shipment(GuidGenerator.Create());
+        _mapper.Map(model, entity);
         entity.Status = ShipmentStatusEnum.Preparing;  // Yeni sevkiyat her zaman Preparing başlar
         return entity;
     }
@@ -64,28 +66,26 @@ public class ShipmentManager : BaseManager<Shipment>
         {
             await EnsureUniqueAsync(
                 x => x.ShipmentNumber == model.ShipmentNumber,
-                existing.Id,
-                InventoryTrackingAutomationDomainErrorCodes.Shipments.ShipmentNumberNotUnique);
+                existing.Id);
         }
 
         if (existing.VehicleId != model.VehicleId)
         {
             await EnsureExistsInAsync(
                 _vehicleRepository,
-                model.VehicleId,
-                InventoryTrackingAutomationDomainErrorCodes.Vehicles.NotFound);
+                model.VehicleId);
         }
 
         if (existing.DriverWorkerId != model.DriverWorkerId)
         {
             await EnsureExistsInAsync(
                 _workerRepository,
-                model.DriverWorkerId,
-                InventoryTrackingAutomationDomainErrorCodes.Workers.NotFound);
+                model.DriverWorkerId);
         }
 
         await EnsureValidEnumAsync(model.Status, InventoryTrackingAutomation.Settings.InventoryTrackingAutomationSettings.Shipments.AllowedShipmentStatuses);
 
-        return MapForUpdate(model, existing);
+        _mapper.Map(model, existing);
+        return existing;
     }
 }

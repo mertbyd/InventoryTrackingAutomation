@@ -1,3 +1,4 @@
+using AutoMapper;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -12,83 +13,85 @@ using Volo.Abp.Uow;
 
 namespace InventoryTrackingAutomation.Application.Services.Lookups;
 
-/// <summary>
-/// Departman application servisi — HTTP endpoint'leri için orkestra katmanı.
-/// </summary>
+// Departman application servisi — HTTP endpoint'leri için ince orkestra katmanı; iş kuralları DepartmentManager'da.
 public class DepartmentAppService : InventoryTrackingAutomationAppService, IDepartmentAppService
 {
+    // Read/list/persist için ana repository.
     private readonly IDepartmentRepository _repository;
+    // Domain manager — Code uniqueness ve diğer iş kuralları.
     private readonly DepartmentManager _manager;
 
+    // Tüm bağımlılıkları DI ile alır.
+    private readonly IMapper _mapper;
     public DepartmentAppService(
         IDepartmentRepository repository,
-        DepartmentManager manager)
+        DepartmentManager manager,
+        IMapper mapper)
     {
+        _mapper = mapper;
         _repository = repository;
         _manager = manager;
     }
 
-    /// <summary> Id'ye göre departman getirir. </summary>
+    // Id ile departmanı getirir; yoksa EntityNotFoundException.
     public async Task<DepartmentDto> GetAsync(Guid id)
     {
-        var entity = await _manager.EnsureExistsAsync(
-            id, InventoryTrackingAutomationDomainErrorCodes.Departments.NotFound);
-        return ObjectMapper.Map<Department, DepartmentDto>(entity);
+        var entity = await _manager.EnsureExistsAsync(id);
+        return _mapper.Map<Department, DepartmentDto>(entity);
     }
 
-    /// <summary> Departmanları sayfalı listeler. </summary>
+    // Departmanları sayfalı listeler.
     public async Task<PagedResultDto<DepartmentDto>> GetListAsync(PagedResultRequestDto input)
     {
         var totalCount = await _repository.GetCountAsync();
         var entities = await _repository.GetPagedListAsync(
             input.SkipCount, input.MaxResultCount, sorting: string.Empty);
         return new PagedResultDto<DepartmentDto>(
-            totalCount, ObjectMapper.Map<List<Department>, List<DepartmentDto>>(entities));
+            totalCount,
+            _mapper.Map<List<Department>, List<DepartmentDto>>(entities));
     }
 
-    /// <summary> Yeni departman oluşturur. </summary>
+    // Yeni departman oluşturur — manager iş kurallarını uygular, repository persist eder.
     [UnitOfWork]
     public async Task<DepartmentDto> CreateAsync(CreateDepartmentDto input)
     {
-        var model = ObjectMapper.Map<CreateDepartmentDto, CreateDepartmentModel>(input);
+        var model = _mapper.Map<CreateDepartmentDto, CreateDepartmentModel>(input);
         var entity = await _manager.CreateAsync(model);
         var inserted = await _repository.InsertAsync(entity, autoSave: true);
-        return ObjectMapper.Map<Department, DepartmentDto>(inserted);
+        return _mapper.Map<Department, DepartmentDto>(inserted);
     }
 
-    /// <summary> Birden fazla departmanı toplu oluşturur. </summary>
+    // Birden fazla departmanı toplu oluşturur.
     [UnitOfWork]
     public async Task<List<DepartmentDto>> CreateManyAsync(List<CreateDepartmentDto> inputs)
     {
         var entities = new List<Department>();
         foreach (var dto in inputs)
         {
-            var model = ObjectMapper.Map<CreateDepartmentDto, CreateDepartmentModel>(dto);
+            var model = _mapper.Map<CreateDepartmentDto, CreateDepartmentModel>(dto);
             entities.Add(await _manager.CreateAsync(model));
         }
 
         var inserted = await _repository.InsertManyAndGetListAsync(entities);
-        return ObjectMapper.Map<List<Department>, List<DepartmentDto>>(inserted);
+        return _mapper.Map<List<Department>, List<DepartmentDto>>(inserted);
     }
 
-    /// <summary> Departmanı günceller. </summary>
+    // Departmanı günceller — manager iş kurallarını uygular, repository persist eder.
     [UnitOfWork]
     public async Task<DepartmentDto> UpdateAsync(Guid id, UpdateDepartmentDto input)
     {
-        var existing = await _manager.EnsureExistsAsync(
-            id, InventoryTrackingAutomationDomainErrorCodes.Departments.NotFound);
-        var model = ObjectMapper.Map<UpdateDepartmentDto, UpdateDepartmentModel>(input);
+        var existing = await _manager.EnsureExistsAsync(id);
+        var model = _mapper.Map<UpdateDepartmentDto, UpdateDepartmentModel>(input);
         var updated = await _manager.UpdateAsync(existing, model);
         var saved = await _repository.UpdateAsync(updated, autoSave: true);
-        return ObjectMapper.Map<Department, DepartmentDto>(saved);
+        return _mapper.Map<Department, DepartmentDto>(saved);
     }
 
-    /// <summary> Departmanı soft delete ile siler. </summary>
+    // Departmanı soft delete ile siler.
     [UnitOfWork]
     public async Task DeleteAsync(Guid id)
     {
-        await _manager.EnsureExistsAsync(
-            id, InventoryTrackingAutomationDomainErrorCodes.Departments.NotFound);
+        await _manager.EnsureExistsAsync(id);
         await _repository.SoftDeleteAsync(id);
     }
 }
