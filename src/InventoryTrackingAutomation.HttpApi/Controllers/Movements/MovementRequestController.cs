@@ -16,7 +16,6 @@ namespace InventoryTrackingAutomation.Controllers.Movements;
 /// Hareket talebi CRUD endpoint'leri.
 /// </summary>
 [Route("api/movement-requests")]
-[Authorize]
 [ApiExplorerSettings(GroupName = "Movements")]
 [Tags("MovementRequests")]
 public class MovementRequestController : InventoryTrackingAutomationController
@@ -91,4 +90,3 @@ public class MovementRequestController : InventoryTrackingAutomationController
         return Result.Success();
     }
 }
-

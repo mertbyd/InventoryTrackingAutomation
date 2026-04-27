@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authorization;
 using SystemStandards.Results;
 using InventoryTrackingAutomation.Dtos.Stock;
 using InventoryTrackingAutomation.Services.Stock;
@@ -16,7 +15,6 @@ namespace InventoryTrackingAutomation.Controllers.Stock;
 /// Stok hareketi CRUD endpoint'leri.
 /// </summary>
 [Route("api/stock-movements")]
-[Authorize]
 [ApiExplorerSettings(GroupName = "Stock")]
 [Tags("StockMovements")]
 public class StockMovementController : InventoryTrackingAutomationController
@@ -83,4 +81,3 @@ public class StockMovementController : InventoryTrackingAutomationController
         return Result.Success();
     }
 }
-

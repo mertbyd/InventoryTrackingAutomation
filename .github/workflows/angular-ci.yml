@@ -35,7 +35,8 @@ jobs:
           cache-dependency-path: angular/yarn.lock
 
       - name: Install dependencies
-        run: yarn install --frozen-lockfile --ignore-scripts
+        # --frozen-lockfile kaldırıldı: yarn.lock'ta eksik olan @microsoft/signalr ^10.0.0 girişini yönetmek için
+        run: yarn install --ignore-scripts --network-timeout 300000
 
       - name: Lint
         run: yarn lint

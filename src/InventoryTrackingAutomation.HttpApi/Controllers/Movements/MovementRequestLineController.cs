@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authorization;
 using SystemStandards.Results;
 using InventoryTrackingAutomation.Dtos.Movements;
 using InventoryTrackingAutomation.Services.Movements;
@@ -16,7 +15,6 @@ namespace InventoryTrackingAutomation.Controllers.Movements;
 /// Hareket talebi satÄ±rÄ± CRUD endpoint'leri.
 /// </summary>
 [Route("api/movement-request-lines")]
-[Authorize]
 [ApiExplorerSettings(GroupName = "Movements")]
 [Tags("MovementRequestLines")]
 public class MovementRequestLineController : InventoryTrackingAutomationController
@@ -75,7 +73,7 @@ public class MovementRequestLineController : InventoryTrackingAutomationControll
 
     /// <summary> Hareket talebi satÄ±rÄ±nÄ± soft delete ile siler. </summary>
     [HttpDelete("{id}")]
-    [Authorize(InventoryTrackingAutomationPermissions.MovementRequests.Edit)]
+    [Authorize(InventoryTrackingAutomationPermissions.MovementRequests.Delete)]
     public async Task<Result> Delete(Guid id)
     {
         await _appService.DeleteAsync(id);

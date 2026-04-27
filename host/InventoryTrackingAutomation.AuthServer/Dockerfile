@@ -11,6 +11,7 @@ COPY . .
 WORKDIR /src/host/InventoryTrackingAutomation.AuthServer
 RUN --mount=type=secret,id=github_token \
     dotnet nuget remove source SystemStandardsLocal --configfile /src/NuGet.Config || true && \
+    dotnet nuget remove source github --configfile /src/NuGet.Config || true && \
     dotnet nuget add source "https://nuget.pkg.github.com/mertbyd/index.json" \
       --name github \
       --username "${GITHUB_ACTOR}" \

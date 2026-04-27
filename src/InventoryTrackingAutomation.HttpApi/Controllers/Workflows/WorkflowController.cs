@@ -31,7 +31,7 @@ public class WorkflowController : InventoryTrackingAutomationController, IWorkfl
     /// Yeni bir iş akışı süreci başlatır.
     /// </summary>
     [HttpPost("start")]
-    [Authorize]
+    [Authorize(InventoryTrackingAutomationPermissions.Workflows.Approve)]
     public async Task<WorkflowInstanceDto> StartAsync([FromBody] StartWorkflowDto input)
     {
         return await _workflowAppService.StartAsync(input);
@@ -63,7 +63,7 @@ public class WorkflowController : InventoryTrackingAutomationController, IWorkfl
     /// Mevcut kullanıcının onaylaması bekleyen tüm iş akışı adımlarını döner.
     /// </summary>
     [HttpGet("my-pending-approvals")]
-    [Authorize]
+    [Authorize(InventoryTrackingAutomationPermissions.Workflows.View)]
     public async Task<List<PendingWorkflowStepDto>> GetMyPendingApprovalsAsync()
     {
         return await _workflowAppService.GetMyPendingApprovalsAsync();
@@ -73,7 +73,7 @@ public class WorkflowController : InventoryTrackingAutomationController, IWorkfl
     /// Belirtilen iş akışı süreci için tam tarihçeyi döner (kim başlattı, hangi adım onaylandı/bekliyor/kaldı).
     /// </summary>
     [HttpGet("{instanceId}/history")]
-    [Authorize]
+    [Authorize(InventoryTrackingAutomationPermissions.Workflows.View)]
     public async Task<WorkflowHistoryDto> GetHistoryAsync(Guid instanceId)
     {
         return await _workflowAppService.GetHistoryAsync(instanceId);
