@@ -28,7 +28,6 @@ public class WorkflowMappingProfile : Profile
             .IgnoreAuditedObjectProperties()
             .ForMember(dest => dest.Id, opt => opt.Ignore())
             .ForMember(dest => dest.WorkflowDefinitionId, opt => opt.Ignore())
-            .ForMember(dest => dest.ResolverKey, opt => opt.Ignore())
             .ForMember(dest => dest.WorkflowDefinition, opt => opt.Ignore());
 
         // WorkflowInstance Mappings
@@ -39,8 +38,7 @@ public class WorkflowMappingProfile : Profile
 
         // Dto to Model Mappings
         CreateMap<StartWorkflowDto, StartWorkflowModel>()
-            .ForMember(dest => dest.InitiatorUserId, opt => opt.Ignore())
-            .ForMember(dest => dest.InitiatorsManagerUserId, opt => opt.Ignore());
+            .ForMember(dest => dest.InitiatorUserId, opt => opt.Ignore());
         CreateMap<ProcessApprovalDto, ProcessApprovalModel>()
             .ForMember(dest => dest.CurrentUserId, opt => opt.Ignore())
             .ForMember(dest => dest.CurrentUserRoles, opt => opt.Ignore());

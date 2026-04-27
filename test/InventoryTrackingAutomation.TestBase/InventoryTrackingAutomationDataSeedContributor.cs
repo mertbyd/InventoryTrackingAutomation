@@ -6,6 +6,11 @@ using Volo.Abp.MultiTenancy;
 
 namespace InventoryTrackingAutomation;
 
+/// <summary>
+/// Test ortamında seed verisi için placeholder.
+/// Prodüksiyondaki InventoryTrackingAutomationDataSeedContributor (Domain klasöründe)
+/// tüm test verilerini sağlıyor. Test projesi kendi seed'i gerekirse burada eklenebilir.
+/// </summary>
 public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContributor, ITransientDependency
 {
     private readonly IGuidGenerator _guidGenerator;
@@ -20,9 +25,8 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
 
     public Task SeedAsync(DataSeedContext context)
     {
-        /* Instead of returning the Task.CompletedTask, you can insert your test data
-         * at this point!
-         */
+        // Test seed'i prodüksiyondaki contributor tarafından yönetiliyor.
+        // Buraya test-spesifik seed veri eklenebilir.
 
         using (_currentTenant.Change(context?.TenantId))
         {

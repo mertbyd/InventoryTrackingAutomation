@@ -8,7 +8,9 @@ using InventoryTrackingAutomation.Entities.Movements;
 using InventoryTrackingAutomation.Entities.Workflows;
 using InventoryTrackingAutomation.Enums;
 using InventoryTrackingAutomation.Enums.Workflows;
+using InventoryTrackingAutomation.Managers.Workflows;
 using InventoryTrackingAutomation.Models.Movements;
+using InventoryTrackingAutomation.Models.Workflows;
 using Volo.Abp;
 using Volo.Abp.Domain.Repositories;
 using Volo.Abp.Domain.Services;
@@ -38,6 +40,7 @@ public class MovementApprovalManager : DomainService
     private readonly IdentityUserManager _identityUserManager;
     // Yeni MovementApproval kayıtlarına Id atamak için.
     private readonly IGuidGenerator _guidGenerator;
+    private readonly WorkflowManager _workflowManager;
 
     // Tüm bağımlılıkları DI ile alır.
     private readonly IMapper _mapper;
@@ -51,6 +54,7 @@ public class MovementApprovalManager : DomainService
         IRepository<Site, Guid> siteRepository,
         IdentityUserManager identityUserManager,
         IGuidGenerator guidGenerator,
+        WorkflowManager workflowManager,
         IMapper mapper)
     {
         _mapper = mapper;
@@ -63,6 +67,7 @@ public class MovementApprovalManager : DomainService
         _siteRepository = siteRepository;
         _identityUserManager = identityUserManager;
         _guidGenerator = guidGenerator;
+        _workflowManager = workflowManager;
     }
 
     // Hareket talebini onaylar — yetki kontrolü yapar, approval kaydı oluşturur, sonraki adıma routing.
@@ -81,11 +86,8 @@ public class MovementApprovalManager : DomainService
         var approval = await CreateApprovalRecordAsync(
             movementRequestId, approvingUserId, currentStep, ApprovalStatusEnum.Approved, comment);
 
-        // Step'i Approved olarak işaretle
-        await MarkStepAsDecidedAsync(currentStep, WorkflowActionType.Approved);
-
-        // Tüm step'ler tamamlandıysa workflow ve talep durumunu güncelle
-        await TryCompleteWorkflowAsync(workflowInstance, movementRequest);
+        // Step kararı ve sonraki adım routing'i generic WorkflowManager tarafından yapılır.
+        await AdvanceWorkflowAsync(currentStep, approvingUserId, true, comment);
 
         return approval;
     }
@@ -106,11 +108,8 @@ public class MovementApprovalManager : DomainService
         var approval = await CreateApprovalRecordAsync(
             movementRequestId, approvingUserId, currentStep, ApprovalStatusEnum.Rejected, reason);
 
-        // Step'i Rejected olarak işaretle
-        await MarkStepAsDecidedAsync(currentStep, WorkflowActionType.Rejected);
-
-        // Workflow ve talebi anında sonlandır
-        await TerminateWorkflowAsync(workflowInstance, movementRequest);
+        // Step kararı, workflow reject ve MovementRequest final durum event'i generic WorkflowManager tarafından yönetilir.
+        await AdvanceWorkflowAsync(currentStep, approvingUserId, false, reason);
 
         return approval;
     }
@@ -195,38 +194,26 @@ public class MovementApprovalManager : DomainService
         return approval;
     }
 
-    // Step'i Approved/Rejected olarak işaretler ve kaydeder.
-    private async Task MarkStepAsDecidedAsync(WorkflowInstanceStep step, WorkflowActionType action)
+    // Step kararını generic workflow state machine'e delege eder.
+    private async Task AdvanceWorkflowAsync(WorkflowInstanceStep currentStep, Guid approvingUserId, bool isApproved, string? note)
     {
-        step.ActionTaken = action;
-        step.ActionDate = DateTime.UtcNow;
-        await _workflowInstanceStepRepository.UpdateAsync(step, autoSave: true);
+        var roles = await GetUserRolesAsync(approvingUserId);
+
+        await _workflowManager.ProcessApprovalAsync(new ProcessApprovalModel
+        {
+            InstanceStepId = currentStep.Id,
+            IsApproved = isApproved,
+            Note = note,
+            CurrentUserId = approvingUserId,
+            CurrentUserRoles = roles
+        });
     }
 
-    // Tüm step'ler tamamlandıysa workflow ve talebi Approved olarak işaretler.
-    private async Task TryCompleteWorkflowAsync(WorkflowInstance workflowInstance, MovementRequest movementRequest)
+    // WorkflowManager role bazlı yetki kontrolü için kullanıcı rollerini ister.
+    private async Task<List<string>> GetUserRolesAsync(Guid userId)
     {
-        // Hâlâ bekleyen step var mı?
-        var remainingPendingSteps = await _workflowInstanceStepRepository.GetListAsync(
-            x => x.WorkflowInstanceId == workflowInstance.Id && x.ActionTaken == WorkflowActionType.Pending);
-
-        if (remainingPendingSteps.Any())
-            return;
-
-        // Tüm step'ler tamamlandı: workflow Completed, talep Approved
-        workflowInstance.State = WorkflowState.Completed;
-        movementRequest.Status = MovementStatusEnum.Approved;
-        await _workflowInstanceRepository.UpdateAsync(workflowInstance, autoSave: true);
-        await _movementRequestRepository.UpdateAsync(movementRequest, autoSave: true);
-    }
-
-    // Workflow'u Rejected olarak sonlandırır ve talebi reddeder.
-    private async Task TerminateWorkflowAsync(WorkflowInstance workflowInstance, MovementRequest movementRequest)
-    {
-        workflowInstance.State = WorkflowState.Rejected;
-        movementRequest.Status = MovementStatusEnum.Rejected;
-        await _workflowInstanceRepository.UpdateAsync(workflowInstance, autoSave: true);
-        await _movementRequestRepository.UpdateAsync(movementRequest, autoSave: true);
+        var user = await _identityUserManager.GetByIdAsync(userId);
+        return (await _identityUserManager.GetRolesAsync(user)).ToList();
     }
 
     // Onaylayan kullanıcının yetki kontrolü: assigned user, required role veya manager onayı.

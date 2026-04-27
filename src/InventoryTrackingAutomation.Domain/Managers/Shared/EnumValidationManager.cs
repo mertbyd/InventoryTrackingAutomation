@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Volo.Abp;
@@ -32,7 +32,7 @@ public class EnumValidationManager : DomainService
         var allowedValuesStr = await _settingProvider.GetOrNullAsync(settingName);
         if (string.IsNullOrWhiteSpace(allowedValuesStr))
         {
-            throw new BusinessException(InventoryTrackingAutomationDomainErrorCodes.General.InvalidOperation)
+            throw new BusinessException(InventoryTrackingAutomationErrorCodes.General.InvalidOperation)
                 .WithData("Message", $"Missing setting configuration for '{settingName}'");
         }
 
@@ -47,7 +47,7 @@ public class EnumValidationManager : DomainService
 
         if (!allowedInts.Contains(intValue))
         {
-            throw new BusinessException(InventoryTrackingAutomationDomainErrorCodes.General.InvalidEnumValue)
+            throw new BusinessException(InventoryTrackingAutomationErrorCodes.General.InvalidEnumValue)
                 .WithData("EnumType", typeof(TEnum).Name)
                 .WithData("InvalidValue", enumValue.ToString())
                 .WithData("AllowedValues", allowedValuesStr);

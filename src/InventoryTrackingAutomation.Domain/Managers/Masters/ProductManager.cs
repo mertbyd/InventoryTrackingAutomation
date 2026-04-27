@@ -1,3 +1,4 @@
+using AutoMapper;
 using System.Threading.Tasks;
 using InventoryTrackingAutomation.Entities.Masters;
 using InventoryTrackingAutomation.Interface.Lookups;
@@ -16,11 +17,14 @@ public class ProductManager : BaseManager<Product>
     /// <summary>
     /// ProductManager constructor'ı.
     /// </summary>
+    private readonly IMapper _mapper;
     public ProductManager(
         IProductRepository repository,
-        IProductCategoryRepository categoryRepository)
+        IProductCategoryRepository categoryRepository,
+        IMapper mapper)
         : base(repository)
     {
+        _mapper = mapper;
         _categoryRepository = categoryRepository;
     }
 
@@ -32,21 +36,21 @@ public class ProductManager : BaseManager<Product>
         if (!string.IsNullOrWhiteSpace(model.Code))
         {
             await EnsureUniqueAsync(
-                x => x.Code == model.Code,
-                InventoryTrackingAutomationDomainErrorCodes.Products.CodeNotUnique);
+                x => x.Code == model.Code);
         }
 
         if (model.CategoryId.HasValue)
         {
             await EnsureExistsInAsync(
                 _categoryRepository,
-                model.CategoryId.Value,
-                InventoryTrackingAutomationDomainErrorCodes.ProductCategories.NotFound);
+                model.CategoryId.Value);
         }
 
         await EnsureValidEnumAsync(model.BaseUnit, InventoryTrackingAutomation.Settings.InventoryTrackingAutomationSettings.Masters.AllowedUnitTypes);
 
-        return MapAndAssignId(model);
+        var entity = new Product(GuidGenerator.Create());
+        _mapper.Map(model, entity);
+        return entity;
     }
 
     /// <summary>
@@ -58,20 +62,20 @@ public class ProductManager : BaseManager<Product>
         {
             await EnsureUniqueAsync(
                 x => x.Code == model.Code,
-                existing.Id,
-                InventoryTrackingAutomationDomainErrorCodes.Products.CodeNotUnique);
+                existing.Id);
         }
 
         if (model.CategoryId.HasValue && existing.CategoryId != model.CategoryId)
         {
             await EnsureExistsInAsync(
                 _categoryRepository,
-                model.CategoryId.Value,
-                InventoryTrackingAutomationDomainErrorCodes.ProductCategories.NotFound);
+                model.CategoryId.Value);
         }
 
         await EnsureValidEnumAsync(model.BaseUnit, InventoryTrackingAutomation.Settings.InventoryTrackingAutomationSettings.Masters.AllowedUnitTypes);
 
-        return MapForUpdate(model, existing);
+        _mapper.Map(model, existing);
+        return existing;
     }
 }
+

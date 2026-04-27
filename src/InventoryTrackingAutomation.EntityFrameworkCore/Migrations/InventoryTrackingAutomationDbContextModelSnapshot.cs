@@ -19,7 +19,7 @@ namespace InventoryTrackingAutomation.Migrations
 #pragma warning disable 612, 618
             modelBuilder
                 .HasAnnotation("_Abp_DatabaseProvider", EfCoreDatabaseProvider.PostgreSql)
-                .HasAnnotation("ProductVersion", "7.0.3")
+                .HasAnnotation("ProductVersion", "10.0.2")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -407,6 +407,7 @@ namespace InventoryTrackingAutomation.Migrations
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
+                        .IsRequired()
                         .HasMaxLength(40)
                         .HasColumnType("character varying(40)")
                         .HasColumnName("ConcurrencyStamp");
@@ -431,6 +432,7 @@ namespace InventoryTrackingAutomation.Migrations
                         .HasColumnName("DeletionTime");
 
                     b.Property<string>("ExtraProperties")
+                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("ExtraProperties");
 
@@ -481,6 +483,7 @@ namespace InventoryTrackingAutomation.Migrations
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
+                        .IsRequired()
                         .HasMaxLength(40)
                         .HasColumnType("character varying(40)")
                         .HasColumnName("ConcurrencyStamp");
@@ -502,6 +505,7 @@ namespace InventoryTrackingAutomation.Migrations
                         .HasColumnName("DeletionTime");
 
                     b.Property<string>("ExtraProperties")
+                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("ExtraProperties");
 
@@ -538,6 +542,9 @@ namespace InventoryTrackingAutomation.Migrations
                     b.Property<Guid>("RequestedByWorkerId")
                         .HasColumnType("uuid");
 
+                    b.Property<Guid?>("RequestedVehicleId")
+                        .HasColumnType("uuid");
+
                     b.Property<Guid?>("ShipmentId")
                         .HasColumnType("uuid");
 
@@ -559,6 +566,8 @@ namespace InventoryTrackingAutomation.Migrations
                         .IsUnique();
 
                     b.HasIndex("RequestedByWorkerId");
+
+                    b.HasIndex("RequestedVehicleId");
 
                     b.HasIndex("ShipmentId");
 
@@ -894,6 +903,7 @@ namespace InventoryTrackingAutomation.Migrations
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
+                        .IsRequired()
                         .HasMaxLength(40)
                         .HasColumnType("character varying(40)")
                         .HasColumnName("ConcurrencyStamp");
@@ -919,6 +929,7 @@ namespace InventoryTrackingAutomation.Migrations
                         .HasColumnType("character varying(500)");
 
                     b.Property<string>("ExtraProperties")
+                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("ExtraProperties");
 
@@ -959,6 +970,7 @@ namespace InventoryTrackingAutomation.Migrations
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
+                        .IsRequired()
                         .HasMaxLength(40)
                         .HasColumnType("character varying(40)")
                         .HasColumnName("ConcurrencyStamp");
@@ -988,6 +1000,7 @@ namespace InventoryTrackingAutomation.Migrations
                         .HasColumnType("character varying(50)");
 
                     b.Property<string>("ExtraProperties")
+                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("ExtraProperties");
 
@@ -1171,6 +1184,11 @@ namespace InventoryTrackingAutomation.Migrations
                         .HasForeignKey("RequestedByWorkerId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.HasOne("InventoryTrackingAutomation.Entities.Masters.Vehicle", null)
+                        .WithMany()
+                        .HasForeignKey("RequestedVehicleId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("InventoryTrackingAutomation.Entities.Shipments.Shipment", null)
                         .WithMany()

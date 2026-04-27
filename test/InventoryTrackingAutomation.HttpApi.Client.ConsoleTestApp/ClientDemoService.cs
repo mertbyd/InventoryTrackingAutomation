@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Net.Http;
 using System.Threading.Tasks;
-using IdentityModel.Client;
+using Duende.IdentityModel.Client;
+using Duende.IdentityModel.Client;
 using Microsoft.Extensions.Configuration;
 using InventoryTrackingAutomation.Samples;
 using Volo.Abp.DependencyInjection;
@@ -111,7 +112,7 @@ public class ClientDemoService : ITransientDependency
         }
 
         // request token
-        var tokenResponse = await client.RequestPasswordTokenAsync(new PasswordTokenRequest
+        var tokenResponse = await client.RequestPasswordTokenAsync(new PasswordTokenRequest()
         {
             Address = disco.TokenEndpoint,
             ClientId = _configuration["IdentityClients:Default:ClientId"],

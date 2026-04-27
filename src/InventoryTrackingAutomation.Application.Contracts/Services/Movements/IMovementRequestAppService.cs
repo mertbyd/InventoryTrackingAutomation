@@ -21,6 +21,9 @@ public interface IMovementRequestAppService : IApplicationService
     /// <summary> Yeni hareket talebi oluşturur. </summary>
     Task<MovementRequestDto> CreateAsync(CreateMovementRequestDto input);
 
+    /// <summary> Hareket talebini ve satırlarını tek atomik istekle oluşturur. </summary>
+    Task<MovementRequestDto> CreateWithLinesAsync(CreateMovementRequestWithLinesDto input);
+
     /// <summary> Birden fazla hareket talebini toplu oluşturur. </summary>
     Task<List<MovementRequestDto>> CreateManyAsync(List<CreateMovementRequestDto> inputs);
 

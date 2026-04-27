@@ -13,6 +13,7 @@ public class MovementRequest : FullAuditedAggregateRoot<Guid>
     public Guid RequestedByWorkerId { get; set; }           // Talebi iş sürecinde oluşturan çalışanın kimliği. Örnek: Worker Id'si
     public Guid SourceSiteId { get; set; }                  // Malzemenin çıkacağı kaynak lokasyon. Örnek: Site Id'si (depo)
     public Guid TargetSiteId { get; set; }                  // Malzemenin gideceği hedef lokasyon. Örnek: Site Id'si (saha)
+    public Guid? RequestedVehicleId { get; set; }            // Talep edilen sevkiyat aracı. Örnek: Vehicle Id'si
     public MovementStatusEnum Status { get; set; }          // Talebin anlık durumu. Örnek: MovementStatusEnum.Pending
     public MovementPriorityEnum Priority { get; set; }      // Talebin öncelik seviyesi. Örnek: MovementPriorityEnum.Normal
     public string RequestNote { get; set; }                 // Talep gerekçesi ve açıklaması. Örnek: "Saha üretimi için acil malzeme ihtiyacı"

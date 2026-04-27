@@ -22,7 +22,6 @@ public class DepartmentMappingProfile : Profile
             .IgnoreFullAuditedObjectProperties()
             .ForMember(dest => dest.Id, opt => opt.Ignore())
             .ReverseMap();
-
         CreateMap<CreateDepartmentDto, CreateDepartmentModel>();
         CreateMap<CreateDepartmentModel, Department>()
             .IgnoreFullAuditedObjectProperties()

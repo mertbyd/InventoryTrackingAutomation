@@ -1,3 +1,4 @@
+using AutoMapper;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -12,83 +13,85 @@ using Volo.Abp.Uow;
 
 namespace InventoryTrackingAutomation.Application.Services.Masters;
 
-/// <summary>
-/// Lokasyon application servisi — HTTP endpoint'leri için orkestra katmanı.
-/// </summary>
+// Lokasyon application servisi — HTTP endpoint'leri için ince orkestra katmanı; iş kuralları SiteManager'da.
 public class SiteAppService : InventoryTrackingAutomationAppService, ISiteAppService
 {
+    // Read/list/persist için ana repository.
     private readonly ISiteRepository _repository;
+    // Domain manager — Code uniqueness, LinkedVehicle/Worker FK ve SiteType enum validasyonu.
     private readonly SiteManager _manager;
 
+    // Tüm bağımlılıkları DI ile alır.
+    private readonly IMapper _mapper;
     public SiteAppService(
         ISiteRepository repository,
-        SiteManager manager)
+        SiteManager manager,
+        IMapper mapper)
     {
+        _mapper = mapper;
         _repository = repository;
         _manager = manager;
     }
 
-    /// <summary> Id'ye göre lokasyon getirir. </summary>
+    // Id ile lokasyonu getirir; yoksa EntityNotFoundException.
     public async Task<SiteDto> GetAsync(Guid id)
     {
-        var entity = await _manager.EnsureExistsAsync(
-            id, InventoryTrackingAutomationDomainErrorCodes.Sites.NotFound);
-        return ObjectMapper.Map<Site, SiteDto>(entity);
+        var entity = await _manager.EnsureExistsAsync(id);
+        return _mapper.Map<Site, SiteDto>(entity);
     }
 
-    /// <summary> Lokasyonları sayfalı listeler. </summary>
+    // Lokasyonları sayfalı listeler.
     public async Task<PagedResultDto<SiteDto>> GetListAsync(PagedResultRequestDto input)
     {
         var totalCount = await _repository.GetCountAsync();
         var entities = await _repository.GetPagedListAsync(
             input.SkipCount, input.MaxResultCount, sorting: string.Empty);
         return new PagedResultDto<SiteDto>(
-            totalCount, ObjectMapper.Map<List<Site>, List<SiteDto>>(entities));
+            totalCount,
+            _mapper.Map<List<Site>, List<SiteDto>>(entities));
     }
 
-    /// <summary> Yeni lokasyon oluşturur. </summary>
+    // Yeni lokasyon oluşturur — manager iş kurallarını uygular, repository persist eder.
     [UnitOfWork]
     public async Task<SiteDto> CreateAsync(CreateSiteDto input)
     {
-        var model = ObjectMapper.Map<CreateSiteDto, CreateSiteModel>(input);
+        var model = _mapper.Map<CreateSiteDto, CreateSiteModel>(input);
         var entity = await _manager.CreateAsync(model);
         var inserted = await _repository.InsertAsync(entity, autoSave: true);
-        return ObjectMapper.Map<Site, SiteDto>(inserted);
+        return _mapper.Map<Site, SiteDto>(inserted);
     }
 
-    /// <summary> Birden fazla lokasyonu toplu oluşturur. </summary>
+    // Birden fazla lokasyonu toplu oluşturur.
     [UnitOfWork]
     public async Task<List<SiteDto>> CreateManyAsync(List<CreateSiteDto> inputs)
     {
         var entities = new List<Site>();
         foreach (var dto in inputs)
         {
-            var model = ObjectMapper.Map<CreateSiteDto, CreateSiteModel>(dto);
+            var model = _mapper.Map<CreateSiteDto, CreateSiteModel>(dto);
             entities.Add(await _manager.CreateAsync(model));
         }
 
         var inserted = await _repository.InsertManyAndGetListAsync(entities);
-        return ObjectMapper.Map<List<Site>, List<SiteDto>>(inserted);
+        return _mapper.Map<List<Site>, List<SiteDto>>(inserted);
     }
 
-    /// <summary> Lokasyonu günceller. </summary>
+    // Lokasyonu günceller — manager iş kurallarını uygular, repository persist eder.
     [UnitOfWork]
     public async Task<SiteDto> UpdateAsync(Guid id, UpdateSiteDto input)
     {
-        var existing = await _manager.EnsureExistsAsync(
-            id, InventoryTrackingAutomationDomainErrorCodes.Sites.NotFound);
-        var model = ObjectMapper.Map<UpdateSiteDto, UpdateSiteModel>(input);
+        var existing = await _manager.EnsureExistsAsync(id);
+        var model = _mapper.Map<UpdateSiteDto, UpdateSiteModel>(input);
         var updated = await _manager.UpdateAsync(existing, model);
         var saved = await _repository.UpdateAsync(updated, autoSave: true);
-        return ObjectMapper.Map<Site, SiteDto>(saved);
+        return _mapper.Map<Site, SiteDto>(saved);
     }
 
-    /// <summary> Lokasyonu soft delete ile siler. </summary>
+    // Lokasyonu soft delete ile siler.
     [UnitOfWork]
     public async Task DeleteAsync(Guid id)
     {
-        await _manager.EnsureExistsAsync(
-            id, InventoryTrackingAutomationDomainErrorCodes.Sites.NotFound);
+        await _manager.EnsureExistsAsync(id);
         await _repository.SoftDeleteAsync(id);
     }
 }

@@ -1,4 +1,4 @@
-﻿namespace InventoryTrackingAutomation;
+namespace InventoryTrackingAutomation;
 
 public static class InventoryTrackingAutomationDbProperties
 {
@@ -11,4 +11,5 @@ public static class InventoryTrackingAutomationDbProperties
     public static string StockSchema { get; set; } = "stock";
     public static string MovementSchema { get; set; } = "movement";
     public static string ShipmentSchema { get; set; } = "shipment";
+    public static string WorkflowSchema { get; set; } = "workflow";
 }

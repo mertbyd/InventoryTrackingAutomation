@@ -1,3 +1,4 @@
+using AutoMapper;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -12,83 +13,85 @@ using Volo.Abp.Uow;
 
 namespace InventoryTrackingAutomation.Application.Services.Masters;
 
-/// <summary>
-/// Çalışan application servisi — HTTP endpoint'leri için orkestra katmanı.
-/// </summary>
+// Çalışan application servisi — HTTP endpoint'leri için ince orkestra katmanı; iş kuralları WorkerManager'da.
 public class WorkerAppService : InventoryTrackingAutomationAppService, IWorkerAppService
 {
+    // Read/list/persist için ana repository.
     private readonly IWorkerRepository _repository;
+    // Domain manager — Department/Site/Manager FK kontrolleri ve self-assignment kuralları.
     private readonly WorkerManager _manager;
 
+    // Tüm bağımlılıkları DI ile alır.
+    private readonly IMapper _mapper;
     public WorkerAppService(
         IWorkerRepository repository,
-        WorkerManager manager)
+        WorkerManager manager,
+        IMapper mapper)
     {
+        _mapper = mapper;
         _repository = repository;
         _manager = manager;
     }
 
-    /// <summary> Id'ye göre çalışan getirir. </summary>
+    // Id ile çalışanı getirir; yoksa EntityNotFoundException.
     public async Task<WorkerDto> GetAsync(Guid id)
     {
-        var entity = await _manager.EnsureExistsAsync(
-            id, InventoryTrackingAutomationDomainErrorCodes.Workers.NotFound);
-        return ObjectMapper.Map<Worker, WorkerDto>(entity);
+        var entity = await _manager.EnsureExistsAsync(id);
+        return _mapper.Map<Worker, WorkerDto>(entity);
     }
 
-    /// <summary> Çalışanları sayfalı listeler. </summary>
+    // Çalışanları sayfalı listeler.
     public async Task<PagedResultDto<WorkerDto>> GetListAsync(PagedResultRequestDto input)
     {
         var totalCount = await _repository.GetCountAsync();
         var entities = await _repository.GetPagedListAsync(
             input.SkipCount, input.MaxResultCount, sorting: string.Empty);
         return new PagedResultDto<WorkerDto>(
-            totalCount, ObjectMapper.Map<List<Worker>, List<WorkerDto>>(entities));
+            totalCount,
+            _mapper.Map<List<Worker>, List<WorkerDto>>(entities));
     }
 
-    /// <summary> Yeni çalışan oluşturur. </summary>
+    // Yeni çalışan oluşturur — manager iş kurallarını uygular, repository persist eder.
     [UnitOfWork]
     public async Task<WorkerDto> CreateAsync(CreateWorkerDto input)
     {
-        var model = ObjectMapper.Map<CreateWorkerDto, CreateWorkerModel>(input);
+        var model = _mapper.Map<CreateWorkerDto, CreateWorkerModel>(input);
         var entity = await _manager.CreateAsync(model);
         var inserted = await _repository.InsertAsync(entity, autoSave: true);
-        return ObjectMapper.Map<Worker, WorkerDto>(inserted);
+        return _mapper.Map<Worker, WorkerDto>(inserted);
     }
 
-    /// <summary> Birden fazla çalışanı toplu oluşturur. </summary>
+    // Birden fazla çalışanı toplu oluşturur.
     [UnitOfWork]
     public async Task<List<WorkerDto>> CreateManyAsync(List<CreateWorkerDto> inputs)
     {
         var entities = new List<Worker>();
         foreach (var dto in inputs)
         {
-            var model = ObjectMapper.Map<CreateWorkerDto, CreateWorkerModel>(dto);
+            var model = _mapper.Map<CreateWorkerDto, CreateWorkerModel>(dto);
             entities.Add(await _manager.CreateAsync(model));
         }
 
         var inserted = await _repository.InsertManyAndGetListAsync(entities);
-        return ObjectMapper.Map<List<Worker>, List<WorkerDto>>(inserted);
+        return _mapper.Map<List<Worker>, List<WorkerDto>>(inserted);
     }
 
-    /// <summary> Çalışanı günceller. </summary>
+    // Çalışanı günceller — manager iş kurallarını uygular, repository persist eder.
     [UnitOfWork]
     public async Task<WorkerDto> UpdateAsync(Guid id, UpdateWorkerDto input)
     {
-        var existing = await _manager.EnsureExistsAsync(
-            id, InventoryTrackingAutomationDomainErrorCodes.Workers.NotFound);
-        var model = ObjectMapper.Map<UpdateWorkerDto, UpdateWorkerModel>(input);
+        var existing = await _manager.EnsureExistsAsync(id);
+        var model = _mapper.Map<UpdateWorkerDto, UpdateWorkerModel>(input);
         var updated = await _manager.UpdateAsync(existing, model);
         var saved = await _repository.UpdateAsync(updated, autoSave: true);
-        return ObjectMapper.Map<Worker, WorkerDto>(saved);
+        return _mapper.Map<Worker, WorkerDto>(saved);
     }
 
-    /// <summary> Çalışanı soft delete ile siler. </summary>
+    // Çalışanı soft delete ile siler.
     [UnitOfWork]
     public async Task DeleteAsync(Guid id)
     {
-        await _manager.EnsureExistsAsync(
-            id, InventoryTrackingAutomationDomainErrorCodes.Workers.NotFound);
+        await _manager.EnsureExistsAsync(id);
         await _repository.SoftDeleteAsync(id);
     }
 }

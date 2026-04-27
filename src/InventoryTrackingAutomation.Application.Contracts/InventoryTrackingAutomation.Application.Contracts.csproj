@@ -3,15 +3,15 @@
   <Import Project="..\..\common.props" />
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <RootNamespace>InventoryTrackingAutomation</RootNamespace>
     <NoWarn>$(NoWarn);CS8618</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Volo.Abp.Ddd.Application.Contracts" Version="7.0.3" />
-    <PackageReference Include="Volo.Abp.Authorization" Version="7.0.3" />
-    <PackageReference Include="Volo.Abp.FluentValidation" Version="7.0.3" />
+    <PackageReference Include="Volo.Abp.Ddd.Application.Contracts" Version="10.3.0" />
+    <PackageReference Include="Volo.Abp.Authorization" Version="10.3.0" />
+    <PackageReference Include="Volo.Abp.FluentValidation" Version="10.3.0" />
     <ProjectReference Include="..\InventoryTrackingAutomation.Domain.Shared\InventoryTrackingAutomation.Domain.Shared.csproj" />
   </ItemGroup>
 

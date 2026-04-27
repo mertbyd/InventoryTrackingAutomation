@@ -1,3 +1,4 @@
+using AutoMapper;
 using System.Threading.Tasks;
 using InventoryTrackingAutomation.Entities.Shipments;
 using InventoryTrackingAutomation.Interface.Masters;
@@ -19,13 +20,16 @@ public class ShipmentLineManager : BaseManager<ShipmentLine>
     /// <summary>
     /// ShipmentLineManager constructor'ı.
     /// </summary>
+    private readonly IMapper _mapper;
     public ShipmentLineManager(
         IShipmentLineRepository repository,
         IShipmentRepository shipmentRepository,
         IMovementRequestLineRepository movementRequestLineRepository,
-        IProductRepository productRepository)
+        IProductRepository productRepository,
+        IMapper mapper)
         : base(repository)
     {
+        _mapper = mapper;
         _shipmentRepository = shipmentRepository;
         _movementRequestLineRepository = movementRequestLineRepository;
         _productRepository = productRepository;
@@ -38,20 +42,19 @@ public class ShipmentLineManager : BaseManager<ShipmentLine>
     {
         await EnsureExistsInAsync(
             _shipmentRepository,
-            model.ShipmentId,
-            InventoryTrackingAutomationDomainErrorCodes.Shipments.NotFound);
+            model.ShipmentId);
 
         await EnsureExistsInAsync(
             _movementRequestLineRepository,
-            model.MovementRequestLineId,
-            InventoryTrackingAutomationDomainErrorCodes.MovementRequestLines.NotFound);
+            model.MovementRequestLineId);
 
         await EnsureExistsInAsync(
             _productRepository,
-            model.ProductId,
-            InventoryTrackingAutomationDomainErrorCodes.Products.NotFound);
+            model.ProductId);
 
-        return MapAndAssignId(model);
+        var entity = new ShipmentLine(GuidGenerator.Create());
+        _mapper.Map(model, entity);
+        return entity;
     }
 
     /// <summary>
@@ -63,26 +66,25 @@ public class ShipmentLineManager : BaseManager<ShipmentLine>
         {
             await EnsureExistsInAsync(
                 _shipmentRepository,
-                model.ShipmentId,
-                InventoryTrackingAutomationDomainErrorCodes.Shipments.NotFound);
+                model.ShipmentId);
         }
 
         if (existing.MovementRequestLineId != model.MovementRequestLineId)
         {
             await EnsureExistsInAsync(
                 _movementRequestLineRepository,
-                model.MovementRequestLineId,
-                InventoryTrackingAutomationDomainErrorCodes.MovementRequestLines.NotFound);
+                model.MovementRequestLineId);
         }
 
         if (existing.ProductId != model.ProductId)
         {
             await EnsureExistsInAsync(
                 _productRepository,
-                model.ProductId,
-                InventoryTrackingAutomationDomainErrorCodes.Products.NotFound);
+                model.ProductId);
         }
 
-        return MapForUpdate(model, existing);
+        _mapper.Map(model, existing);
+        return existing;
     }
 }
+

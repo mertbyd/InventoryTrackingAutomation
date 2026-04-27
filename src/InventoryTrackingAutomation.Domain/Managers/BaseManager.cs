@@ -7,23 +7,18 @@ using InventoryTrackingAutomation.Interface;
 using Volo.Abp;
 using Volo.Abp.Domain.Entities;
 using Volo.Abp.Domain.Services;
-using Volo.Abp.ObjectMapping;
 
 namespace InventoryTrackingAutomation.Managers;
 
-/// <summary>
-/// Tüm domain manager'larının türeyeceği generic base — tekrarlı validasyon ve mapping işlerini merkezileştirir.
-/// </summary>
-/// <typeparam name="TEntity">Yönetilen entity tipi (IEntity&lt;Guid&gt; olmalı).</typeparam>
+// Tüm domain manager'larının türeyeceği generic base — varlık/unique/mapping/enum doğrulama helper'larını merkezileştirir.
+// Türetilmiş manager'lar tekrarlı kontrolleri buradan kullanır, sadece kendine özgü iş kurallarını ekler.
 public abstract class BaseManager<TEntity> : DomainService
     where TEntity : class, IEntity<Guid>
 {
+    // Yönetilen entity tipinin temel repository'si (alt sınıflara açık).
     protected readonly IBaseRepository<TEntity> Repository;
 
-    // DomainService'de ObjectMapper property'si yoktur; LazyServiceProvider üzerinden çözülür.
-    private IObjectMapper? _objectMapper;
-    protected IObjectMapper ObjectMapper => _objectMapper ??= LazyServiceProvider.LazyGetRequiredService<IObjectMapper>();
-
+    // Yönetilen entity'nin repository'sini DI ile alır.
     protected BaseManager(IBaseRepository<TEntity> repository)
     {
         Repository = repository;
@@ -33,67 +28,63 @@ public abstract class BaseManager<TEntity> : DomainService
     //  VARLIK KONTROL HELPER'LARI
     // ════════════════════════════════════════════════════════
 
-    /// <summary>
-    /// Id'ye ait entity DB'de varsa döner, yoksa verilen errorCode ile BusinessException fırlatır.
-    /// </summary>
-    public async Task<TEntity> EnsureExistsAsync(Guid id, string errorCode)
+    // Id'ye ait entity DB'de varsa döner, yoksa EntityNotFoundException fırlatır.
+    public async Task<TEntity> EnsureExistsAsync(Guid id)
     {
         var entity = await Repository.FindAsync(id);
         if (entity == null)
         {
-            throw new BusinessException(errorCode);
+            throw new EntityNotFoundException(typeof(TEntity), id);
         }
 
         return entity;
     }
 
-    /// <summary>
-    /// Başka tipteki bir repository'de id'nin varlığını kontrol eder (zorunlu FK validasyonu için).
-    /// </summary>
+    // Başka tipteki bir repository'de Id'nin varlığını kontrol eder (FK validasyonu için).
     public async Task EnsureExistsInAsync<TOther>(
         IBaseRepository<TOther> otherRepository,
-        Guid id,
-        string errorCode)
+        Guid id)
         where TOther : class, IEntity<Guid>
     {
         var entity = await otherRepository.FindAsync(id);
         if (entity == null)
         {
-            throw new BusinessException(errorCode);
+            throw new EntityNotFoundException(typeof(TOther), id);
         }
     }
 
-    /// <summary>
-    /// Opsiyonel FK için — null ise kontrolü atlar.
-    /// </summary>
+    // Opsiyonel FK için — null ise kontrolü atlar, dolu ise non-nullable overload'a delege eder.
     public async Task EnsureExistsInAsync<TOther>(
         IBaseRepository<TOther> otherRepository,
-        Guid? id,
-        string errorCode)
+        Guid? id)
         where TOther : class, IEntity<Guid>
     {
         if (id.HasValue)
         {
-            await EnsureExistsInAsync(otherRepository, id.Value, errorCode);
+            await EnsureExistsInAsync(otherRepository, id.Value);
         }
     }
 
-    /// <summary>
-    /// Id listesindeki tüm entity'lerin başka bir repository'de var olduğunu doğrular — biri eksikse exception.
-    /// </summary>
+    // Id listesindeki tüm entity'lerin başka bir repository'de var olduğunu doğrular — eksik olanı raporlar.
     public async Task EnsureAllExistInAsync<TOther>(
         IBaseRepository<TOther> otherRepository,
-        IEnumerable<Guid> ids,
-        string errorCode)
+        IEnumerable<Guid> ids)
         where TOther : class, IEntity<Guid>
     {
+        // Distinct id listesi.
         var idList = ids.Distinct().ToList();
+        // Mevcut id'leri tek query ile çek.
         var queryable = await otherRepository.GetQueryableAsync();
-        var foundCount = queryable.Count(x => idList.Contains(x.Id));
+        var foundIds = queryable
+            .Where(x => idList.Contains(x.Id))
+            .Select(x => x.Id)
+            .ToHashSet();
 
-        if (foundCount != idList.Count)
+        // Listede olup DB'de olmayan ilk id'yi bul ve onu raporla.
+        var missingId = idList.FirstOrDefault(id => !foundIds.Contains(id));
+        if (missingId != Guid.Empty || foundIds.Count != idList.Count)
         {
-            throw new BusinessException(errorCode);
+            throw new EntityNotFoundException(typeof(TOther), missingId);
         }
     }
 
@@ -101,27 +92,21 @@ public abstract class BaseManager<TEntity> : DomainService
     //  UNIQUE KONTROL HELPER'LARI
     // ════════════════════════════════════════════════════════
 
-    /// <summary>
-    /// Create için unique kontrol — predicate'e uyan kayıt varsa BusinessException fırlatır.
-    /// </summary>
+    // Create için unique kontrol — predicate'e uyan kayıt varsa BusinessException fırlatır.
     public async Task EnsureUniqueAsync(
-        Expression<Func<TEntity, bool>> predicate,
-        string errorCode)
+        Expression<Func<TEntity, bool>> predicate)
     {
         var queryable = await Repository.GetQueryableAsync();
         if (queryable.Any(predicate))
         {
-            throw new BusinessException(errorCode);
+            throw new BusinessException(BuildAlreadyExistsErrorCode());
         }
     }
 
-    /// <summary>
-    /// Update için unique kontrol — kendisi (excludeId) hariç tutularak kontrol yapılır.
-    /// </summary>
+    // Update için unique kontrol — kendisi (excludeId) hariç tutularak kontrol yapılır.
     public async Task EnsureUniqueAsync(
         Expression<Func<TEntity, bool>> predicate,
-        Guid excludeId,
-        string errorCode)
+        Guid excludeId)
     {
         var queryable = await Repository.GetQueryableAsync();
         var exists = queryable
@@ -129,42 +114,20 @@ public abstract class BaseManager<TEntity> : DomainService
             .Any(e => !e.Id.Equals(excludeId));
         if (exists)
         {
-            throw new BusinessException(errorCode);
+            throw new BusinessException(BuildAlreadyExistsErrorCode());
         }
     }
 
-    // ════════════════════════════════════════════════════════
-    //  MAPPING HELPER'LARI
-    // ════════════════════════════════════════════════════════
-
-    /// <summary>
-    /// Model'den yeni entity oluşturur — GuidGenerator ile Id atar, ObjectMapper ile property'leri doldurur.
-    /// </summary>
-    public TEntity MapAndAssignId<TModel>(TModel model)
-    {
-        var entity = (TEntity)Activator.CreateInstance(typeof(TEntity), GuidGenerator.Create())!;
-        ObjectMapper.Map<TModel, TEntity>(model, entity);
-        return entity;
-    }
-
-    /// <summary>
-    /// Update model'ini mevcut entity üzerine map eder — audit alanlarını bozmaz.
-    /// </summary>
-    public TEntity MapForUpdate<TModel>(TModel model, TEntity existingEntity)
-    {
-        ObjectMapper.Map<TModel, TEntity>(model, existingEntity);
-        return existingEntity;
-    }
+    // Entity tipi adına göre AlreadyExists error code'unu oluşturur (ErrorCodes pattern'iyle uyumlu).
+    private static string BuildAlreadyExistsErrorCode()
+        => $"InventoryTrackingAutomation:{typeof(TEntity).Name}.AlreadyExists";
 
     // ════════════════════════════════════════════════════════
     //  ENUM VALIDASYON HELPER'LARI
     // ════════════════════════════════════════════════════════
 
-    /// <summary>
-    /// Verilen enum değerinin, SettingProvider'da tanımlı izin verilen değerler
-    /// listesinde olup olmadığını kontrol eder. Base sınıfların constructor'ını
-    /// bozmamak için LazyServiceProvider üzerinden resolve edilir.
-    /// </summary>
+    // Enum değerinin SettingProvider'daki izinli değerler listesinde olup olmadığını doğrular.
+    // Base sınıfların constructor imzasını şişirmemek için EnumValidationManager LazyServiceProvider üzerinden çözülür.
     protected async Task EnsureValidEnumAsync<TEnum>(TEnum value, string settingName) where TEnum : struct, Enum
     {
         var enumValidationManager = LazyServiceProvider.LazyGetRequiredService<InventoryTrackingAutomation.Managers.Shared.EnumValidationManager>();

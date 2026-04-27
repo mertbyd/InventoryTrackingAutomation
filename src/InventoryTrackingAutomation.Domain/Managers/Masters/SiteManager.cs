@@ -1,3 +1,4 @@
+using AutoMapper;
 using System.Threading.Tasks;
 using InventoryTrackingAutomation.Entities.Masters;
 using InventoryTrackingAutomation.Interface.Masters;
@@ -16,12 +17,15 @@ public class SiteManager : BaseManager<Site>
     /// <summary>
     /// SiteManager constructor'ı.
     /// </summary>
+    private readonly IMapper _mapper;
     public SiteManager(
         ISiteRepository repository,
         IVehicleRepository vehicleRepository,
-        IWorkerRepository workerRepository)
+        IWorkerRepository workerRepository,
+        IMapper mapper)
         : base(repository)
     {
+        _mapper = mapper;
         _vehicleRepository = vehicleRepository;
         _workerRepository = workerRepository;
     }
@@ -34,23 +38,22 @@ public class SiteManager : BaseManager<Site>
         if (!string.IsNullOrWhiteSpace(model.Code))
         {
             await EnsureUniqueAsync(
-                x => x.Code == model.Code,
-                InventoryTrackingAutomationDomainErrorCodes.Sites.CodeNotUnique);
+                x => x.Code == model.Code);
         }
 
         await EnsureExistsInAsync(
             _vehicleRepository,
-            model.LinkedVehicleId,
-            InventoryTrackingAutomationDomainErrorCodes.Vehicles.NotFound);
+            model.LinkedVehicleId);
 
         await EnsureExistsInAsync(
             _workerRepository,
-            model.LinkedWorkerId,
-            InventoryTrackingAutomationDomainErrorCodes.Workers.NotFound);
+            model.LinkedWorkerId);
 
         await EnsureValidEnumAsync(model.SiteType, InventoryTrackingAutomation.Settings.InventoryTrackingAutomationSettings.Masters.AllowedSiteTypes);
 
-        return MapAndAssignId(model);
+        var entity = new Site(GuidGenerator.Create());
+        _mapper.Map(model, entity);
+        return entity;
     }
 
     /// <summary>
@@ -62,22 +65,21 @@ public class SiteManager : BaseManager<Site>
         {
             await EnsureUniqueAsync(
                 x => x.Code == model.Code,
-                existing.Id,
-                InventoryTrackingAutomationDomainErrorCodes.Sites.CodeNotUnique);
+                existing.Id);
         }
 
         await EnsureExistsInAsync(
             _vehicleRepository,
-            model.LinkedVehicleId,
-            InventoryTrackingAutomationDomainErrorCodes.Vehicles.NotFound);
+            model.LinkedVehicleId);
 
         await EnsureExistsInAsync(
             _workerRepository,
-            model.LinkedWorkerId,
-            InventoryTrackingAutomationDomainErrorCodes.Workers.NotFound);
+            model.LinkedWorkerId);
 
         await EnsureValidEnumAsync(model.SiteType, InventoryTrackingAutomation.Settings.InventoryTrackingAutomationSettings.Masters.AllowedSiteTypes);
 
-        return MapForUpdate(model, existing);
+        _mapper.Map(model, existing);
+        return existing;
     }
 }
+

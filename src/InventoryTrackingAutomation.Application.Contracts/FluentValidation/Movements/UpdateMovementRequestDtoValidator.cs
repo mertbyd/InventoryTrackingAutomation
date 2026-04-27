@@ -20,5 +20,8 @@ public class UpdateMovementRequestDtoValidator : AbstractValidator<UpdateMovemen
 
         RuleFor(x => x.Priority)
             .IsInEnum();
+
+        RuleFor(x => x.RequestedVehicleId)
+            .NotEmpty();
     }
 }

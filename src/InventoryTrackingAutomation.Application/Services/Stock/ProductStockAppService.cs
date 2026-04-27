@@ -1,3 +1,4 @@
+using AutoMapper;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -12,83 +13,85 @@ using Volo.Abp.Uow;
 
 namespace InventoryTrackingAutomation.Application.Services.Stock;
 
-/// <summary>
-/// Ürün stok application servisi — HTTP endpoint'leri için orkestra katmanı.
-/// </summary>
+// Ürün stok application servisi — HTTP endpoint'leri için ince orkestra katmanı; iş kuralları ProductStockManager'da.
 public class ProductStockAppService : InventoryTrackingAutomationAppService, IProductStockAppService
 {
+    // Read/list/persist için ana repository.
     private readonly IProductStockRepository _repository;
+    // Domain manager — (ProductId, SiteId) unique ve FK kontrolleri.
     private readonly ProductStockManager _manager;
 
+    // Tüm bağımlılıkları DI ile alır.
+    private readonly IMapper _mapper;
     public ProductStockAppService(
         IProductStockRepository repository,
-        ProductStockManager manager)
+        ProductStockManager manager,
+        IMapper mapper)
     {
+        _mapper = mapper;
         _repository = repository;
         _manager = manager;
     }
 
-    /// <summary> Id'ye göre stok kaydı getirir. </summary>
+    // Id ile stok kaydını getirir; yoksa EntityNotFoundException.
     public async Task<ProductStockDto> GetAsync(Guid id)
     {
-        var entity = await _manager.EnsureExistsAsync(
-            id, InventoryTrackingAutomationDomainErrorCodes.ProductStocks.NotFound);
-        return ObjectMapper.Map<ProductStock, ProductStockDto>(entity);
+        var entity = await _manager.EnsureExistsAsync(id);
+        return _mapper.Map<ProductStock, ProductStockDto>(entity);
     }
 
-    /// <summary> Stok kayıtlarını sayfalı listeler. </summary>
+    // Stok kayıtlarını sayfalı listeler.
     public async Task<PagedResultDto<ProductStockDto>> GetListAsync(PagedResultRequestDto input)
     {
         var totalCount = await _repository.GetCountAsync();
         var entities = await _repository.GetPagedListAsync(
             input.SkipCount, input.MaxResultCount, sorting: string.Empty);
         return new PagedResultDto<ProductStockDto>(
-            totalCount, ObjectMapper.Map<List<ProductStock>, List<ProductStockDto>>(entities));
+            totalCount,
+            _mapper.Map<List<ProductStock>, List<ProductStockDto>>(entities));
     }
 
-    /// <summary> Yeni stok kaydı oluşturur. </summary>
+    // Yeni stok kaydı oluşturur — manager iş kurallarını uygular, repository persist eder.
     [UnitOfWork]
     public async Task<ProductStockDto> CreateAsync(CreateProductStockDto input)
     {
-        var model = ObjectMapper.Map<CreateProductStockDto, CreateProductStockModel>(input);
+        var model = _mapper.Map<CreateProductStockDto, CreateProductStockModel>(input);
         var entity = await _manager.CreateAsync(model);
         var inserted = await _repository.InsertAsync(entity, autoSave: true);
-        return ObjectMapper.Map<ProductStock, ProductStockDto>(inserted);
+        return _mapper.Map<ProductStock, ProductStockDto>(inserted);
     }
 
-    /// <summary> Birden fazla stok kaydını toplu oluşturur. </summary>
+    // Birden fazla stok kaydını toplu oluşturur.
     [UnitOfWork]
     public async Task<List<ProductStockDto>> CreateManyAsync(List<CreateProductStockDto> inputs)
     {
         var entities = new List<ProductStock>();
         foreach (var dto in inputs)
         {
-            var model = ObjectMapper.Map<CreateProductStockDto, CreateProductStockModel>(dto);
+            var model = _mapper.Map<CreateProductStockDto, CreateProductStockModel>(dto);
             entities.Add(await _manager.CreateAsync(model));
         }
 
         var inserted = await _repository.InsertManyAndGetListAsync(entities);
-        return ObjectMapper.Map<List<ProductStock>, List<ProductStockDto>>(inserted);
+        return _mapper.Map<List<ProductStock>, List<ProductStockDto>>(inserted);
     }
 
-    /// <summary> Stok kaydını günceller. </summary>
+    // Stok kaydını günceller — manager iş kurallarını uygular, repository persist eder.
     [UnitOfWork]
     public async Task<ProductStockDto> UpdateAsync(Guid id, UpdateProductStockDto input)
     {
-        var existing = await _manager.EnsureExistsAsync(
-            id, InventoryTrackingAutomationDomainErrorCodes.ProductStocks.NotFound);
-        var model = ObjectMapper.Map<UpdateProductStockDto, UpdateProductStockModel>(input);
+        var existing = await _manager.EnsureExistsAsync(id);
+        var model = _mapper.Map<UpdateProductStockDto, UpdateProductStockModel>(input);
         var updated = await _manager.UpdateAsync(existing, model);
         var saved = await _repository.UpdateAsync(updated, autoSave: true);
-        return ObjectMapper.Map<ProductStock, ProductStockDto>(saved);
+        return _mapper.Map<ProductStock, ProductStockDto>(saved);
     }
 
-    /// <summary> Stok kaydını soft delete ile siler. </summary>
+    // Stok kaydını soft delete ile siler.
     [UnitOfWork]
     public async Task DeleteAsync(Guid id)
     {
-        await _manager.EnsureExistsAsync(
-            id, InventoryTrackingAutomationDomainErrorCodes.ProductStocks.NotFound);
+        await _manager.EnsureExistsAsync(id);
         await _repository.SoftDeleteAsync(id);
     }
 }

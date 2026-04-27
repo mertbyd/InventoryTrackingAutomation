@@ -12,6 +12,7 @@ public class CreateMovementRequestModel
     public Guid RequestedByWorkerId { get; set; }               // Talebi oluşturan çalışan Id. Örnek: Worker Id'si
     public Guid SourceSiteId { get; set; }                      // Kaynak lokasyon Id. Örnek: Site Id'si
     public Guid TargetSiteId { get; set; }                      // Hedef lokasyon Id. Örnek: Site Id'si
+    public Guid RequestedVehicleId { get; set; }                 // Talep edilen sevkiyat aracı Id. Örnek: Vehicle Id'si
     public Guid? ShipmentId { get; set; }                       // Bağlı sevkiyat Id. Örnek: Shipment Id'si
     public MovementStatusEnum Status { get; set; }              // Talep durumu. Örnek: MovementStatusEnum.Pending
     public MovementPriorityEnum Priority { get; set; }          // Öncelik. Örnek: MovementPriorityEnum.Normal

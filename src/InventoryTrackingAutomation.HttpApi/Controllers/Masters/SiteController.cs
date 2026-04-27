@@ -1,9 +1,12 @@
-﻿using System;
+using InventoryTrackingAutomation.Permissions;
+using Microsoft.AspNetCore.Authorization;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using SystemStandards.Results;
 using InventoryTrackingAutomation.Dtos.Masters;
 using InventoryTrackingAutomation.Services.Masters;
 
@@ -13,7 +16,7 @@ namespace InventoryTrackingAutomation.Controllers.Masters;
 /// Lokasyon CRUD endpoint'leri.
 /// </summary>
 [Route("api/sites")]
-//[Authorize]
+[Authorize]
 [ApiExplorerSettings(GroupName = "Masters")]
 [Tags("Sites")]
 public class SiteController : InventoryTrackingAutomationController
@@ -27,26 +30,57 @@ public class SiteController : InventoryTrackingAutomationController
 
     /// <summary> Id'ye gÃ¶re tek lokasyon getirir. </summary>
     [HttpGet("{id}")]
-    public async Task<SiteDto> Get(Guid id) => await _appService.GetAsync(id);
+    [Authorize(InventoryTrackingAutomationPermissions.Masters.View)]
+    public async Task<Result<SiteDto>> Get(Guid id)
+    {
+        var result = await _appService.GetAsync(id);
+        return result;
+    }
 
     /// <summary> TÃ¼m lokasyonlarÄ± listeler. </summary>
     [HttpGet]
-    public async Task<Volo.Abp.Application.Dtos.PagedResultDto<SiteDto>> GetList([FromQuery] Volo.Abp.Application.Dtos.PagedResultRequestDto input) => await _appService.GetListAsync(input);
+    [Authorize(InventoryTrackingAutomationPermissions.Masters.View)]
+    public async Task<Result<Volo.Abp.Application.Dtos.PagedResultDto<SiteDto>>> GetList([FromQuery] Volo.Abp.Application.Dtos.PagedResultRequestDto input)
+    {
+        var result = await _appService.GetListAsync(input);
+        return result;
+    }
 
     /// <summary> Yeni lokasyon oluÅŸturur. </summary>
     [HttpPost]
-    public async Task<SiteDto> Create([FromBody] CreateSiteDto input) => await _appService.CreateAsync(input);
+    [Authorize(InventoryTrackingAutomationPermissions.Masters.Manage)]
+    public async Task<Result<SiteDto>> Create([FromBody] CreateSiteDto input)
+    {
+        var result = await _appService.CreateAsync(input);
+        return result;
+    }
 
     /// <summary> Birden fazla lokasyonu toplu oluÅŸturur. </summary>
     [HttpPost("bulk")]
-    public async Task<List<SiteDto>> CreateMany([FromBody] List<CreateSiteDto> inputs) => await _appService.CreateManyAsync(inputs);
+    [Authorize(InventoryTrackingAutomationPermissions.Masters.Manage)]
+    public async Task<Result<List<SiteDto>>> CreateMany([FromBody] List<CreateSiteDto> inputs)
+    {
+        var result = await _appService.CreateManyAsync(inputs);
+        return result;
+    }
 
     /// <summary> Lokasyonu gÃ¼nceller. </summary>
     [HttpPut("{id}")]
-    public async Task<SiteDto> Update(Guid id, [FromBody] UpdateSiteDto input) => await _appService.UpdateAsync(id, input);
+    [Authorize(InventoryTrackingAutomationPermissions.Masters.Manage)]
+    public async Task<Result<SiteDto>> Update(Guid id, [FromBody] UpdateSiteDto input)
+    {
+        var result = await _appService.UpdateAsync(id, input);
+        return result;
+    }
 
     /// <summary> Lokasyonu soft delete ile siler. </summary>
     [HttpDelete("{id}")]
-    public async Task Delete(Guid id) => await _appService.DeleteAsync(id);
+    [Authorize(InventoryTrackingAutomationPermissions.Masters.Manage)]
+    public async Task<Result> Delete(Guid id)
+    {
+        await _appService.DeleteAsync(id);
+        return Result.Success();
+    }
 }
+
 

@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
@@ -10,6 +10,7 @@ public class InventoryTrackingAutomationHttpApiHostMigrationsDbContextFactory : 
     public InventoryTrackingAutomationHttpApiHostMigrationsDbContext CreateDbContext(string[] args)
     {
         var configuration = BuildConfiguration();
+        InventoryTrackingAutomationEntityFrameworkCoreModule.ConfigureAllSchemas(configuration);
 
         var builder = new DbContextOptionsBuilder<InventoryTrackingAutomationHttpApiHostMigrationsDbContext>()
             .UseNpgsql(configuration.GetConnectionString("Default"));

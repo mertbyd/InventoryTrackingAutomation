@@ -1,21 +1,20 @@
 using System;
 using System.Threading.Tasks;
 using InventoryTrackingAutomation.Entities.Workflows;
+using InventoryTrackingAutomation.Managers.Workflows.Approvers;
 
 namespace InventoryTrackingAutomation.Interface.Workflows;
 
 /// <summary>
 /// Dinamik iş akışlarında, ilgili adımın onaycısının "kim" olduğunu çözümleyen (resolve eden) arayüz.
-/// Bu sayede Workflow motoru, Envanter (Worker, Site) bağımlılıklarından izole edilir.
+/// Strategy registry üzerinden ResolverKey → IApproverStrategy haritasını çalıştırır.
 /// </summary>
 public interface IWorkflowApproverResolver
 {
     /// <summary>
-    /// Belirtilen adımın onaycısının Id'sini döner.
+    /// Belirtilen adımın onaycısının User Id'sini döner; çözülemezse null döner.
     /// </summary>
-    /// <param name="entityType">İşleme giren entity tipi (Örn: "MovementRequest")</param>
-    /// <param name="entityId">İşleme giren entity'nin Id'si</param>
-    /// <param name="stepDefinition">Çözümlenecek adımın tanımı</param>
-    /// <returns>Onaycı Kullanıcı Id'si (Eğer çözülemezse null)</returns>
-    Task<Guid?> ResolveApproverAsync(string entityType, Guid entityId, WorkflowStepDefinition stepDefinition);
+    /// <param name="context">Onaycı çözümleme bağlamı (entity, initiator).</param>
+    /// <param name="stepDefinition">Çözümlenecek adımın tanımı (ResolverKey burada).</param>
+    Task<Guid?> ResolveApproverAsync(ApproverContext context, WorkflowStepDefinition stepDefinition);
 }

@@ -1,4 +1,4 @@
-﻿using InventoryTrackingAutomation.Localization;
+using InventoryTrackingAutomation.Localization;
 using Volo.Abp.AspNetCore.Mvc;
 
 namespace InventoryTrackingAutomation;
