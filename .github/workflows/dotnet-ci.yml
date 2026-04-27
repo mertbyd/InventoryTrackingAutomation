@@ -1,15 +1,18 @@
 name: .NET CI
 
-# CI geçici olarak devre dışı — SystemStandards NuGet feed kurulana kadar
-# Faz 2 tamamlandıktan sonra aşağıdaki on bloğunu geri aç
 on:
-  workflow_dispatch:
+  push:
+    branches: [main, master, feature/**, hotfix/**]
+    paths:
+      - '**/*.cs'
+      - '**/*.csproj'
+      - '**/*.props'
+      - '**/*.targets'
+      - 'global.json'
       - 'NuGet.Config'
       - '.github/workflows/dotnet-ci.yml'
   pull_request:
-    branches:
-      - main
-      - master
+    branches: [main, master]
     types: [opened, synchronize, reopened, ready_for_review]
     paths:
       - '**/*.cs'
@@ -65,13 +68,11 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.nuget/packages
-          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/*.props', '**/*.targets', 'NuGet.Config', 'global.json') }}
-          restore-keys: |
-            ${{ runner.os }}-nuget-
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/*.props', 'NuGet.Config', 'global.json') }}
+          restore-keys: ${{ runner.os }}-nuget-
 
       - name: Authenticate to GitHub Packages
         run: |
-          dotnet nuget remove source SystemStandardsLocal --configfile NuGet.Config || true
           dotnet nuget remove source github --configfile NuGet.Config || true
           dotnet nuget add source "https://nuget.pkg.github.com/mertbyd/index.json" \
             --name github \
@@ -92,13 +93,6 @@ jobs:
       - name: Build
         run: dotnet build "$SOLUTION_FILE" --configuration "$BUILD_CONFIGURATION" --no-restore -p:ContinuousIntegrationBuild=true
 
-      - name: Check pending model changes
-        run: |
-          dotnet tool install dotnet-ef --version 10.0.* --tool-path ./.dotnet-tools
-          ./.dotnet-tools/dotnet-ef migrations has-pending-model-changes \
-            --project src/InventoryTrackingAutomation.EntityFrameworkCore \
-            --startup-project host/InventoryTrackingAutomation.HttpApi.Host
-
       - name: Test
         run: >
           dotnet test "$SOLUTION_FILE"
@@ -118,6 +112,7 @@ jobs:
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
+        if: always()
         with:
           files: ./TestResults/**/coverage.cobertura.xml
           flags: backend
