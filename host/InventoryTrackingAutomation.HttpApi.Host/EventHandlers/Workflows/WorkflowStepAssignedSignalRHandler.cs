@@ -1,8 +1,8 @@
+using System;
 using System.Threading.Tasks;
 using InventoryTrackingAutomation.Events.Workflows;
-using InventoryTrackingAutomation.Hubs;
+using InventoryTrackingAutomation.Notifications;
 using InventoryTrackingAutomation.SignalR;
-using Microsoft.AspNetCore.SignalR;
 using Volo.Abp.DependencyInjection;
 using Volo.Abp.EventBus;
 
@@ -15,89 +15,59 @@ public class WorkflowStepAssignedSignalRHandler :
     ILocalEventHandler<WorkflowStepAssignedEto>,
     ITransientDependency
 {
-    private readonly IHubContext<InventoryNotificationHub> _hubContext;
-    private readonly InventorySignalRDebugNotificationStore _debugStore;
+    private readonly IInventoryNotificationSender _notificationSender;
+    private readonly IInventorySignalRDebugRecorder _debugRecorder;
 
     public WorkflowStepAssignedSignalRHandler(
-        IHubContext<InventoryNotificationHub> hubContext,
-        InventorySignalRDebugNotificationStore debugStore)
+        IInventoryNotificationSender notificationSender,
+        IInventorySignalRDebugRecorder debugRecorder)
     {
-        _hubContext = hubContext;
-        _debugStore = debugStore;
+        _notificationSender = notificationSender;
+        _debugRecorder = debugRecorder;
     }
 
     public async Task HandleEventAsync(WorkflowStepAssignedEto eventData)
     {
-        var createdAtUtc = System.DateTime.UtcNow;
-        const string eventName = "ReceiveInventoryNotification";
-        const string type = "WorkflowStepAssigned";
-        const string title = "Yeni onay bekleniyor";
-        const string message = "Bir hareket talebi onayınız için bekliyor.";
+        // Workflow event'ini client tarafinin anlayacagi SignalR payload'una cevirir.
+        var payload = CreatePayload(eventData);
 
         if (!eventData.AssignedUserId.HasValue)
         {
-            AddDebugNotification(
-                eventData,
-                eventName,
-                type,
-                title,
-                message,
-                createdAtUtc,
+            _debugRecorder.Record(
+                eventData.AssignedUserId,
+                payload,
                 sent: false,
-                "AssignedUserId bos; workflow onaycisi cozulemedi.");
+                InventoryNotificationConstants.Messages.MissingAssignedUser);
             return;
         }
 
         try
         {
-            await _hubContext.Clients
-                .User(eventData.AssignedUserId.Value.ToString())
-                .SendAsync(eventName, new
-                {
-                    Type = type,
-                    Title = title,
-                    Message = message,
-                    EntityType = eventData.EntityType,
-                    EntityId = eventData.EntityId,
-                    WorkflowInstanceId = eventData.WorkflowInstanceId,
-                    WorkflowInstanceStepId = eventData.WorkflowInstanceStepId,
-                    CreatedAt = createdAtUtc
-                });
+            // ABP SignalR UserIdProvider hedef kullaniciyi AssignedUserId ile eslestirir.
+            await _notificationSender.SendToUserAsync(eventData.AssignedUserId.Value, payload);
 
-            AddDebugNotification(eventData, eventName, type, title, message, createdAtUtc, sent: true);
+            _debugRecorder.Record(eventData.AssignedUserId, payload, sent: true);
         }
-        catch (System.Exception ex)
+        catch (Exception ex)
         {
-            AddDebugNotification(eventData, eventName, type, title, message, createdAtUtc, sent: false, ex.Message);
+            _debugRecorder.Record(eventData.AssignedUserId, payload, sent: false, ex.Message);
             throw;
         }
     }
 
-    private void AddDebugNotification(
-        WorkflowStepAssignedEto eventData,
-        string eventName,
-        string type,
-        string title,
-        string message,
-        System.DateTime createdAtUtc,
-        bool sent,
-        string? error = null)
+    private static InventoryNotificationPayload CreatePayload(WorkflowStepAssignedEto eventData)
     {
-        _debugStore.Add(new InventorySignalRDebugNotification
+        // Bildirim metinleri ve event tipi merkezi sabitlerden gelir.
+        return new InventoryNotificationPayload
         {
-            Id = System.Guid.NewGuid(),
-            EventName = eventName,
-            TargetUserId = eventData.AssignedUserId,
-            Type = type,
-            Title = title,
-            Message = message,
+            Type = InventoryNotificationConstants.Types.WorkflowStepAssigned,
+            Title = InventoryNotificationConstants.Messages.WorkflowStepAssignedTitle,
+            Message = InventoryNotificationConstants.Messages.WorkflowStepAssignedMessage,
             EntityType = eventData.EntityType,
             EntityId = eventData.EntityId,
             WorkflowInstanceId = eventData.WorkflowInstanceId,
             WorkflowInstanceStepId = eventData.WorkflowInstanceStepId,
-            CreatedAtUtc = createdAtUtc,
-            Sent = sent,
-            Error = error
-        });
+            CreatedAt = DateTime.UtcNow
+        };
     }
 }

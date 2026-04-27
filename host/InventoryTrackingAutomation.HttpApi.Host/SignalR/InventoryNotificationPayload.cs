@@ -14,5 +14,5 @@ public class InventoryNotificationPayload
     public Guid EntityId { get; set; }
     public Guid WorkflowInstanceId { get; set; }
     public Guid WorkflowInstanceStepId { get; set; }
-    public DateTime CreatedAtUtc { get; set; }
+    public DateTime CreatedAt { get; set; }
 }
