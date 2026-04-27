@@ -284,6 +284,13 @@ public class MovementApprovalManager : DomainService
         if (!pendingSteps.Any())
             throw new BusinessException(InventoryTrackingAutomationErrorCodes.MovementApprovals.NoPendingApprovalStep);
 
-        return pendingSteps.OrderBy(x => x.WorkflowStepDefinition.StepOrder).First();
+        var orderedPendingSteps = new List<(WorkflowInstanceStep Step, int StepOrder)>();
+        foreach (var pendingStep in pendingSteps)
+        {
+            var stepDefinition = await _workflowStepDefinitionRepository.GetAsync(pendingStep.WorkflowStepDefinitionId);
+            orderedPendingSteps.Add((pendingStep, stepDefinition.StepOrder));
+        }
+
+        return orderedPendingSteps.OrderBy(x => x.StepOrder).First().Step;
     }
 }
