@@ -1,8 +1,16 @@
 name: Docker Build
 
-# CI geçici olarak devre dışı — Dockerfile + SystemStandards NuGet hazırlanana kadar
 on:
-  workflow_dispatch:
+  push:
+    branches: [main]
+    tags: ['v*.*.*']
+    paths:
+      - 'host/**'
+      - 'src/**'
+      - '*.sln'
+      - '*.props'
+      - 'global.json'
+      - 'NuGet.Config'
       - '.github/workflows/docker-build.yml'
   workflow_dispatch:
 
@@ -60,12 +68,12 @@ jobs:
           context: .
           file: host/InventoryTrackingAutomation.HttpApi.Host/Dockerfile
           push: true
-          build-args: |
-            GITHUB_ACTOR=${{ github.actor }}
-          secrets: |
-            github_token=${{ secrets.GITHUB_TOKEN }}
+          build-args: GITHUB_ACTOR=${{ github.actor }}
+          secrets: github_token=${{ secrets.GITHUB_TOKEN }}
           tags: ${{ steps.httpapi-meta.outputs.tags }}
           labels: ${{ steps.httpapi-meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       - name: Build and push AuthServer image
         uses: docker/build-push-action@v6
@@ -73,9 +81,9 @@ jobs:
           context: .
           file: host/InventoryTrackingAutomation.AuthServer/Dockerfile
           push: true
-          build-args: |
-            GITHUB_ACTOR=${{ github.actor }}
-          secrets: |
-            github_token=${{ secrets.GITHUB_TOKEN }}
+          build-args: GITHUB_ACTOR=${{ github.actor }}
+          secrets: github_token=${{ secrets.GITHUB_TOKEN }}
           tags: ${{ steps.authserver-meta.outputs.tags }}
           labels: ${{ steps.authserver-meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
