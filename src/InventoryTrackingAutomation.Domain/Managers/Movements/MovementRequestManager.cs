@@ -225,18 +225,14 @@ public class MovementRequestManager : BaseManager<MovementRequest>
         // 2. Lines'taki product'ların hepsinin var olduğunu toplu doğrula.
         var productIds = model.Lines.Select(l => l.ProductId).Distinct().ToList();
         await EnsureAllExistInAsync(_productRepository, productIds);
-
         // 3. Header entity'sini oluştur.
         var entity = new MovementRequest(GuidGenerator.Create());
         _mapper.Map(model, entity);
         entity.Status = InventoryTrackingAutomation.Enums.MovementStatusEnum.Pending;
-
         // 4. Workflow ata (definition aktifse Status InReview'e geçer).
         var workflowInstance = await AssignWorkflowAsync(entity, currentUserId);
-
         // 5. Header'ı insert et — line'ların FK'sı için Id lazım.
         var insertedHeader = await Repository.InsertAsync(entity, autoSave: true);
-
         // 6. Lines entity'lerini oluştur ve insert et.
         var lineEntities = model.Lines.Select(lineModel =>
         {
@@ -245,10 +241,8 @@ public class MovementRequestManager : BaseManager<MovementRequest>
             lineEntity.MovementRequestId = insertedHeader.Id;
             return lineEntity;
         }).ToList();
-
         await _movementRequestLineRepository.InsertManyAsync(lineEntities, autoSave: true);
         await PublishInitialWorkflowStepAssignedAsync(workflowInstance);
-
         return insertedHeader;
     }
 
@@ -258,15 +252,12 @@ public class MovementRequestManager : BaseManager<MovementRequest>
         var vehicle = await _vehicleRepository.FindAsync(requestedVehicleId);
         if (vehicle == null)
         {
-            throw new Volo.Abp.BusinessException(InventoryTrackingAutomationErrorCodes.Vehicles.NotFound)
-                .WithData("VehicleId", requestedVehicleId);
+            throw new Volo.Abp.BusinessException(InventoryTrackingAutomationErrorCodes.Vehicles.NotFound);
         }
 
         if (!vehicle.IsActive)
         {
-            throw new Volo.Abp.BusinessException(InventoryTrackingAutomationErrorCodes.General.InvalidOperation)
-                .WithData("Message", "Seçilen araç aktif değil.")
-                .WithData("VehicleId", requestedVehicleId);
+            throw new Volo.Abp.BusinessException(InventoryTrackingAutomationErrorCodes.General.InvalidOperation);
         }
 
         var activeShipments = await _shipmentRepository.GetListAsync(x =>
@@ -277,10 +268,7 @@ public class MovementRequestManager : BaseManager<MovementRequest>
 
         if (activeShipment != null)
         {
-            throw new Volo.Abp.BusinessException(InventoryTrackingAutomationErrorCodes.General.InvalidOperation)
-                .WithData("Message", "Seçilen araç aktif bir sevkiyatta olduğu için atanamaz.")
-                .WithData("VehicleId", requestedVehicleId)
-                .WithData("ShipmentId", activeShipment.Id);
+            throw new Volo.Abp.BusinessException(InventoryTrackingAutomationErrorCodes.General.InvalidOperation);
         }
     }
 
@@ -292,12 +280,10 @@ public class MovementRequestManager : BaseManager<MovementRequest>
         // MovementRequest için aktif workflow definition'ı bul; yoksa workflow başlatılmaz (geriye dönük uyumluluk).
         var workflowDef = await _workflowDefinitionRepository.FindAsync(
             w => w.Name == WorkflowDefinitionNames.MovementRequest && w.IsActive);
-
         if (workflowDef == null)
         {
             return null;
         }
-
         var startModel = new InventoryTrackingAutomation.Models.Workflows.StartWorkflowModel
         {
             WorkflowDefinitionId = workflowDef.Id,
@@ -305,12 +291,9 @@ public class MovementRequestManager : BaseManager<MovementRequest>
             EntityId = entity.Id,
             InitiatorUserId = currentUserId
         };
-
         var workflowInstance = await _workflowManager.StartWorkflowAsync(startModel);
         await _workflowInstanceRepository.InsertAsync(workflowInstance);
-
         entity.WorkflowInstanceId = workflowInstance.Id;
-
         // Workflow başarıyla atandı — talep artık inceleme sürecinde.
         entity.Status = InventoryTrackingAutomation.Enums.MovementStatusEnum.InReview;
         return workflowInstance;

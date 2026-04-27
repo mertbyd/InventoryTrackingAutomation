@@ -1,25 +1,27 @@
-version: '3.4'
+# Local geliştirme ortamı için sadece PostgreSQL ayağa kaldırır.
+# .NET uygulamaları ayrı terminallerde `dotnet run` ile çalıştırılır.
+# Kullanım: docker-compose up -d
+
+version: '3.8'
 
 services:
-  sqlserver:
-    image: mcr.microsoft.com/mssql/server
+  postgres:
+    image: postgres:15
+    container_name: inventory-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: InventoryTrackingAutomationdb
+    ports:
+      - "5432:5432"
     volumes:
-      - dbdata:/var/opt/mssql
-  
-  identity-server:
-    build:
-      context: ../../
-      dockerfile: templates/service/host/IdentityServerHost/Dockerfile
-    depends_on:
-      - sqlserver      
-  
-  inventory-tracking-automation:
-    build:
-      context: ../../
-      dockerfile: templates/service/host/InventoryTrackingAutomation.Host/Dockerfile
-    depends_on:
-      - sqlserver
-      - identity-server
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 volumes:
-  dbdata:
+  postgres_data:
