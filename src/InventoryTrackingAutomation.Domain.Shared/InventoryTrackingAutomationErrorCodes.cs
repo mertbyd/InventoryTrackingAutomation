@@ -88,6 +88,9 @@ public static class InventoryTrackingAutomationErrorCodes
         public const string NotFound = Prefix + ":Shipment.NotFound";
         public const string InvalidStatus = Prefix + ":Shipment.InvalidStatus";
         public const string ShipmentNumberNotUnique = Prefix + ":Shipment.ShipmentNumberNotUnique";
+        public const string RequestedVehicleRequired = Prefix + ":Shipment.RequestedVehicleRequired";
+        public const string RequestedVehicleUnavailable = Prefix + ":Shipment.RequestedVehicleUnavailable";
+        public const string DriverNotFound = Prefix + ":Shipment.DriverNotFound";
     }
 
     public static class ShipmentLines

@@ -143,14 +143,12 @@ public class WorkflowManager : DomainService
 
         if (!definition.IsActive)
         {
-            throw new BusinessException(InventoryTrackingAutomationErrorCodes.General.InvalidOperation)
-                .WithData("Message", "Workflow definition is not active.");
+            throw new BusinessException(InventoryTrackingAutomationErrorCodes.General.InvalidOperation);
         }
 
         if (!definition.Steps.Any())
         {
-            throw new BusinessException(InventoryTrackingAutomationErrorCodes.General.InvalidOperation)
-                .WithData("Message", "Workflow definition has no steps.");
+            throw new BusinessException(InventoryTrackingAutomationErrorCodes.General.InvalidOperation);
         }
 
         return definition;
@@ -166,8 +164,7 @@ public class WorkflowManager : DomainService
 
         if (step == null)
         {
-            throw new BusinessException(InventoryTrackingAutomationErrorCodes.Workflows.StepNotFound)
-                .WithData("StepId", stepId);
+            throw new BusinessException(InventoryTrackingAutomationErrorCodes.Workflows.StepNotFound);
         }
 
         return step;
@@ -176,18 +173,13 @@ public class WorkflowManager : DomainService
     private void ValidateWorkflowIsActive(WorkflowInstance instance)
     {
         if (instance.State != WorkflowState.Active)
-        {
-            throw new BusinessException(InventoryTrackingAutomationErrorCodes.Workflows.InstanceNotActive)
-                .WithData("State", instance.State.ToString());
-        }
+            throw new BusinessException(InventoryTrackingAutomationErrorCodes.Workflows.InstanceNotActive);
     }
 
     private void ValidateStepIsPending(WorkflowInstanceStep step)
     {
         if (step.ActionTaken != WorkflowActionType.Pending)
-        {
             throw new BusinessException(InventoryTrackingAutomationErrorCodes.MovementApprovals.AlreadyDecided);
-        }
     }
 
     // Mevcut kullanıcının bu adımı onaylama yetkisinin olup olmadığını doğrular.
@@ -197,17 +189,14 @@ public class WorkflowManager : DomainService
         if (step.AssignedUserId.HasValue)
         {
             if (step.AssignedUserId.Value != currentUserId)
-            {
                 throw new BusinessException(InventoryTrackingAutomationErrorCodes.Workflows.UnauthorizedApproval);
-            }
         }
         else
         {
             var requiredRole = step.WorkflowStepDefinition.RequiredRoleName;
             if (!string.IsNullOrEmpty(requiredRole) && !currentUserRoles.Contains(requiredRole))
-            {
                 throw new BusinessException(InventoryTrackingAutomationErrorCodes.Workflows.UnauthorizedApproval);
-            }
+            
         }
     }
 
@@ -215,7 +204,6 @@ public class WorkflowManager : DomainService
     {
         instance.State = finalState;
         await _workflowInstanceRepository.UpdateAsync(instance, autoSave: true);
-
         await _localEventBus.PublishAsync(new WorkflowCompletedEto
         {
             WorkflowInstanceId = instance.Id,

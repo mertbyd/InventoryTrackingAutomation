@@ -1,13 +1,9 @@
-version: '3.4'
+# EF Core migration'larını çalıştırmak için kullanılır.
+# Kullanım:
+#   docker-compose up -d                          # önce postgres ayağa kaldır
+#   cd src/InventoryTrackingAutomation.EntityFrameworkCore
+#   dotnet ef database update --startup-project ../../../host/InventoryTrackingAutomation.HttpApi.Host
 
-services:
-  migrations:
-    build:
-      context: ../../
-      dockerfile: templates/service/database/Dockerfile
-    depends_on:
-      - sqlserver
-    environment:
-      - IdentityServer_DB=InventoryTrackingAutomation_Identity
-      - InventoryTrackingAutomation_DB=InventoryTrackingAutomation_ModuleDb
-      - SA_PASSWORD=yourStrong(!)Password
+# Bu dosya şu an placeholder olarak tutulmaktadır.
+# Migration'lar manuel olarak yukarıdaki komutla çalıştırılır.
+version: '3.8'
