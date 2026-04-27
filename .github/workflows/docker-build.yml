@@ -1,18 +1,8 @@
 name: Docker Build
 
+# CI geçici olarak devre dışı — Dockerfile + SystemStandards NuGet hazırlanana kadar
 on:
-  push:
-    branches:
-      - main
-    tags:
-      - 'v*.*.*'
-    paths:
-      - 'host/**'
-      - 'src/**'
-      - '*.sln'
-      - '*.props'
-      - 'global.json'
-      - 'NuGet.Config'
+  workflow_dispatch:
       - '.github/workflows/docker-build.yml'
   workflow_dispatch:
 

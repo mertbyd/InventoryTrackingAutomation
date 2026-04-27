@@ -1,18 +1,9 @@
 name: .NET CI
 
+# CI geçici olarak devre dışı — SystemStandards NuGet feed kurulana kadar
+# Faz 2 tamamlandıktan sonra aşağıdaki on bloğunu geri aç
 on:
-  push:
-    branches:
-      - main
-      - master
-      - feature/**
-      - hotfix/**
-    paths:
-      - '**/*.cs'
-      - '**/*.csproj'
-      - '**/*.props'
-      - '**/*.targets'
-      - 'global.json'
+  workflow_dispatch:
       - 'NuGet.Config'
       - '.github/workflows/dotnet-ci.yml'
   pull_request:
