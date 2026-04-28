@@ -11,6 +11,8 @@ on:
       - 'global.json'
       - 'NuGet.Config'
       - '.github/workflows/dotnet-ci.yml'
+      - '.github/workflows/codeql.yml'
+      - '.github/workflows/docker-build.yml'
   pull_request:
     branches: [main, master]
     types: [opened, synchronize, reopened, ready_for_review]
