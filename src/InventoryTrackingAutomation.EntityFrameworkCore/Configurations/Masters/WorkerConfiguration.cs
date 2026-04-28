@@ -23,9 +23,9 @@ public class WorkerConfiguration : IEntityTypeConfiguration<Worker>
             .HasForeignKey(x => x.DepartmentId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasOne<Site>()
+        builder.HasOne<Warehouse>()
             .WithMany()
-            .HasForeignKey(x => x.DefaultSiteId)
+            .HasForeignKey(x => x.DefaultWarehouseId)
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne<Worker>()

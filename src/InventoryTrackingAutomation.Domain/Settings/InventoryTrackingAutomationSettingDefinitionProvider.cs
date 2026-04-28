@@ -27,7 +27,6 @@ public class InventoryTrackingAutomationSettingDefinitionProvider : SettingDefin
 
         context.Add(new SettingDefinition(InventoryTrackingAutomationSettings.Masters.AllowedUnitTypes, GetEnumValues<UnitTypeEnum>()));
         context.Add(new SettingDefinition(InventoryTrackingAutomationSettings.Masters.AllowedWorkerTypes, GetEnumValues<WorkerTypeEnum>()));
-        context.Add(new SettingDefinition(InventoryTrackingAutomationSettings.Masters.AllowedSiteTypes, GetEnumValues<SiteTypeEnum>()));
         context.Add(new SettingDefinition(InventoryTrackingAutomationSettings.Masters.AllowedVehicleTypes, GetEnumValues<VehicleTypeEnum>()));
 
         context.Add(new SettingDefinition(InventoryTrackingAutomationSettings.Movements.AllowedMovementPriorities, GetEnumValues<MovementPriorityEnum>()));

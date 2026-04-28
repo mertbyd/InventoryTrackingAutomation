@@ -4,21 +4,19 @@ using InventoryTrackingAutomation.Dtos.Masters;
 namespace InventoryTrackingAutomation.FluentValidation.Masters;
 
 /// <summary>
-/// CreateSiteDto için sade validation kuralları.
+/// CreateWarehouseDto icin depo kurallarini dogrular.
 /// </summary>
-public class CreateSiteDtoValidator : AbstractValidator<CreateSiteDto>
+public class CreateWarehouseDtoValidator : AbstractValidator<CreateWarehouseDto>
 {
-    public CreateSiteDtoValidator()
+    public CreateWarehouseDtoValidator()
     {
         RuleFor(x => x.Name)
             .NotEmpty()
             .MaximumLength(200);
 
         RuleFor(x => x.Code)
+            .NotEmpty()
             .MaximumLength(50);
-
-        RuleFor(x => x.SiteType)
-            .IsInEnum();
 
         RuleFor(x => x.Address)
             .MaximumLength(500);

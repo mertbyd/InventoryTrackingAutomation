@@ -4,11 +4,11 @@ using InventoryTrackingAutomation.Dtos.Masters;
 namespace InventoryTrackingAutomation.FluentValidation.Masters;
 
 /// <summary>
-/// UpdateSiteDto için validation kuralları — güncelleme işleminde tüm alanlar zorunlu tutulur.
+/// UpdateWarehouseDto icin depo kurallarini dogrular.
 /// </summary>
-public class UpdateSiteDtoValidator : AbstractValidator<UpdateSiteDto>
+public class UpdateWarehouseDtoValidator : AbstractValidator<UpdateWarehouseDto>
 {
-    public UpdateSiteDtoValidator()
+    public UpdateWarehouseDtoValidator()
     {
         RuleFor(x => x.Name)
             .NotEmpty()
@@ -17,9 +17,6 @@ public class UpdateSiteDtoValidator : AbstractValidator<UpdateSiteDto>
         RuleFor(x => x.Code)
             .NotEmpty()
             .MaximumLength(50);
-
-        RuleFor(x => x.SiteType)
-            .IsInEnum();
 
         RuleFor(x => x.Address)
             .MaximumLength(500);

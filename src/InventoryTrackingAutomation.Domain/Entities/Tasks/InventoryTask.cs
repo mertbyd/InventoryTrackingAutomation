@@ -8,7 +8,7 @@ namespace InventoryTrackingAutomation.Entities.Tasks;
 /// <summary>
 /// Sahada yurutulen operasyonel envanter gorevini temsil eder.
 /// </summary>
-public class InventoryTask : FullAuditedAggregateRoot<Guid>, IMultiTenant
+public class InventoryTask : FullAuditedEntity<Guid>, IMultiTenant
 {
     public string Code { get; set; }                 // Gorevin benzersiz kodu. Ornek: "TASK-IZMIR-001"
     public string Name { get; set; }                 // Gorev adi. Ornek: "Izmir Saha Destek Gorevi"

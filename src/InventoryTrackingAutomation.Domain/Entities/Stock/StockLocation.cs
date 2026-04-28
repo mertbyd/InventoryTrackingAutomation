@@ -8,7 +8,7 @@ namespace InventoryTrackingAutomation.Entities.Stock;
 /// <summary>
 /// Urun stok miktarini depo veya arac lokasyonu bazinda tutar.
 /// </summary>
-public class StockLocation : FullAuditedAggregateRoot<Guid>, IMultiTenant
+public class StockLocation : FullAuditedEntity<Guid>, IMultiTenant
 {
     public Guid ProductId { get; set; }                       // Stoku takip edilen urun Id'si.
     public InventoryLocationTypeEnum LocationType { get; set; } // Stokun bulundugu lokasyon tipi.

@@ -14,7 +14,7 @@ namespace InventoryTrackingAutomation.Managers.Masters;
 public class WorkerManager : BaseManager<Worker>
 {
     private readonly IDepartmentRepository _departmentRepository;  // DepartmentId FK validasyonu için
-    private readonly ISiteRepository _siteRepository;              // DefaultSiteId FK validasyonu için
+    private readonly IWarehouseRepository _warehouseRepository;              // DefaultWarehouseId FK validasyonu için
 
     /// <summary>
     /// WorkerManager constructor'ı.
@@ -23,17 +23,17 @@ public class WorkerManager : BaseManager<Worker>
     public WorkerManager(
         IWorkerRepository repository,
         IDepartmentRepository departmentRepository,
-        ISiteRepository siteRepository,
+        IWarehouseRepository warehouseRepository,
         IMapper mapper)
         : base(repository)
     {
         _mapper = mapper;
         _departmentRepository = departmentRepository;
-        _siteRepository = siteRepository;
+        _warehouseRepository = warehouseRepository;
     }
 
     /// <summary>
-    /// Yeni çalışan oluşturur — DepartmentId, DefaultSiteId ve ManagerId varlık kontrolleri yapar.
+    /// Yeni çalışan oluşturur — DepartmentId, DefaultWarehouseId ve ManagerId varlık kontrolleri yapar.
     /// </summary>
     public async Task<Worker> CreateAsync(CreateWorkerModel model)
     {
@@ -42,8 +42,8 @@ public class WorkerManager : BaseManager<Worker>
             model.DepartmentId);
 
         await EnsureExistsInAsync(
-            _siteRepository,
-            model.DefaultSiteId);
+            _warehouseRepository,
+            model.DefaultWarehouseId);
 
         await EnsureExistsInAsync(
             Repository,
@@ -57,7 +57,7 @@ public class WorkerManager : BaseManager<Worker>
     }
 
     /// <summary>
-    /// Çalışanı günceller — DepartmentId, DefaultSiteId ve ManagerId varlık kontrolleri ile kendi kendini yönetici atamama kurallarını işletir.
+    /// Çalışanı günceller — DepartmentId, DefaultWarehouseId ve ManagerId varlık kontrolleri ile kendi kendini yönetici atamama kurallarını işletir.
     /// </summary>
     public async Task<Worker> UpdateAsync(Worker existing, UpdateWorkerModel model)
     {
@@ -68,8 +68,8 @@ public class WorkerManager : BaseManager<Worker>
             model.DepartmentId);
 
         await EnsureExistsInAsync(
-            _siteRepository,
-            model.DefaultSiteId);
+            _warehouseRepository,
+            model.DefaultWarehouseId);
 
         await EnsureExistsInAsync(
             Repository,

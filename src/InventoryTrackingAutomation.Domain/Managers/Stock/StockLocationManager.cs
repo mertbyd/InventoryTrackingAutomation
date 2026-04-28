@@ -18,20 +18,20 @@ namespace InventoryTrackingAutomation.Managers.Stock;
 public class StockLocationManager : BaseManager<StockLocation>
 {
     private readonly IProductRepository _productRepository;
-    private readonly ISiteRepository _siteRepository;
+    private readonly IWarehouseRepository _warehouseRepository;
     private readonly IVehicleRepository _vehicleRepository;
     private readonly IMapper _mapper;
 
     public StockLocationManager(
         IStockLocationRepository repository,
         IProductRepository productRepository,
-        ISiteRepository siteRepository,
+        IWarehouseRepository warehouseRepository,
         IVehicleRepository vehicleRepository,
         IMapper mapper)
         : base(repository)
     {
         _productRepository = productRepository;
-        _siteRepository = siteRepository;
+        _warehouseRepository = warehouseRepository;
         _vehicleRepository = vehicleRepository;
         _mapper = mapper;
     }
@@ -66,7 +66,7 @@ public class StockLocationManager : BaseManager<StockLocation>
         await EnsureExistsInAsync(_productRepository, productId);
         if (locationType == InventoryLocationTypeEnum.Warehouse)
         {
-            await EnsureExistsInAsync<Site>(_siteRepository, locationId);
+            await EnsureExistsInAsync<Warehouse>(_warehouseRepository, locationId);
             return;
         }
 

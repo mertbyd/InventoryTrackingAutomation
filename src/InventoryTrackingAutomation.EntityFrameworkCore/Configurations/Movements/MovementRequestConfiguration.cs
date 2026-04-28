@@ -24,14 +24,14 @@ public class MovementRequestConfiguration : IEntityTypeConfiguration<MovementReq
             .HasForeignKey(x => x.RequestedByWorkerId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasOne<Site>()
+        builder.HasOne<Warehouse>()
             .WithMany()
-            .HasForeignKey(x => x.SourceSiteId)
+            .HasForeignKey(x => x.SourceWarehouseId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasOne<Site>()
+        builder.HasOne<Warehouse>()
             .WithMany()
-            .HasForeignKey(x => x.TargetSiteId)
+            .HasForeignKey(x => x.TargetWarehouseId)
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne<Vehicle>()

@@ -16,7 +16,7 @@ using Volo.Abp.EventBus.Local;
 namespace InventoryTrackingAutomation.Managers.Workflows;
 
 // Dinamik iş akışı yürütme manager'ı — instance başlatır, çok adımlı state machine ile onayları yönlendirir.
-// Onaycı çözümleme tamamen IWorkflowApproverResolver'a delege edilir; manager initiator/site mantığı bilmez.
+// Onaycı çözümleme tamamen IWorkflowApproverResolver'a delege edilir; manager initiator/Warehouse mantığı bilmez.
 public class WorkflowManager : DomainService
 {
     private readonly IWorkflowDefinitionRepository _workflowDefinitionRepository;

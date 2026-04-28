@@ -13,7 +13,7 @@ public class Worker : FullAuditedEntity<Guid>
     public string RegistrationNumber { get; set; }   // Sicil/personel numarası. Örnek: "EMP-2024-001"
     public WorkerTypeEnum WorkerType { get; set; }   // Çalışan tipi. Örnek: WorkerTypeEnum.BlueCollar
     public Guid? DepartmentId { get; set; }          // Bağlı olduğu departman. Örnek: Department Id'si
-    public Guid? DefaultSiteId { get; set; }         // Varsayılan lokasyonu. Örnek: Site Id'si
+    public Guid? DefaultWarehouseId { get; set; }         // Varsayılan lokasyonu. Örnek: Warehouse Id'si
     public Guid? ManagerId { get; set; }             // Yöneticisinin kimliği (self-ref hiyerarşi). Örnek: Başka bir Worker Id'si
     public bool IsActive { get; set; }               // Çalışan aktif mi. Örnek: true
 

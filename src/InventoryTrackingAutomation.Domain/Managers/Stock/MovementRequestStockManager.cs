@@ -48,7 +48,7 @@ public class MovementRequestStockManager : DomainService
         var sourceLocation = await _stockLocationRepository.FindAsync(x =>
             x.ProductId == line.ProductId &&
             x.LocationType == InventoryLocationTypeEnum.Warehouse &&
-            x.LocationId == request.SourceSiteId);
+            x.LocationId == request.SourceWarehouseId);
 
         if (sourceLocation == null || sourceLocation.Quantity < line.Quantity)
         {
@@ -94,7 +94,7 @@ public class MovementRequestStockManager : DomainService
         return await _stockLocationRepository.FindAsync(x =>
             x.ProductId == line.ProductId &&
             x.LocationType == InventoryLocationTypeEnum.Warehouse &&
-            x.LocationId == request.TargetSiteId);
+            x.LocationId == request.TargetWarehouseId);
     }
 
     private StockLocation CreateTargetStockLocation(
@@ -108,7 +108,7 @@ public class MovementRequestStockManager : DomainService
             ProductId = line.ProductId,
             LocationType = targetLocationType,
             LocationId = targetLocationType == InventoryLocationTypeEnum.Warehouse
-                ? request.TargetSiteId
+                ? request.TargetWarehouseId
                 : request.RequestedVehicleId!.Value,
             Quantity = line.Quantity,
             ReservedQuantity = 0
@@ -127,10 +127,10 @@ public class MovementRequestStockManager : DomainService
             TransactionType = ResolveTransactionType(targetLocationType),
             Quantity = line.Quantity,
             SourceLocationType = InventoryLocationTypeEnum.Warehouse,
-            SourceLocationId = request.SourceSiteId,
+            SourceLocationId = request.SourceWarehouseId,
             TargetLocationType = targetLocationType,
             TargetLocationId = targetLocationType == InventoryLocationTypeEnum.Warehouse
-                ? request.TargetSiteId
+                ? request.TargetWarehouseId
                 : request.RequestedVehicleId,
             RelatedMovementRequestId = request.Id,
             RelatedTaskId = activeVehicleTaskId,

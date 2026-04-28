@@ -8,7 +8,7 @@ namespace InventoryTrackingAutomation.Entities.Stock;
 /// <summary>
 /// Tum depo/arac stok hareketlerinin kronolojik denetim kaydini temsil eder.
 /// </summary>
-public class InventoryTransaction : FullAuditedAggregateRoot<Guid>, IMultiTenant
+public class InventoryTransaction : FullAuditedEntity<Guid>, IMultiTenant
 {
     public Guid ProductId { get; set; }                                  // Hareket eden urun Id'si.
     public InventoryTransactionTypeEnum TransactionType { get; set; }    // Transfer islem tipi.

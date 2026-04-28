@@ -26,7 +26,7 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
     private readonly IRepository<InventoryTrackingAutomation.Entities.Lookups.Department, Guid> _departmentRepository;
     private readonly IRepository<InventoryTrackingAutomation.Entities.Lookups.ProductCategory, Guid> _productCategoryRepository;
     private readonly IRepository<Product, Guid> _productRepository;
-    private readonly IRepository<Site, Guid> _siteRepository;
+    private readonly IRepository<Warehouse, Guid> _warehouseRepository;
     private readonly IRepository<Worker, Guid> _workerRepository;
     private readonly IRepository<Vehicle, Guid> _vehicleRepository;
     private readonly IRepository<InventoryTrackingAutomation.Entities.Stock.StockLocation, Guid> _stockLocationRepository;
@@ -40,7 +40,7 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
         IRepository<InventoryTrackingAutomation.Entities.Lookups.Department, Guid> departmentRepository,
         IRepository<InventoryTrackingAutomation.Entities.Lookups.ProductCategory, Guid> productCategoryRepository,
         IRepository<Product, Guid> productRepository,
-        IRepository<Site, Guid> siteRepository,
+        IRepository<Warehouse, Guid> warehouseRepository,
         IRepository<Worker, Guid> workerRepository,
         IRepository<Vehicle, Guid> vehicleRepository,
         IRepository<InventoryTrackingAutomation.Entities.Stock.StockLocation, Guid> stockLocationRepository,
@@ -53,7 +53,7 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
         _departmentRepository = departmentRepository;
         _productCategoryRepository = productCategoryRepository;
         _productRepository = productRepository;
-        _siteRepository = siteRepository;
+        _warehouseRepository = warehouseRepository;
         _workerRepository = workerRepository;
         _vehicleRepository = vehicleRepository;
         _stockLocationRepository = stockLocationRepository;
@@ -121,52 +121,28 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
             ekipmanCatId = (await _productCategoryRepository.FirstOrDefaultAsync(x => x.Code == "CAT-02"))?.Id ?? default;
         }
 
-        // 3. Site (Lokasyon/Şantiye/Depo) verileri
-        if (await _siteRepository.GetCountAsync() == 0)
+        // 3. Warehouse (Lokasyon/Şantiye/Depo) verileri
+        if (await _warehouseRepository.GetCountAsync() == 0)
         {
             // İlk uygun manager worker'ı bul
             // İlk saha teknikeri bul
             // Merkez Deposu
-            await _siteRepository.InsertAsync(new Site(_guidGenerator.Create())
+            await _warehouseRepository.InsertAsync(new Warehouse(_guidGenerator.Create())
             {
                 Code = "WH-01",
                 Name = "Merkez Lojistik Deposu",
-                SiteType = SiteTypeEnum.Warehouse,
                 ManagerWorkerId = null,
                 Address = "Ataşehir / İstanbul",
                 IsActive = true
             }, autoSave: true);
 
             // İkinci Depo
-            await _siteRepository.InsertAsync(new Site(_guidGenerator.Create())
+            await _warehouseRepository.InsertAsync(new Warehouse(_guidGenerator.Create())
             {
                 Code = "WH-02",
                 Name = "Anadolu Yakası Depo",
-                SiteType = SiteTypeEnum.Warehouse,
                 ManagerWorkerId = null,
                 Address = "Tuzla / İstanbul",
-                IsActive = true
-            }, autoSave: true);
-
-            // Kadıköy Şantiyesi
-            await _siteRepository.InsertAsync(new Site(_guidGenerator.Create())
-            {
-                Code = "ST-01",
-                Name = "Kadıköy Kentsel Dönüşüm Şantiyesi",
-                SiteType = SiteTypeEnum.Field,
-                ManagerWorkerId = null,
-                Address = "Kadıköy / İstanbul",
-                IsActive = true
-            }, autoSave: true);
-
-            // Taksim Şantiyesi
-            await _siteRepository.InsertAsync(new Site(_guidGenerator.Create())
-            {
-                Code = "ST-02",
-                Name = "Taksim Meydanı Renovasyon",
-                SiteType = SiteTypeEnum.Field,
-                ManagerWorkerId = null,
-                Address = "Taksim / İstanbul",
                 IsActive = true
             }, autoSave: true);
         }
@@ -307,21 +283,20 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
         // 6. Users (IdentityUser) + Workers
         await SeedUsersAndWorkersAsync();
 
-        // 7. Site manager atamalarını deterministik RegNo lookup ile yap
-        await AssignSiteManagersAsync();
+        // 7. Warehouse manager atamalarını deterministik RegNo lookup ile yap
+        await AssignWarehouseManagersAsync();
 
         // 8. StockLocation (Stok) verileri
         if (await _stockLocationRepository.GetCountAsync() == 0)
         {
             var allProducts = await _productRepository.GetListAsync();
-            var allSites = await _siteRepository.GetListAsync();
-            var warehouseSites = allSites.Where(s => s.SiteType == SiteTypeEnum.Warehouse).ToList();
-            var fieldSites = allSites.Where(s => s.SiteType == SiteTypeEnum.Field).ToList();
+            var allWarehouses = await _warehouseRepository.GetListAsync();
+            var warehouseWarehouses = allWarehouses.ToList();
 
             // Depolardaki stok verileri
-            if (warehouseSites.Count > 0)
+            if (warehouseWarehouses.Count > 0)
             {
-                var warehouse1 = warehouseSites[0];
+                var warehouse1 = warehouseWarehouses[0];
 
                 // Beton - Depo 1
                 var beton = allProducts.FirstOrDefault(x => x.Code == "PRD-01");
@@ -436,9 +411,9 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
                 }
 
                 // İkinci depo stokları
-                if (warehouseSites.Count > 1)
+                if (warehouseWarehouses.Count > 1)
                 {
-                    var warehouse2 = warehouseSites[1];
+                    var warehouse2 = warehouseWarehouses[1];
                     if (beton != null)
                     {
                         await _stockLocationRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Stock.StockLocation(_guidGenerator.Create())
@@ -453,24 +428,6 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
                 }
             }
 
-            // Saha yerleştirmelerindeki stoklar (daha düşük)
-            if (fieldSites.Count > 0)
-            {
-                var fieldSite = fieldSites[0];
-                var equipmentProducts = allProducts.Where(p => p.Code.StartsWith("EQP")).ToList();
-
-                foreach (var product in equipmentProducts)
-                {
-                    await _stockLocationRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Stock.StockLocation(_guidGenerator.Create())
-                    {
-                        ProductId = product.Id,
-                        LocationType = InventoryLocationTypeEnum.Warehouse,
-                        LocationId = fieldSite.Id,
-                        Quantity = 2,
-                        ReservedQuantity = 0
-                    }, autoSave: true);
-                }
-            }
         }
 
         // 8. Workflow (İş Akışı) verileri
@@ -498,7 +455,7 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
                 workflowDefinitionId: workflowDef.Id,
                 stepOrder: 2,
                 requiredRoleName: null,
-                resolverKey: "TargetSiteManager"
+                resolverKey: "TargetWarehouseManager"
             ));
 
             // Adım 3: Kaynak deposunun yöneticisi onaylamalı
@@ -507,7 +464,7 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
                 workflowDefinitionId: workflowDef.Id,
                 stepOrder: 3,
                 requiredRoleName: null,
-                resolverKey: "SourceSiteManager"
+                resolverKey: "SourceWarehouseManager"
             ));
 
             await _workflowDefinitionRepository.InsertAsync(workflowDef, autoSave: true);
@@ -517,7 +474,7 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
     private async Task CleanupOrphanWorkersAsync()
     {
         // UserId'si AbpUsers'da bulunmayan Worker kayıtlarını temizle.
-        // Bu kayıtlar önceki seed sürümlerinden kalabilir; site manager FK'sini
+        // Bu kayıtlar önceki seed sürümlerinden kalabilir; Warehouse manager FK'sini
         // bunlara bağlamak workflow'u kırar (login imkansız).
         var allWorkers = await _workerRepository.GetListAsync();
         foreach (var worker in allWorkers)
@@ -527,12 +484,12 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
             var user = await _identityUserManager.FindByIdAsync(worker.UserId.ToString());
             if (user == null)
             {
-                // Önce bu worker'ı manager olarak gösteren siteleri null'a çek
-                var orphanedSites = await _siteRepository.GetListAsync(s => s.ManagerWorkerId == worker.Id);
-                foreach (var site in orphanedSites)
+                // Önce bu worker'ı manager olarak gösteren Warehouseleri null'a çek
+                var orphanedWarehouses = await _warehouseRepository.GetListAsync(s => s.ManagerWorkerId == worker.Id);
+                foreach (var Warehouse in orphanedWarehouses)
                 {
-                    site.ManagerWorkerId = null;
-                    await _siteRepository.UpdateAsync(site, autoSave: true);
+                    Warehouse.ManagerWorkerId = null;
+                    await _warehouseRepository.UpdateAsync(Warehouse, autoSave: true);
                 }
 
                 // Sonra worker'ı manager gösteren diğer worker'ları null'a çek (hiyerarşi)
@@ -548,7 +505,7 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
         }
     }
 
-    private async Task AssignSiteManagersAsync()
+    private async Task AssignWarehouseManagersAsync()
     {
         // Deterministik atama - RegNo bazlı lookup, [0] indeksleme yerine
         var manager01 = await _workerRepository.FirstOrDefaultAsync(w => w.RegistrationNumber == "MGR-001");
@@ -560,24 +517,22 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
             return;
         }
 
-        var siteManagerMap = new (string SiteCode, Guid ManagerWorkerId)[]
+        var WarehouseManagerMap = new (string WarehouseCode, Guid ManagerWorkerId)[]
         {
             ("WH-01", manager01.Id),
             ("WH-02", manager01.Id),
-            ("ST-01", warehouse01.Id),
-            ("ST-02", warehouse01.Id),
         };
 
-        foreach (var (siteCode, managerId) in siteManagerMap)
+        foreach (var (WarehouseCode, managerId) in WarehouseManagerMap)
         {
-            var site = await _siteRepository.FirstOrDefaultAsync(s => s.Code == siteCode);
-            if (site == null) continue;
+            var Warehouse = await _warehouseRepository.FirstOrDefaultAsync(s => s.Code == WarehouseCode);
+            if (Warehouse == null) continue;
 
             // Idempotent - sadece null ya da farklıysa güncelle (re-seed güvenli)
-            if (site.ManagerWorkerId != managerId)
+            if (Warehouse.ManagerWorkerId != managerId)
             {
-                site.ManagerWorkerId = managerId;
-                await _siteRepository.UpdateAsync(site, autoSave: true);
+                Warehouse.ManagerWorkerId = managerId;
+                await _warehouseRepository.UpdateAsync(Warehouse, autoSave: true);
             }
         }
     }
@@ -733,16 +688,15 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
             new { Username = "manager.vehicle", Email = "manager.vehicle@inventorysystem.local", Password = "123456aA@", FullName = "Araç Servis Müdürü", Roles = new[] { InventoryTrackingAutomationRoleConstants.VehicleManager }, RegNo = "MGR-VHC-001", WorkerType = WorkerTypeEnum.WhiteCollar, ManagerUsername = "manager.istanbul" }
         };
 
-        // Departmanlar ve siteler hazırla
+        // Departmanlar ve Warehouseler hazırla
         var departments = await _departmentRepository.GetListAsync();
         var lojistikDep = departments.Find(x => x.Code == "DEP-LOJ") ??
                          (await _departmentRepository.FirstOrDefaultAsync(x => x.Name.Contains("Lojistik")));
         var sahaDepId = departments.Find(x => x.Code == "DEP-SAH")?.Id ??
                        (await _departmentRepository.FirstOrDefaultAsync(x => x.Name.Contains("Saha")))?.Id;
 
-        var sites = await _siteRepository.GetListAsync();
-        var warehouseSite = sites.Find(x => x.Code == "WH-01");
-        var fieldSite = sites.Find(x => x.Code == "ST-01");
+        var Warehouses = await _warehouseRepository.GetListAsync();
+        var warehouseWarehouse = Warehouses.Find(x => x.Code == "WH-01");
 
         // Adım 1: Kullanıcı ve worker'ları oluştur (ManagerId henüz set etme)
         foreach (var userInfo in usersToCreate)
@@ -787,7 +741,7 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
                 RegistrationNumber = userInfo.RegNo,
                 WorkerType = userInfo.WorkerType,
                 DepartmentId = userInfo.WorkerType == WorkerTypeEnum.WhiteCollar ? lojistikDep?.Id : sahaDepId,
-                DefaultSiteId = userInfo.WorkerType == WorkerTypeEnum.WhiteCollar ? warehouseSite?.Id : fieldSite?.Id,
+                DefaultWarehouseId = userInfo.WorkerType == WorkerTypeEnum.WhiteCollar ? warehouseWarehouse?.Id : null,
                 IsActive = true,
                 ManagerId = null // Adım 2'de set edelim
             };

@@ -5,11 +5,11 @@ using Volo.Abp.EntityFrameworkCore.Modeling;
 
 namespace InventoryTrackingAutomation.EntityFrameworkCore.Configurations.Masters;
 
-public class SiteConfiguration : IEntityTypeConfiguration<Site>
+public class WarehouseConfiguration : IEntityTypeConfiguration<Warehouse>
 {
-    public void Configure(EntityTypeBuilder<Site> builder)
+    public void Configure(EntityTypeBuilder<Warehouse> builder)
     {
-        builder.ToTable("Sites", InventoryTrackingAutomationDbProperties.MasterSchema);
+        builder.ToTable("warehouses", InventoryTrackingAutomationDbProperties.MasterSchema);
         builder.ConfigureByConvention();
 
         builder.Property(x => x.Code).HasMaxLength(50);
