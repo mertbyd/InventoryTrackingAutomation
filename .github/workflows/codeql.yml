@@ -5,10 +5,12 @@ on:
     branches:
       - main
       - master
+      - development
   pull_request:
     branches:
       - main
       - master
+      - development
     types: [opened, synchronize, reopened, ready_for_review]
   schedule:
     - cron: '0 6 * * 1'
