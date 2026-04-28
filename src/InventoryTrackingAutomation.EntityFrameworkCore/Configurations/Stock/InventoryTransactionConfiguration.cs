@@ -31,7 +31,7 @@ public class InventoryTransactionConfiguration : IEntityTypeConfiguration<Invent
             .HasForeignKey(x => x.RelatedMovementRequestId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasOne<InventoryTask>()
+        builder.HasOne<VehicleTask>()
             .WithMany()
             .HasForeignKey(x => x.RelatedTaskId)
             .OnDelete(DeleteBehavior.Restrict);
