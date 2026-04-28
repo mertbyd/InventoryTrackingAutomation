@@ -8,6 +8,7 @@ using InventoryTrackingAutomation.Interface.Stock;
 using InventoryTrackingAutomation.Managers.Stock;
 using InventoryTrackingAutomation.Models.Stock;
 using InventoryTrackingAutomation.Services.Stock;
+using FluentValidation;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Uow;
 
@@ -18,12 +19,21 @@ public class StockLocationAppService : InventoryTrackingAutomationAppService, IS
 {
     private readonly IStockLocationRepository _repository;
     private readonly StockLocationManager _manager;
+    private readonly IValidator<CreateStockLocationDto> _createValidator;
+    private readonly IValidator<UpdateStockLocationDto> _updateValidator;
     private readonly IMapper _mapper;
 
-    public StockLocationAppService(IStockLocationRepository repository, StockLocationManager manager, IMapper mapper)
+    public StockLocationAppService(
+        IStockLocationRepository repository,
+        StockLocationManager manager,
+        IValidator<CreateStockLocationDto> createValidator,
+        IValidator<UpdateStockLocationDto> updateValidator,
+        IMapper mapper)
     {
         _repository = repository;
         _manager = manager;
+        _createValidator = createValidator;
+        _updateValidator = updateValidator;
         _mapper = mapper;
     }
 
@@ -43,6 +53,7 @@ public class StockLocationAppService : InventoryTrackingAutomationAppService, IS
     [UnitOfWork]
     public async Task<StockLocationDto> CreateAsync(CreateStockLocationDto input)
     {
+        await _createValidator.ValidateAndThrowAsync(input);
         var model = _mapper.Map<CreateStockLocationDto, CreateStockLocationModel>(input);
         var entity = await _manager.CreateAsync(model);
         var inserted = await _repository.InsertAsync(entity, autoSave: true);
@@ -55,6 +66,7 @@ public class StockLocationAppService : InventoryTrackingAutomationAppService, IS
         var entities = new List<StockLocation>();
         foreach (var dto in inputs)
         {
+            await _createValidator.ValidateAndThrowAsync(dto);
             var model = _mapper.Map<CreateStockLocationDto, CreateStockLocationModel>(dto);
             entities.Add(await _manager.CreateAsync(model));
         }
@@ -66,6 +78,7 @@ public class StockLocationAppService : InventoryTrackingAutomationAppService, IS
     [UnitOfWork]
     public async Task<StockLocationDto> UpdateAsync(Guid id, UpdateStockLocationDto input)
     {
+        await _updateValidator.ValidateAndThrowAsync(input);
         var existing = await _manager.EnsureExistsAsync(id);
         var model = _mapper.Map<UpdateStockLocationDto, UpdateStockLocationModel>(input);
         var updated = await _manager.UpdateAsync(existing, model);
