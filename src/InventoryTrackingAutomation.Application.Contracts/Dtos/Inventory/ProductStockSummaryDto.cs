@@ -6,6 +6,8 @@ namespace InventoryTrackingAutomation.Dtos.Inventory;
 /// <summary>
 /// Urun stok ozetini depo/arac/gorev dagilimi ile donduren DTO.
 /// </summary>
+//işlevi: ProductStockSummary verisinin transferi sırasında taşınacak olan yapıyı tanımlar.
+//sistemdeki görevi: Katmanlar arası veri alışverişini standartlaştırır.
 public class ProductStockSummaryDto
 {
     public Guid ProductId { get; set; }                                          // Ozetlenen urun Id'si.

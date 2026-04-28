@@ -20,6 +20,8 @@ using Microsoft.AspNetCore.Authorization;
 namespace InventoryTrackingAutomation.Services.Workflows;
 
 // Dinamik iş akışlarını dış dünyaya açan application servisi — başlatma ve onay/red yönlendirmesi.
+//işlevi: Workflow iş mantığını koordine eder ve DTO dönüşümlerini yönetir.
+//sistemdeki görevi: Uygulama katmanındaki kullanım senaryolarını (use-case) gerçekleştiren ana servis birimidir.
 public class WorkflowAppService : InventoryTrackingAutomationAppService, IWorkflowAppService
 {
     // Domain manager — iş akışı state machine ve onaycı çözümleme.
@@ -55,6 +57,8 @@ public class WorkflowAppService : InventoryTrackingAutomationAppService, IWorkfl
 
     // Yeni iş akışı süreci başlatır — initiator CurrentUser'dan çözülür, manager state machine'i kurar, instance persist edilir.
     [UnitOfWork]
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<WorkflowInstanceDto> StartAsync(StartWorkflowDto input)
     {
         var currentUserId = CurrentUser.Id.Value;
@@ -67,6 +71,8 @@ public class WorkflowAppService : InventoryTrackingAutomationAppService, IWorkfl
 
     // Belirtilen iş akışı adımında onay/red aksiyonunu işler — yetki kontrolünü manager yapar, kararı persist eder.
     [UnitOfWork]
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<WorkflowInstanceStepDto> ProcessApprovalAsync(ProcessApprovalDto input)
     {
         var currentUserId = CurrentUser.Id.Value;
@@ -81,6 +87,8 @@ public class WorkflowAppService : InventoryTrackingAutomationAppService, IWorkfl
 
     // Belirtilen workflow instance içindeki mevcut bekleyen adımı bulur ve generic onay akışına yollar.
     [UnitOfWork]
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<WorkflowInstanceStepDto> ProcessInstanceApprovalAsync(
         Guid instanceId,
         ProcessWorkflowInstanceApprovalDto input)
@@ -119,6 +127,8 @@ public class WorkflowAppService : InventoryTrackingAutomationAppService, IWorkfl
     }
 
     // Mevcut kullanıcıya atanmış tüm bekleyen iş akışı adımlarını entity-agnostic olarak döner.
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<List<PendingWorkflowStepDto>> GetMyPendingApprovalsAsync()
     {
         var currentUserId = CurrentUser.Id.Value;
@@ -154,6 +164,8 @@ public class WorkflowAppService : InventoryTrackingAutomationAppService, IWorkfl
     }
 
     // Bir iş akışı süreci için tam tarihçeyi döner — kim başlattı, geçmiş/mevcut/gelecek adımlar tek yapıda.
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<WorkflowHistoryDto> GetHistoryAsync(Guid instanceId)
     {
         var instance = await _workflowInstanceRepository.FindAsync(instanceId);

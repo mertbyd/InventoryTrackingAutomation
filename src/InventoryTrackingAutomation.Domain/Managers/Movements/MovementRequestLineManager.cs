@@ -10,6 +10,8 @@ namespace InventoryTrackingAutomation.Managers.Movements;
 /// <summary>
 /// Hareket talebi satırı domain manager'ı — MovementRequestLine entity'si için iş kuralları ve validasyonları.
 /// </summary>
+//işlevi: MovementRequestLine etki alanı (domain) kurallarını ve karmaşık veri bütünlüğünü sağlar.
+//sistemdeki görevi: Domain katmanındaki iş kurallarının merkezi yönetimini ve validasyonunu sağlar.
 public class MovementRequestLineManager : BaseManager<MovementRequestLine>
 {
     private readonly IMovementRequestRepository _movementRequestRepository;  // MovementRequestId FK validasyonu için
@@ -34,6 +36,8 @@ public class MovementRequestLineManager : BaseManager<MovementRequestLine>
     /// <summary>
     /// Yeni hareket talebi satırı oluşturur — MovementRequestId ve ProductId varlık kontrolü yapar.
     /// </summary>
+//işlevi: Etki alanı kuralını veya validasyonunu işletir.
+//sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
     public async Task<MovementRequestLine> CreateAsync(CreateMovementRequestLineModel model)
     {
         await EnsureExistsInAsync(
@@ -52,6 +56,8 @@ public class MovementRequestLineManager : BaseManager<MovementRequestLine>
     /// <summary>
     /// Hareket talebi satırını günceller — MovementRequestId ve ProductId varlık kontrolleri yapar.
     /// </summary>
+//işlevi: Etki alanı kuralını veya validasyonunu işletir.
+//sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
     public async Task<MovementRequestLine> UpdateAsync(MovementRequestLine existing, UpdateMovementRequestLineModel model)
     {
         if (existing.MovementRequestId != model.MovementRequestId)

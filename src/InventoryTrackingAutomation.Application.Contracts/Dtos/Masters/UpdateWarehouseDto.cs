@@ -5,6 +5,8 @@ namespace InventoryTrackingAutomation.Dtos.Masters;
 /// <summary>
 /// Depo guncelleme request DTO'su.
 /// </summary>
+//işlevi: UpdateWarehouse verisinin transferi sırasında taşınacak olan yapıyı tanımlar.
+//sistemdeki görevi: Katmanlar arası veri alışverişini standartlaştırır.
 public class UpdateWarehouseDto
 {
     public string Code { get; set; } = default!;      // Deponun benzersiz is kodu.

@@ -18,6 +18,8 @@ namespace InventoryTrackingAutomation.Controllers.Workflows;
 [ApiExplorerSettings(GroupName = "Workflows")]
 [Tags("Workflows")]
 [Authorize] // İşlemlerin tümünde giriş yapmış kullanıcı kimliği (CurrentUser.Id) gerekir.
+//işlevi: Workflow modülü için HTTP isteklerini karşılar.
+//sistemdeki görevi: Dış dünya ile sistem arasındaki iletişimi sağlayan API uç noktasıdır.
 public class WorkflowController : InventoryTrackingAutomationController, IWorkflowAppService
 {
     private readonly IWorkflowAppService _workflowAppService;
@@ -32,6 +34,8 @@ public class WorkflowController : InventoryTrackingAutomationController, IWorkfl
     /// </summary>
     [HttpPost("start")]
     [Authorize(InventoryTrackingAutomationPermissions.Workflows.Approve)]
+//işlevi: İlgili HTTP isteğini işler ve servis katmanına yönlendirir.
+//sistemdeki görevi: Belirli bir API aksiyonunun giriş noktasını tanımlar.
     public async Task<WorkflowInstanceDto> StartAsync([FromBody] StartWorkflowDto input)
     {
         return await _workflowAppService.StartAsync(input);
@@ -42,6 +46,8 @@ public class WorkflowController : InventoryTrackingAutomationController, IWorkfl
     /// </summary>
     [HttpPost("process-approval")]
     [Authorize(InventoryTrackingAutomationPermissions.Workflows.Approve)]
+//işlevi: İlgili HTTP isteğini işler ve servis katmanına yönlendirir.
+//sistemdeki görevi: Belirli bir API aksiyonunun giriş noktasını tanımlar.
     public async Task<WorkflowInstanceStepDto> ProcessApprovalAsync([FromBody] ProcessApprovalDto input)
     {
         return await _workflowAppService.ProcessApprovalAsync(input);
@@ -52,6 +58,8 @@ public class WorkflowController : InventoryTrackingAutomationController, IWorkfl
     /// </summary>
     [HttpPost("{instanceId}/process-approval")]
     [Authorize(InventoryTrackingAutomationPermissions.Workflows.Approve)]
+//işlevi: İlgili HTTP isteğini işler ve servis katmanına yönlendirir.
+//sistemdeki görevi: Belirli bir API aksiyonunun giriş noktasını tanımlar.
     public async Task<WorkflowInstanceStepDto> ProcessInstanceApprovalAsync(
         Guid instanceId,
         [FromBody] ProcessWorkflowInstanceApprovalDto input)
@@ -64,6 +72,8 @@ public class WorkflowController : InventoryTrackingAutomationController, IWorkfl
     /// </summary>
     [HttpGet("my-pending-approvals")]
     [Authorize(InventoryTrackingAutomationPermissions.Workflows.View)]
+//işlevi: İlgili HTTP isteğini işler ve servis katmanına yönlendirir.
+//sistemdeki görevi: Belirli bir API aksiyonunun giriş noktasını tanımlar.
     public async Task<List<PendingWorkflowStepDto>> GetMyPendingApprovalsAsync()
     {
         return await _workflowAppService.GetMyPendingApprovalsAsync();
@@ -74,6 +84,8 @@ public class WorkflowController : InventoryTrackingAutomationController, IWorkfl
     /// </summary>
     [HttpGet("{instanceId}/history")]
     [Authorize(InventoryTrackingAutomationPermissions.Workflows.View)]
+//işlevi: İlgili HTTP isteğini işler ve servis katmanına yönlendirir.
+//sistemdeki görevi: Belirli bir API aksiyonunun giriş noktasını tanımlar.
     public async Task<WorkflowHistoryDto> GetHistoryAsync(Guid instanceId)
     {
         return await _workflowAppService.GetHistoryAsync(instanceId);

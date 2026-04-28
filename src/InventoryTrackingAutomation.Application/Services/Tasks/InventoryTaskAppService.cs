@@ -16,6 +16,8 @@ using Volo.Abp.Uow;
 namespace InventoryTrackingAutomation.Application.Services.Tasks;
 
 // Envanter gorevi application servisi - is kurallari InventoryTaskManager'da kalir.
+//işlevi: InventoryTask iş mantığını koordine eder ve DTO dönüşümlerini yönetir.
+//sistemdeki görevi: Uygulama katmanındaki kullanım senaryolarını (use-case) gerçekleştiren ana servis birimidir.
 public class InventoryTaskAppService : InventoryTrackingAutomationAppService, IInventoryTaskAppService
 {
     private readonly IInventoryTaskRepository _repository;
@@ -41,12 +43,16 @@ public class InventoryTaskAppService : InventoryTrackingAutomationAppService, II
         _mapper = mapper;
     }
 
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<InventoryTaskDto> GetAsync(Guid id)
     {
         var entity = await _manager.EnsureExistsAsync(id);
         return _mapper.Map<InventoryTask, InventoryTaskDto>(entity);
     }
 
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<PagedResultDto<InventoryTaskDto>> GetListAsync(PagedResultRequestDto input)
     {
         var totalCount = await _repository.GetCountAsync();
@@ -54,12 +60,16 @@ public class InventoryTaskAppService : InventoryTrackingAutomationAppService, II
         return new PagedResultDto<InventoryTaskDto>(totalCount, _mapper.Map<List<InventoryTask>, List<InventoryTaskDto>>(entities));
     }
 
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<List<TaskVehicleDto>> GetVehiclesAsync(Guid id)
     {
         var vehicles = await _inventoryQueryManager.GetTaskVehiclesAsync(id);
         return _mapper.Map<List<TaskVehicleModel>, List<TaskVehicleDto>>(vehicles);
     }
 
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<List<TaskInventoryDto>> GetInventoryAsync(Guid id)
     {
         var inventory = await _inventoryQueryManager.GetTaskInventoryAsync(id);
@@ -67,6 +77,8 @@ public class InventoryTaskAppService : InventoryTrackingAutomationAppService, II
     }
 
     [UnitOfWork]
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<InventoryTaskDto> CreateAsync(CreateInventoryTaskDto input)
     {
         await _createValidator.ValidateAndThrowAsync(input);
@@ -77,6 +89,8 @@ public class InventoryTaskAppService : InventoryTrackingAutomationAppService, II
     }
 
     [UnitOfWork]
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<List<InventoryTaskDto>> CreateManyAsync(List<CreateInventoryTaskDto> inputs)
     {
         var entities = new List<InventoryTask>();
@@ -92,6 +106,8 @@ public class InventoryTaskAppService : InventoryTrackingAutomationAppService, II
     }
 
     [UnitOfWork]
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<InventoryTaskDto> UpdateAsync(Guid id, UpdateInventoryTaskDto input)
     {
         await _updateValidator.ValidateAndThrowAsync(input);
@@ -103,6 +119,8 @@ public class InventoryTaskAppService : InventoryTrackingAutomationAppService, II
     }
 
     [UnitOfWork]
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task DeleteAsync(Guid id)
     {
         await _manager.EnsureExistsAsync(id);

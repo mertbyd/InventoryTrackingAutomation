@@ -17,6 +17,8 @@ namespace InventoryTrackingAutomation.Managers.Workflows;
 
 // Dinamik iş akışı yürütme manager'ı — instance başlatır, çok adımlı state machine ile onayları yönlendirir.
 // Onaycı çözümleme tamamen IWorkflowApproverResolver'a delege edilir; manager initiator/Warehouse mantığı bilmez.
+//işlevi: Workflow etki alanı (domain) kurallarını ve karmaşık veri bütünlüğünü sağlar.
+//sistemdeki görevi: Domain katmanındaki iş kurallarının merkezi yönetimini ve validasyonunu sağlar.
 public class WorkflowManager : DomainService
 {
     private readonly IWorkflowDefinitionRepository _workflowDefinitionRepository;
@@ -43,6 +45,8 @@ public class WorkflowManager : DomainService
     }
 
     // Yeni iş akışı başlatır: instance oluşturur, ilk adımın tanımını yükler, ilk onaycıyı çözer ve adımı kuyruğa alır.
+//işlevi: Etki alanı kuralını veya validasyonunu işletir.
+//sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
     public async Task<WorkflowInstance> StartWorkflowAsync(StartWorkflowModel model)
     {
         var definition = await FindAndValidateDefinitionAsync(model.WorkflowDefinitionId);
@@ -71,6 +75,8 @@ public class WorkflowManager : DomainService
     }
 
     // Onay/red kararını işler. Onaylandıysa sonraki adıma yönlendirir, reddedildiyse iş akışını sonlandırır.
+//işlevi: Etki alanı kuralını veya validasyonunu işletir.
+//sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
     public async Task<WorkflowInstanceStep> ProcessApprovalAsync(ProcessApprovalModel model)
     {
         var step = await FindAndValidateStepAsync(model.InstanceStepId);

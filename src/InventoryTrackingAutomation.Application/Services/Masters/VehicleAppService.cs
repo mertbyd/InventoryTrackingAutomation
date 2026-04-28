@@ -18,6 +18,8 @@ using Volo.Abp.Uow;
 namespace InventoryTrackingAutomation.Application.Services.Masters;
 
 // Araç application servisi — HTTP endpoint'leri için ince orkestra katmanı; iş kuralları VehicleManager'da.
+//işlevi: Vehicle iş mantığını koordine eder ve DTO dönüşümlerini yönetir.
+//sistemdeki görevi: Uygulama katmanındaki kullanım senaryolarını (use-case) gerçekleştiren ana servis birimidir.
 public class VehicleAppService : InventoryTrackingAutomationAppService, IVehicleAppService
 {
     // Read/list/persist için ana repository.
@@ -48,6 +50,8 @@ public class VehicleAppService : InventoryTrackingAutomationAppService, IVehicle
     }
 
     // Id ile aracı getirir; yoksa EntityNotFoundException.
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<VehicleDto> GetAsync(Guid id)
     {
         var entity = await _manager.EnsureExistsAsync(id);
@@ -55,6 +59,8 @@ public class VehicleAppService : InventoryTrackingAutomationAppService, IVehicle
     }
 
     // Araçları sayfalı listeler.
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<PagedResultDto<VehicleDto>> GetListAsync(PagedResultRequestDto input)
     {
         var totalCount = await _repository.GetCountAsync();
@@ -66,6 +72,8 @@ public class VehicleAppService : InventoryTrackingAutomationAppService, IVehicle
     }
 
     // Arac uzerindeki envanterleri getirir; aktif gorev baglami manager tarafinda cozulur.
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<List<VehicleInventoryDto>> GetInventoriesAsync(Guid id)
     {
         var inventories = await _inventoryQueryManager.GetVehicleInventoriesAsync(id);
@@ -74,6 +82,8 @@ public class VehicleAppService : InventoryTrackingAutomationAppService, IVehicle
 
     // Yeni araç oluşturur — manager iş kurallarını uygular, repository persist eder.
     [UnitOfWork]
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<VehicleDto> CreateAsync(CreateVehicleDto input)
     {
         await _createValidator.ValidateAndThrowAsync(input);
@@ -85,6 +95,8 @@ public class VehicleAppService : InventoryTrackingAutomationAppService, IVehicle
 
     // Birden fazla aracı toplu oluşturur.
     [UnitOfWork]
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<List<VehicleDto>> CreateManyAsync(List<CreateVehicleDto> inputs)
     {
         var entities = new List<Vehicle>();
@@ -101,6 +113,8 @@ public class VehicleAppService : InventoryTrackingAutomationAppService, IVehicle
 
     // Aracı günceller — manager iş kurallarını uygular, repository persist eder.
     [UnitOfWork]
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<VehicleDto> UpdateAsync(Guid id, UpdateVehicleDto input)
     {
         await _updateValidator.ValidateAndThrowAsync(input);
@@ -113,6 +127,8 @@ public class VehicleAppService : InventoryTrackingAutomationAppService, IVehicle
 
     // Aracı soft delete ile siler.
     [UnitOfWork]
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task DeleteAsync(Guid id)
     {
         await _manager.EnsureExistsAsync(id);

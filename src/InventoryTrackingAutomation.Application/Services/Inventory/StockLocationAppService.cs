@@ -16,6 +16,8 @@ using Volo.Abp.Uow;
 namespace InventoryTrackingAutomation.Application.Services.Stock;
 
 // Lokasyon bazli stok application servisi - is kurallari StockLocationManager'da kalir.
+//işlevi: StockLocation iş mantığını koordine eder ve DTO dönüşümlerini yönetir.
+//sistemdeki görevi: Uygulama katmanındaki kullanım senaryolarını (use-case) gerçekleştiren ana servis birimidir.
 public class StockLocationAppService : InventoryTrackingAutomationAppService, IStockLocationAppService
 {
     private readonly IStockLocationRepository _repository;
@@ -38,12 +40,16 @@ public class StockLocationAppService : InventoryTrackingAutomationAppService, IS
         _mapper = mapper;
     }
 
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<StockLocationDto> GetAsync(Guid id)
     {
         var entity = await _manager.EnsureExistsAsync(id);
         return _mapper.Map<StockLocation, StockLocationDto>(entity);
     }
 
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<PagedResultDto<StockLocationDto>> GetListAsync(PagedResultRequestDto input)
     {
         var totalCount = await _repository.GetCountAsync();
@@ -52,6 +58,8 @@ public class StockLocationAppService : InventoryTrackingAutomationAppService, IS
     }
 
     [UnitOfWork]
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<StockLocationDto> CreateAsync(CreateStockLocationDto input)
     {
         await _createValidator.ValidateAndThrowAsync(input);
@@ -62,6 +70,8 @@ public class StockLocationAppService : InventoryTrackingAutomationAppService, IS
     }
 
     [UnitOfWork]
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<List<StockLocationDto>> CreateManyAsync(List<CreateStockLocationDto> inputs)
     {
         var entities = new List<StockLocation>();
@@ -77,6 +87,8 @@ public class StockLocationAppService : InventoryTrackingAutomationAppService, IS
     }
 
     [UnitOfWork]
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<StockLocationDto> UpdateAsync(Guid id, UpdateStockLocationDto input)
     {
         await _updateValidator.ValidateAndThrowAsync(input);
@@ -88,6 +100,8 @@ public class StockLocationAppService : InventoryTrackingAutomationAppService, IS
     }
 
     [UnitOfWork]
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task DeleteAsync(Guid id)
     {
         await _manager.EnsureExistsAsync(id);

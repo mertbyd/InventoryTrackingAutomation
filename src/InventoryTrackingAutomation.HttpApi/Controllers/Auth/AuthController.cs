@@ -15,6 +15,8 @@ namespace InventoryTrackingAutomation.Controllers.Auth;
 [ApiController]
 [IgnoreAntiforgeryToken]
 [ApiExplorerSettings(GroupName = "Auth")]
+//işlevi: Auth modülü için HTTP isteklerini karşılar.
+//sistemdeki görevi: Dış dünya ile sistem arasındaki iletişimi sağlayan API uç noktasıdır.
 public class AuthController : InventoryTrackingAutomationController
 {
     private readonly IAuthAppService _authAppService;
@@ -30,6 +32,8 @@ public class AuthController : InventoryTrackingAutomationController
     /// </summary>
     [HttpPost("login")]
     [AllowAnonymous]
+//işlevi: İlgili HTTP isteğini işler ve servis katmanına yönlendirir.
+//sistemdeki görevi: Belirli bir API aksiyonunun giriş noktasını tanımlar.
     public async Task<TokenResponse> Login([FromBody] LoginDto input)
     {
         var token = await _authAppService.LoginAsync(input);
@@ -42,6 +46,8 @@ public class AuthController : InventoryTrackingAutomationController
     /// </summary>
     [HttpPost("register")]
     [AllowAnonymous]
+//işlevi: İlgili HTTP isteğini işler ve servis katmanına yönlendirir.
+//sistemdeki görevi: Belirli bir API aksiyonunun giriş noktasını tanımlar.
     public async Task<Guid> Register([FromBody] RegisterDto input)
     {
         var userId = await _authAppService.RegisterAsync(input);
@@ -54,6 +60,8 @@ public class AuthController : InventoryTrackingAutomationController
     /// </summary>
     [HttpGet("me")]
     [Authorize]
+//işlevi: İlgili HTTP isteğini işler ve servis katmanına yönlendirir.
+//sistemdeki görevi: Belirli bir API aksiyonunun giriş noktasını tanımlar.
     public async Task<Guid?> GetMe()
     {
         return await _authAppService.GetMeAsync();

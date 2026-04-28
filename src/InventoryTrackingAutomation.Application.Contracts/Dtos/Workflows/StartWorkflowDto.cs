@@ -5,6 +5,8 @@ namespace InventoryTrackingAutomation.Dtos.Workflows;
 /// <summary>
 /// İş akışını başlatmak için kullanılan DTO.
 /// </summary>
+//işlevi: StartWorkflow verisinin transferi sırasında taşınacak olan yapıyı tanımlar.
+//sistemdeki görevi: Katmanlar arası veri alışverişini standartlaştırır.
 public class StartWorkflowDto
 {
     /// <summary>

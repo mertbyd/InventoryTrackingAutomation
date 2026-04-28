@@ -5,6 +5,8 @@ namespace InventoryTrackingAutomation.Dtos.Tasks;
 /// <summary>
 /// Goreve atanmis arac bilgisini donduren DTO.
 /// </summary>
+//işlevi: TaskVehicle verisinin transferi sırasında taşınacak olan yapıyı tanımlar.
+//sistemdeki görevi: Katmanlar arası veri alışverişini standartlaştırır.
 public class TaskVehicleDto
 {
     public Guid VehicleTaskId { get; set; }   // Gorev-arac atama Id'si.

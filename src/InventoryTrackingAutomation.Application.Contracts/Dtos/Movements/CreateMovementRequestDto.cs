@@ -9,6 +9,8 @@ namespace InventoryTrackingAutomation.Dtos.Movements;
 /// Hareket talebi oluşturma request DTO'su.
 /// RequestedByWorkerId ve WorkflowInstanceId server-side çözümlenir, client'tan alınmaz.
 /// </summary>
+//işlevi: CreateMovementRequest verisinin transferi sırasında taşınacak olan yapıyı tanımlar.
+//sistemdeki görevi: Katmanlar arası veri alışverişini standartlaştırır.
 public class CreateMovementRequestDto
 {
     public string RequestNumber { get; set; }             // Talep numarası. Örnek: "MR-2024-00123"

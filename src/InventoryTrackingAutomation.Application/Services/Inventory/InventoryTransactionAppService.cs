@@ -16,6 +16,8 @@ using Volo.Abp.Uow;
 namespace InventoryTrackingAutomation.Application.Services.Stock;
 
 // Envanter hareketi application servisi - is kurallari InventoryTransactionManager'da kalir.
+//işlevi: InventoryTransaction iş mantığını koordine eder ve DTO dönüşümlerini yönetir.
+//sistemdeki görevi: Uygulama katmanındaki kullanım senaryolarını (use-case) gerçekleştiren ana servis birimidir.
 public class InventoryTransactionAppService : InventoryTrackingAutomationAppService, IInventoryTransactionAppService
 {
     private readonly IInventoryTransactionRepository _repository;
@@ -38,12 +40,16 @@ public class InventoryTransactionAppService : InventoryTrackingAutomationAppServ
         _mapper = mapper;
     }
 
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<InventoryTransactionDto> GetAsync(Guid id)
     {
         var entity = await _manager.EnsureExistsAsync(id);
         return _mapper.Map<InventoryTransaction, InventoryTransactionDto>(entity);
     }
 
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<PagedResultDto<InventoryTransactionDto>> GetListAsync(PagedResultRequestDto input)
     {
         var totalCount = await _repository.GetCountAsync();
@@ -52,6 +58,8 @@ public class InventoryTransactionAppService : InventoryTrackingAutomationAppServ
     }
 
     [UnitOfWork]
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<InventoryTransactionDto> CreateAsync(CreateInventoryTransactionDto input)
     {
         await _createValidator.ValidateAndThrowAsync(input);
@@ -62,6 +70,8 @@ public class InventoryTransactionAppService : InventoryTrackingAutomationAppServ
     }
 
     [UnitOfWork]
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<List<InventoryTransactionDto>> CreateManyAsync(List<CreateInventoryTransactionDto> inputs)
     {
         var entities = new List<InventoryTransaction>();
@@ -77,6 +87,8 @@ public class InventoryTransactionAppService : InventoryTrackingAutomationAppServ
     }
 
     [UnitOfWork]
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<InventoryTransactionDto> UpdateAsync(Guid id, UpdateInventoryTransactionDto input)
     {
         await _updateValidator.ValidateAndThrowAsync(input);
@@ -88,6 +100,8 @@ public class InventoryTransactionAppService : InventoryTrackingAutomationAppServ
     }
 
     [UnitOfWork]
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task DeleteAsync(Guid id)
     {
         await _manager.EnsureExistsAsync(id);

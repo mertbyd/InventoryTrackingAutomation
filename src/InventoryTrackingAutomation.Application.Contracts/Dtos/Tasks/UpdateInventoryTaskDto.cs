@@ -8,6 +8,8 @@ namespace InventoryTrackingAutomation.Dtos.Tasks;
 /// <summary>
 /// Envanter gorevi guncelleme request DTO'su.
 /// </summary>
+//işlevi: UpdateInventoryTask verisinin transferi sırasında taşınacak olan yapıyı tanımlar.
+//sistemdeki görevi: Katmanlar arası veri alışverişini standartlaştırır.
 public class UpdateInventoryTaskDto
 {
     public string Code { get; set; }                 // Gorev kodu.

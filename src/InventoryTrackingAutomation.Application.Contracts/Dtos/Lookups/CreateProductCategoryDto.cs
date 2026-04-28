@@ -5,6 +5,8 @@ namespace InventoryTrackingAutomation.Dtos.Lookups;
 /// <summary>
 /// Ürün kategorisi oluşturma request DTO'su.
 /// </summary>
+//işlevi: CreateProductCategory verisinin transferi sırasında taşınacak olan yapıyı tanımlar.
+//sistemdeki görevi: Katmanlar arası veri alışverişini standartlaştırır.
 public class CreateProductCategoryDto
 {
     public string Code { get; set; }       // Kategori kodu. Örnek: "CAT-001"

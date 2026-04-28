@@ -5,6 +5,8 @@ namespace InventoryTrackingAutomation.Dtos.Tasks;
 /// <summary>
 /// Gorev kapsamindaki arac envanterini donduren DTO.
 /// </summary>
+//işlevi: TaskInventory verisinin transferi sırasında taşınacak olan yapıyı tanımlar.
+//sistemdeki görevi: Katmanlar arası veri alışverişini standartlaştırır.
 public class TaskInventoryDto
 {
     public Guid InventoryTaskId { get; set; } // Gorev Id'si.

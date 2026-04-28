@@ -15,6 +15,8 @@ using Volo.Abp.Uow;
 namespace InventoryTrackingAutomation.Application.Services.Masters;
 
 // Lokasyon application servisi — HTTP endpoint'leri için ince orkestra katmanı; iş kuralları WarehouseManager'da.
+//işlevi: Warehouse iş mantığını koordine eder ve DTO dönüşümlerini yönetir.
+//sistemdeki görevi: Uygulama katmanındaki kullanım senaryolarını (use-case) gerçekleştiren ana servis birimidir.
 public class WarehouseAppService : InventoryTrackingAutomationAppService, IWarehouseAppService
 {
     // Read/list/persist için ana repository.
@@ -41,6 +43,8 @@ public class WarehouseAppService : InventoryTrackingAutomationAppService, IWareh
     }
 
     // Id ile lokasyonu getirir; yoksa EntityNotFoundException.
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<WarehouseDto> GetAsync(Guid id)
     {
         var entity = await _manager.EnsureExistsAsync(id);
@@ -48,6 +52,8 @@ public class WarehouseAppService : InventoryTrackingAutomationAppService, IWareh
     }
 
     // Lokasyonları sayfalı listeler.
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<PagedResultDto<WarehouseDto>> GetListAsync(PagedResultRequestDto input)
     {
         var totalCount = await _repository.GetCountAsync();
@@ -60,6 +66,8 @@ public class WarehouseAppService : InventoryTrackingAutomationAppService, IWareh
 
     // Yeni lokasyon oluşturur — manager iş kurallarını uygular, repository persist eder.
     [UnitOfWork]
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<WarehouseDto> CreateAsync(CreateWarehouseDto input)
     {
         await _createValidator.ValidateAndThrowAsync(input);
@@ -71,6 +79,8 @@ public class WarehouseAppService : InventoryTrackingAutomationAppService, IWareh
 
     // Birden fazla lokasyonu toplu oluşturur.
     [UnitOfWork]
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<List<WarehouseDto>> CreateManyAsync(List<CreateWarehouseDto> inputs)
     {
         var entities = new List<Warehouse>();
@@ -87,6 +97,8 @@ public class WarehouseAppService : InventoryTrackingAutomationAppService, IWareh
 
     // Lokasyonu günceller — manager iş kurallarını uygular, repository persist eder.
     [UnitOfWork]
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<WarehouseDto> UpdateAsync(Guid id, UpdateWarehouseDto input)
     {
         await _updateValidator.ValidateAndThrowAsync(input);
@@ -99,6 +111,8 @@ public class WarehouseAppService : InventoryTrackingAutomationAppService, IWareh
 
     // Lokasyonu soft delete ile siler.
     [UnitOfWork]
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task DeleteAsync(Guid id)
     {
         await _manager.EnsureExistsAsync(id);

@@ -19,6 +19,8 @@ namespace InventoryTrackingAutomation.Managers.Inventory;
 /// </summary>
 //işlevi: Fiziksel lokasyonlardaki (depo/araç) ürün stok bakiyelerini yönetir, validasyonları yapar.
 //sistemdeki görevii: Stok kayıtlarının bütünlüğünü sağlar (negatif stok engelleme, lokasyon doğrulama vb.).
+//işlevi: StockLocation etki alanı (domain) kurallarını ve karmaşık veri bütünlüğünü sağlar.
+//sistemdeki görevi: Domain katmanındaki iş kurallarının merkezi yönetimini ve validasyonunu sağlar.
 public class StockLocationManager : BaseManager<StockLocation>
 {
     private readonly IProductRepository _productRepository;
@@ -40,6 +42,8 @@ public class StockLocationManager : BaseManager<StockLocation>
         _mapper = mapper;
     }
 
+//işlevi: Etki alanı kuralını veya validasyonunu işletir.
+//sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
     public async Task<StockLocation> CreateAsync(CreateStockLocationModel model)
     {
         await ValidateReferencesAsync(model.ProductId, model.LocationType, model.LocationId);
@@ -51,6 +55,8 @@ public class StockLocationManager : BaseManager<StockLocation>
         return entity;
     }
 
+//işlevi: Etki alanı kuralını veya validasyonunu işletir.
+//sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
     public async Task<StockLocation> UpdateAsync(StockLocation existing, UpdateStockLocationModel model)
     {
         await ValidateReferencesAsync(model.ProductId, model.LocationType, model.LocationId);
@@ -106,6 +112,8 @@ public class StockLocationManager : BaseManager<StockLocation>
 
     //işlevi: Belirtilen lokasyondaki stok bakiyesini düşürür.
     //sistemdeki görevi: Stok çıkış işlemlerinde bakiyeyi güvenli şekilde azaltır, yetersiz bakiye durumunda hata fırlatır.
+//işlevi: Etki alanı kuralını veya validasyonunu işletir.
+//sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
     public async Task DecreaseAsync(StockLocationTypeEnum type, Guid locationId, Guid productId, int qty)
     {
         var stock = await ((IStockLocationRepository)Repository)
@@ -123,6 +131,8 @@ public class StockLocationManager : BaseManager<StockLocation>
 
     //işlevi: Belirtilen lokasyondaki stok bakiyesini artırır.
     //sistemdeki görevi: Stok giriş işlemlerinde bakiyeyi artırır, eğer o lokasyonda daha önce ürün yoksa yeni kayıt oluşturur.
+//işlevi: Etki alanı kuralını veya validasyonunu işletir.
+//sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
     public async Task IncreaseAsync(StockLocationTypeEnum type, Guid locationId, Guid productId, int qty)
     {
         var stock = await ((IStockLocationRepository)Repository)

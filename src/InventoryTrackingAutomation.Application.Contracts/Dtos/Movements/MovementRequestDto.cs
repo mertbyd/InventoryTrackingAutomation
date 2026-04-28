@@ -11,6 +11,8 @@ namespace InventoryTrackingAutomation.Dtos.Movements;
 /// </summary>
 //işlevi: MovementRequest verisini istemciye (frontend) taşır.
 //sistemdeki görevii: Veri tabanı modelini gizleyerek sadece istemcinin ihtiyacı olan talep bilgilerini sunar.
+//işlevi: MovementRequest verisinin transferi sırasında taşınacak olan yapıyı tanımlar.
+//sistemdeki görevi: Katmanlar arası veri alışverişini standartlaştırır.
 public class MovementRequestDto : FullAuditedEntityDto<Guid>
 {
     public string RequestNumber { get; set; }             // Talep numarasi. Ornek: "MR-2024-00123"

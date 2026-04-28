@@ -8,6 +8,8 @@ namespace InventoryTrackingAutomation.Dtos.Inventory;
 /// <summary>
 /// Urunun tek lokasyondaki stok ozetini donduren DTO.
 /// </summary>
+//işlevi: ProductStockLocationSummary verisinin transferi sırasında taşınacak olan yapıyı tanımlar.
+//sistemdeki görevi: Katmanlar arası veri alışverişini standartlaştırır.
 public class ProductStockLocationSummaryDto
 {
     public StockLocationTypeEnum LocationType { get; set; } // Lokasyon tipi.

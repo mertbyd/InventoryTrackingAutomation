@@ -5,6 +5,8 @@ namespace InventoryTrackingAutomation.Dtos.Movements;
 /// <summary>
 /// Hareket talebini işleme (onay/red) isteği.
 /// </summary>
+//işlevi: ProcessMovementApproval verisinin transferi sırasında taşınacak olan yapıyı tanımlar.
+//sistemdeki görevi: Katmanlar arası veri alışverişini standartlaştırır.
 public class ProcessMovementApprovalDto
 {
     /// <summary>

@@ -5,6 +5,8 @@ namespace InventoryTrackingAutomation.Dtos.Masters;
 /// <summary>
 /// Depo olusturma request DTO'su.
 /// </summary>
+//işlevi: CreateWarehouse verisinin transferi sırasında taşınacak olan yapıyı tanımlar.
+//sistemdeki görevi: Katmanlar arası veri alışverişini standartlaştırır.
 public class CreateWarehouseDto
 {
     public string Code { get; set; } = default!;      // Deponun benzersiz is kodu.

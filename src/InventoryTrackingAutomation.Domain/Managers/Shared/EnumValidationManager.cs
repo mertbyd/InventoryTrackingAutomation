@@ -11,6 +11,8 @@ namespace InventoryTrackingAutomation.Managers.Shared;
 /// Proje genelindeki Enum doğrulama işlemlerini SettingProvider üzerinden
 /// dinamik ve merkezi olarak yöneten servis.
 /// </summary>
+//işlevi: EnumValidation etki alanı (domain) kurallarını ve karmaşık veri bütünlüğünü sağlar.
+//sistemdeki görevi: Domain katmanındaki iş kurallarının merkezi yönetimini ve validasyonunu sağlar.
 public class EnumValidationManager : DomainService
 {
     private readonly ISettingProvider _settingProvider;

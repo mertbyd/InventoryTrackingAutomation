@@ -8,6 +8,8 @@ namespace InventoryTrackingAutomation.Dtos.Masters;
 /// <summary>
 /// Çalışan oluşturma request DTO'su.
 /// </summary>
+//işlevi: CreateWorker verisinin transferi sırasında taşınacak olan yapıyı tanımlar.
+//sistemdeki görevi: Katmanlar arası veri alışverişini standartlaştırır.
 public class CreateWorkerDto
 {
     public Guid UserId { get; set; }                  // ABP Identity kullanıcı kimliği.

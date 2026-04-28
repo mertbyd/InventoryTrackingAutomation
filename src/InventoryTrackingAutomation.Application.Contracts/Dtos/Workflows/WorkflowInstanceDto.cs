@@ -6,6 +6,8 @@ namespace InventoryTrackingAutomation.Dtos.Workflows;
 /// <summary>
 /// İş akışı sürecinin anlık durumunu dönen DTO.
 /// </summary>
+//işlevi: WorkflowInstance verisinin transferi sırasında taşınacak olan yapıyı tanımlar.
+//sistemdeki görevi: Katmanlar arası veri alışverişini standartlaştırır.
 public class WorkflowInstanceDto
 {
     public Guid Id { get; set; }

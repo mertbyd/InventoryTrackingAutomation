@@ -20,6 +20,8 @@ namespace InventoryTrackingAutomation.Controllers.Masters;
 [Route("api/v{version:apiVersion}/products")]
 [ApiVersion("1.0")]
 [ApiExplorerSettings(GroupName = "Masters")]
+//işlevi: Product modülü için HTTP isteklerini karşılar.
+//sistemdeki görevi: Dış dünya ile sistem arasındaki iletişimi sağlayan API uç noktasıdır.
 public class ProductController : InventoryTrackingAutomationController
 {
     private readonly IProductAppService _appService;
@@ -32,6 +34,8 @@ public class ProductController : InventoryTrackingAutomationController
     /// <summary> Id'ye göre tek ürün getirir. </summary>
     [HttpGet("{id}")]
     [Authorize(InventoryTrackingAutomationPermissions.Masters.View)]
+//işlevi: İlgili HTTP isteğini işler ve servis katmanına yönlendirir.
+//sistemdeki görevi: Belirli bir API aksiyonunun giriş noktasını tanımlar.
     public async Task<Result<ProductDto>> Get(Guid id)
     {
         var result = await _appService.GetAsync(id);
@@ -41,6 +45,8 @@ public class ProductController : InventoryTrackingAutomationController
     /// <summary> Urunun depo/arac/gorev bazli stok ozetini getirir. </summary>
     [HttpGet("{id}/stock-summary")]
     [Authorize(InventoryTrackingAutomationPermissions.Inventory.View)]
+//işlevi: İlgili HTTP isteğini işler ve servis katmanına yönlendirir.
+//sistemdeki görevi: Belirli bir API aksiyonunun giriş noktasını tanımlar.
     public async Task<Result<ProductStockSummaryDto>> GetStockSummary(Guid id)
     {
         var result = await _appService.GetStockSummaryAsync(id);
@@ -50,6 +56,8 @@ public class ProductController : InventoryTrackingAutomationController
     /// <summary> Tüm ürünleri listeler. </summary>
     [HttpGet]
     [Authorize(InventoryTrackingAutomationPermissions.Masters.View)]
+//işlevi: İlgili HTTP isteğini işler ve servis katmanına yönlendirir.
+//sistemdeki görevi: Belirli bir API aksiyonunun giriş noktasını tanımlar.
     public async Task<Result<Volo.Abp.Application.Dtos.PagedResultDto<ProductDto>>> GetList([FromQuery] Volo.Abp.Application.Dtos.PagedResultRequestDto input)
     {
         var result = await _appService.GetListAsync(input);
@@ -59,6 +67,8 @@ public class ProductController : InventoryTrackingAutomationController
     /// <summary> Yeni ürün oluşturur. </summary>
     [HttpPost]
     [Authorize(InventoryTrackingAutomationPermissions.Masters.Manage)]
+//işlevi: İlgili HTTP isteğini işler ve servis katmanına yönlendirir.
+//sistemdeki görevi: Belirli bir API aksiyonunun giriş noktasını tanımlar.
     public async Task<Result<ProductDto>> Create([FromBody] CreateProductDto input)
     {
         var result = await _appService.CreateAsync(input);
@@ -68,6 +78,8 @@ public class ProductController : InventoryTrackingAutomationController
     /// <summary> Birden fazla ürünü toplu oluşturur. </summary>
     [HttpPost("bulk")]
     [Authorize(InventoryTrackingAutomationPermissions.Masters.Manage)]
+//işlevi: İlgili HTTP isteğini işler ve servis katmanına yönlendirir.
+//sistemdeki görevi: Belirli bir API aksiyonunun giriş noktasını tanımlar.
     public async Task<Result<List<ProductDto>>> CreateMany([FromBody] List<CreateProductDto> inputs)
     {
         var result = await _appService.CreateManyAsync(inputs);
@@ -77,6 +89,8 @@ public class ProductController : InventoryTrackingAutomationController
     /// <summary> Ürünü günceller. </summary>
     [HttpPut("{id}")]
     [Authorize(InventoryTrackingAutomationPermissions.Masters.Manage)]
+//işlevi: İlgili HTTP isteğini işler ve servis katmanına yönlendirir.
+//sistemdeki görevi: Belirli bir API aksiyonunun giriş noktasını tanımlar.
     public async Task<Result<ProductDto>> Update(Guid id, [FromBody] UpdateProductDto input)
     {
         var result = await _appService.UpdateAsync(id, input);
@@ -86,6 +100,8 @@ public class ProductController : InventoryTrackingAutomationController
     /// <summary> Ürünü soft delete ile siler. </summary>
     [HttpDelete("{id}")]
     [Authorize(InventoryTrackingAutomationPermissions.Masters.Manage)]
+//işlevi: İlgili HTTP isteğini işler ve servis katmanına yönlendirir.
+//sistemdeki görevi: Belirli bir API aksiyonunun giriş noktasını tanımlar.
     public async Task<Result> Delete(Guid id)
     {
         await _appService.DeleteAsync(id);

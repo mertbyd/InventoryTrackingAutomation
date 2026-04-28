@@ -3,6 +3,8 @@ namespace InventoryTrackingAutomation.Dtos.Auth;
 /// <summary>
 /// Giriş sonrası dönen token yanıt DTO'su.
 /// </summary>
+//işlevi: TokenResponse.cs verisinin transferi sırasında taşınacak olan yapıyı tanımlar.
+//sistemdeki görevi: Katmanlar arası veri alışverişini standartlaştırır.
 public class TokenResponse
 {
     /// <summary>

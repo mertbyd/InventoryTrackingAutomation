@@ -11,6 +11,8 @@ namespace InventoryTrackingAutomation.Managers.Masters;
 /// <summary>
 /// Çalışan domain manager'ı — Worker entity'si için iş kuralları ve validasyonları.
 /// </summary>
+//işlevi: Worker etki alanı (domain) kurallarını ve karmaşık veri bütünlüğünü sağlar.
+//sistemdeki görevi: Domain katmanındaki iş kurallarının merkezi yönetimini ve validasyonunu sağlar.
 public class WorkerManager : BaseManager<Worker>
 {
     private readonly IDepartmentRepository _departmentRepository;  // DepartmentId FK validasyonu için
@@ -35,6 +37,8 @@ public class WorkerManager : BaseManager<Worker>
     /// <summary>
     /// Yeni çalışan oluşturur — DepartmentId, DefaultWarehouseId ve ManagerId varlık kontrolleri yapar.
     /// </summary>
+//işlevi: Etki alanı kuralını veya validasyonunu işletir.
+//sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
     public async Task<Worker> CreateAsync(CreateWorkerModel model)
     {
         await EnsureExistsInAsync(
@@ -59,6 +63,8 @@ public class WorkerManager : BaseManager<Worker>
     /// <summary>
     /// Çalışanı günceller — DepartmentId, DefaultWarehouseId ve ManagerId varlık kontrolleri ile kendi kendini yönetici atamama kurallarını işletir.
     /// </summary>
+//işlevi: Etki alanı kuralını veya validasyonunu işletir.
+//sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
     public async Task<Worker> UpdateAsync(Worker existing, UpdateWorkerModel model)
     {
         EnsureNotSelfAssigned(existing.Id, model.ManagerId);
@@ -91,6 +97,8 @@ public class WorkerManager : BaseManager<Worker>
 
     // Verilen kullanıcının yöneticisinin User Id'sini Worker zinciri üzerinden çözer (User → Worker → Manager Worker → Manager User).
     // Worker, Manager veya Manager User yoksa null döner. Workflow ve onay zinciri tüm tüketicilerinde tek doğruluk kaynağı.
+//işlevi: Etki alanı kuralını veya validasyonunu işletir.
+//sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
     public async Task<Guid?> GetManagerUserIdAsync(Guid userId)
     {
         var worker = await Repository.FindAsync(w => w.UserId == userId);

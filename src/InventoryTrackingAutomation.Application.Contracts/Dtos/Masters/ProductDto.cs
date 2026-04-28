@@ -9,6 +9,8 @@ namespace InventoryTrackingAutomation.Dtos.Masters;
 /// <summary>
 /// Ürün response DTO'su — GetAll ve GetById operasyonlarında döner.
 /// </summary>
+//işlevi: Product verisinin transferi sırasında taşınacak olan yapıyı tanımlar.
+//sistemdeki görevi: Katmanlar arası veri alışverişini standartlaştırır.
 public class ProductDto : FullAuditedEntityDto<Guid>
 {
     public string Code { get; set; }            // Ürün kodu. Örnek: "PRD-001"

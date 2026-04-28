@@ -3,6 +3,8 @@ namespace InventoryTrackingAutomation.Dtos.Auth;
 /// <summary>
 /// Kayıt (Register) isteği DTO'su.
 /// </summary>
+//işlevi: Register verisinin transferi sırasında taşınacak olan yapıyı tanımlar.
+//sistemdeki görevi: Katmanlar arası veri alışverişini standartlaştırır.
 public class RegisterDto
 {
     /// <summary>

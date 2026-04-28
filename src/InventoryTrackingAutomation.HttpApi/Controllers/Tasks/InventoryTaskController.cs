@@ -21,6 +21,8 @@ namespace InventoryTrackingAutomation.Controllers.Tasks;
 [ApiVersion("1.0")]
 [ApiExplorerSettings(GroupName = "Tasks")]
 [Tags("InventoryTasks")]
+//işlevi: InventoryTask modülü için HTTP isteklerini karşılar.
+//sistemdeki görevi: Dış dünya ile sistem arasındaki iletişimi sağlayan API uç noktasıdır.
 public class InventoryTaskController : InventoryTrackingAutomationController
 {
     private readonly IInventoryTaskAppService _appService;
@@ -32,6 +34,8 @@ public class InventoryTaskController : InventoryTrackingAutomationController
 
     [HttpGet("{id}")]
     [Authorize(InventoryTrackingAutomationPermissions.Tasks.View)]
+//işlevi: İlgili HTTP isteğini işler ve servis katmanına yönlendirir.
+//sistemdeki görevi: Belirli bir API aksiyonunun giriş noktasını tanımlar.
     public async Task<Result<InventoryTaskDto>> Get(Guid id)
     {
         var result = await _appService.GetAsync(id);
@@ -40,6 +44,8 @@ public class InventoryTaskController : InventoryTrackingAutomationController
 
     [HttpGet("{id}/vehicles")]
     [Authorize(InventoryTrackingAutomationPermissions.Tasks.View)]
+//işlevi: İlgili HTTP isteğini işler ve servis katmanına yönlendirir.
+//sistemdeki görevi: Belirli bir API aksiyonunun giriş noktasını tanımlar.
     public async Task<Result<List<TaskVehicleDto>>> GetVehicles(Guid id)
     {
         var result = await _appService.GetVehiclesAsync(id);
@@ -48,6 +54,8 @@ public class InventoryTaskController : InventoryTrackingAutomationController
 
     [HttpGet("{id}/inventory")]
     [Authorize(InventoryTrackingAutomationPermissions.Inventory.View)]
+//işlevi: İlgili HTTP isteğini işler ve servis katmanına yönlendirir.
+//sistemdeki görevi: Belirli bir API aksiyonunun giriş noktasını tanımlar.
     public async Task<Result<List<TaskInventoryDto>>> GetInventory(Guid id)
     {
         var result = await _appService.GetInventoryAsync(id);
@@ -56,6 +64,8 @@ public class InventoryTaskController : InventoryTrackingAutomationController
 
     [HttpGet]
     [Authorize(InventoryTrackingAutomationPermissions.Tasks.View)]
+//işlevi: İlgili HTTP isteğini işler ve servis katmanına yönlendirir.
+//sistemdeki görevi: Belirli bir API aksiyonunun giriş noktasını tanımlar.
     public async Task<Result<PagedResultDto<InventoryTaskDto>>> GetList([FromQuery] PagedResultRequestDto input)
     {
         var result = await _appService.GetListAsync(input);
@@ -64,6 +74,8 @@ public class InventoryTaskController : InventoryTrackingAutomationController
 
     [HttpPost]
     [Authorize(InventoryTrackingAutomationPermissions.Tasks.Manage)]
+//işlevi: İlgili HTTP isteğini işler ve servis katmanına yönlendirir.
+//sistemdeki görevi: Belirli bir API aksiyonunun giriş noktasını tanımlar.
     public async Task<Result<InventoryTaskDto>> Create([FromBody] CreateInventoryTaskDto input)
     {
         var result = await _appService.CreateAsync(input);
@@ -72,6 +84,8 @@ public class InventoryTaskController : InventoryTrackingAutomationController
 
     [HttpPost("bulk")]
     [Authorize(InventoryTrackingAutomationPermissions.Tasks.Manage)]
+//işlevi: İlgili HTTP isteğini işler ve servis katmanına yönlendirir.
+//sistemdeki görevi: Belirli bir API aksiyonunun giriş noktasını tanımlar.
     public async Task<Result<List<InventoryTaskDto>>> CreateMany([FromBody] List<CreateInventoryTaskDto> inputs)
     {
         var result = await _appService.CreateManyAsync(inputs);
@@ -80,6 +94,8 @@ public class InventoryTaskController : InventoryTrackingAutomationController
 
     [HttpPut("{id}")]
     [Authorize(InventoryTrackingAutomationPermissions.Tasks.Manage)]
+//işlevi: İlgili HTTP isteğini işler ve servis katmanına yönlendirir.
+//sistemdeki görevi: Belirli bir API aksiyonunun giriş noktasını tanımlar.
     public async Task<Result<InventoryTaskDto>> Update(Guid id, [FromBody] UpdateInventoryTaskDto input)
     {
         var result = await _appService.UpdateAsync(id, input);
@@ -88,6 +104,8 @@ public class InventoryTaskController : InventoryTrackingAutomationController
 
     [HttpDelete("{id}")]
     [Authorize(InventoryTrackingAutomationPermissions.Tasks.Manage)]
+//işlevi: İlgili HTTP isteğini işler ve servis katmanına yönlendirir.
+//sistemdeki görevi: Belirli bir API aksiyonunun giriş noktasını tanımlar.
     public async Task<Result> Delete(Guid id)
     {
         await _appService.DeleteAsync(id);

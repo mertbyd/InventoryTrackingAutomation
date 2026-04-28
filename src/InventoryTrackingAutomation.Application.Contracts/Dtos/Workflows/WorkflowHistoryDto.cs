@@ -7,6 +7,8 @@ namespace InventoryTrackingAutomation.Dtos.Workflows;
 /// Bir iş akışı sürecinin tam tarihçesini dönen DTO.
 /// Süreci kim başlattı, hangi adımlar tamamlandı/bekliyor/henüz başlamadı bilgisini içerir.
 /// </summary>
+//işlevi: WorkflowHistory verisinin transferi sırasında taşınacak olan yapıyı tanımlar.
+//sistemdeki görevi: Katmanlar arası veri alışverişini standartlaştırır.
 public class WorkflowHistoryDto
 {
     /// <summary>İş akışı süreci (instance) Id'si.</summary>

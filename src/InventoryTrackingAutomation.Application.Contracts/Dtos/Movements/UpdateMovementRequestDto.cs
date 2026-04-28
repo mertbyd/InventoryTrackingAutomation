@@ -9,6 +9,8 @@ namespace InventoryTrackingAutomation.Dtos.Movements;
 /// Hareket talebi güncelleme request DTO'su.
 /// RequestedByWorkerId server-side çözümlenir, client'tan alınmaz.
 /// </summary>
+//işlevi: UpdateMovementRequest verisinin transferi sırasında taşınacak olan yapıyı tanımlar.
+//sistemdeki görevi: Katmanlar arası veri alışverişini standartlaştırır.
 public class UpdateMovementRequestDto
 {
     public string RequestNumber { get; set; }             // Talep numarası. Örnek: "MR-2024-00123"

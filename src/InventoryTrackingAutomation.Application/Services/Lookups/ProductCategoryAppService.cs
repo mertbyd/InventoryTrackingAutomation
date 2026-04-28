@@ -15,6 +15,8 @@ using Volo.Abp.Uow;
 namespace InventoryTrackingAutomation.Application.Services.Lookups;
 
 // Ürün kategorisi application servisi — HTTP endpoint'leri için ince orkestra katmanı; iş kuralları ProductCategoryManager'da.
+//işlevi: ProductCategory iş mantığını koordine eder ve DTO dönüşümlerini yönetir.
+//sistemdeki görevi: Uygulama katmanındaki kullanım senaryolarını (use-case) gerçekleştiren ana servis birimidir.
 public class ProductCategoryAppService : InventoryTrackingAutomationAppService, IProductCategoryAppService
 {
     // Read/list/persist için ana repository.
@@ -41,6 +43,8 @@ public class ProductCategoryAppService : InventoryTrackingAutomationAppService, 
     }
 
     // Id ile ürün kategorisini getirir; yoksa EntityNotFoundException.
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<ProductCategoryDto> GetAsync(Guid id)
     {
         var entity = await _manager.EnsureExistsAsync(id);
@@ -48,6 +52,8 @@ public class ProductCategoryAppService : InventoryTrackingAutomationAppService, 
     }
 
     // Ürün kategorilerini sayfalı listeler.
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<PagedResultDto<ProductCategoryDto>> GetListAsync(PagedResultRequestDto input)
     {
         var totalCount = await _repository.GetCountAsync();
@@ -60,6 +66,8 @@ public class ProductCategoryAppService : InventoryTrackingAutomationAppService, 
 
     // Yeni ürün kategorisi oluşturur — manager iş kurallarını uygular, repository persist eder.
     [UnitOfWork]
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<ProductCategoryDto> CreateAsync(CreateProductCategoryDto input)
     {
         await _createValidator.ValidateAndThrowAsync(input);
@@ -71,6 +79,8 @@ public class ProductCategoryAppService : InventoryTrackingAutomationAppService, 
 
     // Birden fazla ürün kategorisini toplu oluşturur.
     [UnitOfWork]
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<List<ProductCategoryDto>> CreateManyAsync(List<CreateProductCategoryDto> inputs)
     {
         var entities = new List<ProductCategory>();
@@ -87,6 +97,8 @@ public class ProductCategoryAppService : InventoryTrackingAutomationAppService, 
 
     // Ürün kategorisini günceller — manager iş kurallarını uygular, repository persist eder.
     [UnitOfWork]
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<ProductCategoryDto> UpdateAsync(Guid id, UpdateProductCategoryDto input)
     {
         await _updateValidator.ValidateAndThrowAsync(input);
@@ -99,6 +111,8 @@ public class ProductCategoryAppService : InventoryTrackingAutomationAppService, 
 
     // Ürün kategorisini soft delete ile siler.
     [UnitOfWork]
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task DeleteAsync(Guid id)
     {
         await _manager.EnsureExistsAsync(id);

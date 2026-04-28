@@ -5,6 +5,8 @@ namespace InventoryTrackingAutomation.Dtos.Inventory;
 /// <summary>
 /// Arac uzerindeki urun stok bilgisini donduren DTO.
 /// </summary>
+//işlevi: VehicleInventory verisinin transferi sırasında taşınacak olan yapıyı tanımlar.
+//sistemdeki görevi: Katmanlar arası veri alışverişini standartlaştırır.
 public class VehicleInventoryDto
 {
     public Guid VehicleId { get; set; }        // Arac Id'si.

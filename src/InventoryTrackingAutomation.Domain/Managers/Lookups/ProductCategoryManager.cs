@@ -9,6 +9,8 @@ namespace InventoryTrackingAutomation.Managers.Lookups;
 /// <summary>
 /// Ürün kategorisi domain manager'ı — ProductCategory entity'si için iş kuralları ve validasyonları.
 /// </summary>
+//işlevi: ProductCategory etki alanı (domain) kurallarını ve karmaşık veri bütünlüğünü sağlar.
+//sistemdeki görevi: Domain katmanındaki iş kurallarının merkezi yönetimini ve validasyonunu sağlar.
 public class ProductCategoryManager : BaseManager<ProductCategory>
 {
     /// <summary>
@@ -26,6 +28,8 @@ public class ProductCategoryManager : BaseManager<ProductCategory>
     /// <summary>
     /// Yeni ürün kategorisi oluşturur — Code unique ve ParentId varlık kontrolü yapar.
     /// </summary>
+//işlevi: Etki alanı kuralını veya validasyonunu işletir.
+//sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
     public async Task<ProductCategory> CreateAsync(CreateProductCategoryModel model)
     {
         if (!string.IsNullOrWhiteSpace(model.Code))
@@ -47,6 +51,8 @@ public class ProductCategoryManager : BaseManager<ProductCategory>
     /// <summary>
     /// Ürün kategorisini günceller — Code unique (self hariç) ve ParentId varlık kontrolü yapar.
     /// </summary>
+//işlevi: Etki alanı kuralını veya validasyonunu işletir.
+//sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
     public async Task<ProductCategory> UpdateAsync(ProductCategory existing, UpdateProductCategoryModel model)
     {
         if (!string.IsNullOrWhiteSpace(model.Code) && existing.Code != model.Code)

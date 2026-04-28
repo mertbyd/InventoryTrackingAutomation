@@ -15,6 +15,8 @@ using Volo.Abp.Users;
 namespace InventoryTrackingAutomation.Application.Services.Movements;
 
 // Hareket talebi onay application servisi — onay/red orkestra katmanı; iş kuralları MovementApprovalManager'da.
+//işlevi: MovementApproval iş mantığını koordine eder ve DTO dönüşümlerini yönetir.
+//sistemdeki görevi: Uygulama katmanındaki kullanım senaryolarını (use-case) gerçekleştiren ana servis birimidir.
 public class MovementApprovalAppService : InventoryTrackingAutomationAppService, IMovementApprovalAppService
 {
     // Domain manager — onay/red iş kuralları ve workflow state machine.
@@ -36,6 +38,8 @@ public class MovementApprovalAppService : InventoryTrackingAutomationAppService,
 
     // Hareket talebini işler — IsApproved değerine göre manager metodunu çağırır.
     [UnitOfWork]
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<MovementApprovalDto> ProcessApprovalAsync(Guid movementRequestId, ProcessMovementApprovalDto input)
     {
         MovementApproval approval;
@@ -58,6 +62,8 @@ public class MovementApprovalAppService : InventoryTrackingAutomationAppService,
     }
 
     // Bir hareket talebinin tüm onay geçmişini StepOrder'a göre sıralı döner.
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<List<MovementApprovalDto>> GetApprovalHistoryAsync(Guid movementRequestId)
     {
         var approvals = await _repository.GetListAsync(x => x.MovementRequestId == movementRequestId);
@@ -65,6 +71,8 @@ public class MovementApprovalAppService : InventoryTrackingAutomationAppService,
     }
 
     // Mevcut kullanıcının onaylaması bekleyen talepleri döner — manager pending sorgusunu yapar, profile mapping uygular.
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<List<PendingApprovalDto>> GetPendingApprovalsAsync()
     {
         var pending = await _manager.GetPendingApprovalsForUserAsync(CurrentUser.GetId());
