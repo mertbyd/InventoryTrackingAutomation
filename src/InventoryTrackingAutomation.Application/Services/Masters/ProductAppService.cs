@@ -11,6 +11,7 @@ using InventoryTrackingAutomation.Managers.Stock;
 using InventoryTrackingAutomation.Models.Masters;
 using InventoryTrackingAutomation.Models.Stock;
 using InventoryTrackingAutomation.Services.Masters;
+using FluentValidation;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Uow;
 
@@ -25,6 +26,8 @@ public class ProductAppService : InventoryTrackingAutomationAppService, IProduct
     private readonly ProductManager _manager;
     // PITON stok gorunurlugu okuma kurallari.
     private readonly InventoryQueryManager _inventoryQueryManager;
+    private readonly IValidator<CreateProductDto> _createValidator;
+    private readonly IValidator<UpdateProductDto> _updateValidator;
 
     // Tüm bağımlılıkları DI ile alır.
     private readonly IMapper _mapper;
@@ -32,12 +35,16 @@ public class ProductAppService : InventoryTrackingAutomationAppService, IProduct
         IProductRepository repository,
         ProductManager manager,
         InventoryQueryManager inventoryQueryManager,
+        IValidator<CreateProductDto> createValidator,
+        IValidator<UpdateProductDto> updateValidator,
         IMapper mapper)
     {
         _mapper = mapper;
         _repository = repository;
         _manager = manager;
         _inventoryQueryManager = inventoryQueryManager;
+        _createValidator = createValidator;
+        _updateValidator = updateValidator;
     }
 
     // Id ile ürünü getirir; yoksa EntityNotFoundException.
@@ -69,6 +76,7 @@ public class ProductAppService : InventoryTrackingAutomationAppService, IProduct
     [UnitOfWork]
     public async Task<ProductDto> CreateAsync(CreateProductDto input)
     {
+        await _createValidator.ValidateAndThrowAsync(input);
         var model = _mapper.Map<CreateProductDto, CreateProductModel>(input);
         var entity = await _manager.CreateAsync(model);
         var inserted = await _repository.InsertAsync(entity, autoSave: true);
@@ -82,6 +90,7 @@ public class ProductAppService : InventoryTrackingAutomationAppService, IProduct
         var entities = new List<Product>();
         foreach (var dto in inputs)
         {
+            await _createValidator.ValidateAndThrowAsync(dto);
             var model = _mapper.Map<CreateProductDto, CreateProductModel>(dto);
             entities.Add(await _manager.CreateAsync(model));
         }
@@ -94,6 +103,7 @@ public class ProductAppService : InventoryTrackingAutomationAppService, IProduct
     [UnitOfWork]
     public async Task<ProductDto> UpdateAsync(Guid id, UpdateProductDto input)
     {
+        await _updateValidator.ValidateAndThrowAsync(input);
         var existing = await _manager.EnsureExistsAsync(id);
         var model = _mapper.Map<UpdateProductDto, UpdateProductModel>(input);
         var updated = await _manager.UpdateAsync(existing, model);
