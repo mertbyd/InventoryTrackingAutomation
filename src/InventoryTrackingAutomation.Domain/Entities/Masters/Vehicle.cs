@@ -1,17 +1,19 @@
 using System;
 using InventoryTrackingAutomation.Enums;
 using Volo.Abp.Domain.Entities.Auditing;
+using Volo.Abp.MultiTenancy;
 
 namespace InventoryTrackingAutomation.Entities.Masters;
 
 /// <summary>
-/// Sistemdeki araçları temsil eden master data entity'si.
+/// Sahada stok tasiyabilen araci temsil eden master aggregate.
 /// </summary>
-public class Vehicle : FullAuditedEntity<Guid>
+public class Vehicle : FullAuditedAggregateRoot<Guid>, IMultiTenant
 {
-    public string PlateNumber { get; set; }           // Araç plaka numarası. Örnek: "34 ABC 123"
-    public VehicleTypeEnum VehicleType { get; set; } // Araç tipi. Örnek: VehicleTypeEnum.Van
-    public bool IsActive { get; set; }               // Araç aktif mi. Örnek: true
+    public string PlateNumber { get; set; } = default!; // Aracin operasyonel plaka bilgisini tasir.
+    public VehicleTypeEnum VehicleType { get; set; } // Aracin saha operasyonundaki tipini belirler.
+    public bool IsActive { get; set; } // Aracin gorevlere atanabilir olup olmadigini belirler.
+    public Guid? TenantId { get; set; } // Arac verisini kiraci sinirinda tutar.
 
     protected Vehicle() { }
     public Vehicle(Guid id) : base(id) { }
