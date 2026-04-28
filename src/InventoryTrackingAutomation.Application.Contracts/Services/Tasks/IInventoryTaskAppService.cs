@@ -19,5 +19,7 @@ public interface IInventoryTaskAppService : IApplicationService
     Task<InventoryTaskDto> CreateAsync(CreateInventoryTaskDto input);
     Task<List<InventoryTaskDto>> CreateManyAsync(List<CreateInventoryTaskDto> inputs);
     Task<InventoryTaskDto> UpdateAsync(Guid id, UpdateInventoryTaskDto input);
+    Task<InventoryTaskDto> CompleteAsync(Guid id);
+    Task<InventoryTaskDto> CancelAsync(Guid id);
     Task DeleteAsync(Guid id);
 }

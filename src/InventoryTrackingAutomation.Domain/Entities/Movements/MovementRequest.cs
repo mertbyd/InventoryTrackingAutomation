@@ -12,7 +12,7 @@ namespace InventoryTrackingAutomation.Entities.Movements;
 /// </summary>
 //işlevi: Stok hareketi için gereken izin/onay sürecini başlatır ve hedef rotayı (araç veya depo) tutar.
 //sistemdeki görevii: Onaylanana kadar stoklara dokunmayan, sadece "Transfer Niyeti"ni barındıran temel bilet tablosudur.
-public class MovementRequest : FullAuditedAggregateRoot<Guid>, IMultiTenant
+public class MovementRequest : FullAuditedEntity<Guid>
 {
     public string RequestNumber { get; set; } = default!; // Talebin kurumsal takip numarasini tasir.
     public Guid RequestedByWorkerId { get; set; } // Talebi olusturan calisan baglamini tasir.
@@ -20,13 +20,13 @@ public class MovementRequest : FullAuditedAggregateRoot<Guid>, IMultiTenant
     public Guid? TargetWarehouseId { get; set; } // (Opsiyonel) Depo-Depo transferi ise malzemenin gidecegi hedef depo.
     public Guid? RequestedVehicleId { get; set; } // (Opsiyonel) Onay sonrasi stok alacak arac baglamini tasir.
     public Guid? AssignedTaskId { get; set; } // YENI: Bu talebin hangi saha gorevi (InventoryTask) icin acildigini tutar.
+    public MovementRequestTypeEnum Type { get; set; } // Talebin depo transferi, gorev cikisi veya gorev iadesi surec tipini belirler.
     public MovementStatusEnum Status { get; set; } // Talebin operasyonel durumunu belirler.
     public MovementPriorityEnum Priority { get; set; } // Talebin oncelik seviyesini belirler.
     public string RequestNote { get; set; } = default!; // Talep gerekcesi ve operasyon notunu tasir.
     public DateTime PlannedDate { get; set; } // Malzemenin hedefte beklenen zamanini tasir.
     public string? CancellationNote { get; set; } // Iptal durumunda gerekce baglamini tasir.
     public Guid? WorkflowInstanceId { get; set; } // Talebin bagli oldugu workflow sureci baglamini tasir.
-    public Guid? TenantId { get; set; } // Talep verisini kiraci sinirinda tutar.
 
     protected MovementRequest() { }
     

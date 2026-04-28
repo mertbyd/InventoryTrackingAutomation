@@ -13,6 +13,8 @@ public class InventoryTrackingAutomationPermissions
         public const string Edit = Default + ".Edit";
         public const string Delete = Default + ".Delete";
         public const string View = Default + ".View";
+        public const string Dispatch = Default + ".Dispatch";
+        public const string Receive = Default + ".Receive";
     }
 
     public static class Workflows
@@ -35,6 +37,7 @@ public class InventoryTrackingAutomationPermissions
         public const string Default = GroupName + ".Tasks";
         public const string View = Default + ".View";
         public const string Manage = Default + ".Manage";
+        public const string Complete = Default + ".Complete";
     }
 
     public static class VehicleTasks

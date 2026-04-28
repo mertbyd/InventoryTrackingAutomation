@@ -102,6 +102,26 @@ public class InventoryTaskController : InventoryTrackingAutomationController
         return result;
     }
 
+    [HttpPost("{id}/complete")]
+    [Authorize(InventoryTrackingAutomationPermissions.Tasks.Complete)]
+//iÅŸlevi: Ä°lgili HTTP isteÄŸini iÅŸler ve servis katmanÄ±na yÃ¶nlendirir.
+//sistemdeki gÃ¶revi: Belirli bir API aksiyonunun giriÅŸ noktasÄ±nÄ± tanÄ±mlar.
+    public async Task<Result<InventoryTaskDto>> Complete(Guid id)
+    {
+        var result = await _appService.CompleteAsync(id);
+        return result;
+    }
+
+    [HttpPost("{id}/cancel")]
+    [Authorize(InventoryTrackingAutomationPermissions.Tasks.Complete)]
+//iÅŸlevi: Ä°lgili HTTP isteÄŸini iÅŸler ve servis katmanÄ±na yÃ¶nlendirir.
+//sistemdeki gÃ¶revi: Belirli bir API aksiyonunun giriÅŸ noktasÄ±nÄ± tanÄ±mlar.
+    public async Task<Result<InventoryTaskDto>> Cancel(Guid id)
+    {
+        var result = await _appService.CancelAsync(id);
+        return result;
+    }
+
     [HttpDelete("{id}")]
     [Authorize(InventoryTrackingAutomationPermissions.Tasks.Manage)]
 //işlevi: İlgili HTTP isteğini işler ve servis katmanına yönlendirir.

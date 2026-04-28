@@ -13,6 +13,12 @@ public class MovementRequestLineConfiguration : IEntityTypeConfiguration<Movemen
         builder.ToTable("movement_request_lines", InventoryTrackingAutomationDbProperties.MovementSchema);
         builder.ConfigureByConvention();
 
+        builder.Property(x => x.ReceivedQuantity).IsRequired();
+        builder.Property(x => x.DamagedQuantity).IsRequired();
+        builder.Property(x => x.LostQuantity).IsRequired();
+        builder.Property(x => x.ConsumedQuantity).IsRequired();
+        builder.Property(x => x.ReceiveNote).HasMaxLength(500);
+
         builder.HasOne<MovementRequest>()
             .WithMany()
             .HasForeignKey(x => x.MovementRequestId)

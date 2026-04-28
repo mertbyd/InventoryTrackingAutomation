@@ -42,8 +42,7 @@ public class InventoryQueryManager : ITransientDependency
         _inventoryTaskManager = inventoryTaskManager;
     }
 
-//işlevi: Etki alanı kuralını veya validasyonunu işletir.
-//sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
+    /// Ürün stok özetini getirmek için kullanılır.
     public async Task<ProductStockSummaryModel> GetProductStockSummaryAsync(Guid productId)
     {
         await _productManager.EnsureExistsAsync(productId);
@@ -74,8 +73,7 @@ public class InventoryQueryManager : ITransientDependency
         };
     }
 
-//işlevi: Etki alanı kuralını veya validasyonunu işletir.
-//sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
+    /// Araç envanterlerini getirmek için kullanılır.
     public async Task<List<VehicleInventoryModel>> GetVehicleInventoriesAsync(Guid vehicleId)
     {
         await _vehicleManager.EnsureExistsAsync(vehicleId);
@@ -101,8 +99,7 @@ public class InventoryQueryManager : ITransientDependency
             .ToList();
     }
 
-//işlevi: Etki alanı kuralını veya validasyonunu işletir.
-//sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
+    /// Görev araçlarını getirmek için kullanılır.
     public async Task<List<TaskVehicleModel>> GetTaskVehiclesAsync(Guid inventoryTaskId)
     {
         await _inventoryTaskManager.EnsureExistsAsync(inventoryTaskId);
@@ -121,8 +118,7 @@ public class InventoryQueryManager : ITransientDependency
             .ToList();
     }
 
-//işlevi: Etki alanı kuralını veya validasyonunu işletir.
-//sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
+    /// Görev envanterini getirmek için kullanılır.
     public async Task<List<TaskInventoryModel>> GetTaskInventoryAsync(Guid inventoryTaskId)
     {
         await _inventoryTaskManager.EnsureExistsAsync(inventoryTaskId);
@@ -152,6 +148,7 @@ public class InventoryQueryManager : ITransientDependency
             .ToList();
     }
 
+    /// Aktif araç görevlerini getirmek için kullanılır.
     private async Task<List<Entities.Tasks.VehicleTask>> GetActiveVehicleTasksAsync(IEnumerable<Guid?> vehicleIds)
     {
         var ids = vehicleIds
@@ -168,6 +165,7 @@ public class InventoryQueryManager : ITransientDependency
         return await _vehicleTaskRepository.GetListAsync(x => ids.Contains(x.VehicleId) && x.IsActive);
     }
 
+    /// Lokasyon özeti oluşturmak için kullanılır.
     private static ProductStockLocationSummaryModel CreateLocationSummary(
         Entities.Inventory.StockLocation location,
         IReadOnlyCollection<Entities.Tasks.VehicleTask> activeVehicleTasks)

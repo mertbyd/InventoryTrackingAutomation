@@ -13,6 +13,7 @@
     <ProjectReference Include="..\..\src\InventoryTrackingAutomation.EntityFrameworkCore\InventoryTrackingAutomation.EntityFrameworkCore.csproj" />
     <ProjectReference Include="..\InventoryTrackingAutomation.TestBase\InventoryTrackingAutomation.TestBase.csproj" />
     <PackageReference Include="Volo.Abp.EntityFrameworkCore.Sqlite" Version="10.3.0" />
+    <PackageReference Include="Volo.Abp.PermissionManagement.EntityFrameworkCore" Version="10.3.0" />
   </ItemGroup>
 
 </Project>

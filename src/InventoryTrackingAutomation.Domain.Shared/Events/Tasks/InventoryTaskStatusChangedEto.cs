@@ -10,4 +10,6 @@ public class InventoryTaskStatusChangedEto
     public Guid TaskId { get; set; }
     public TaskStatusEnum PreviousStatus { get; set; }
     public TaskStatusEnum NewStatus { get; set; }
+    public Guid? ChangedByUserId { get; set; }
+    public Guid? ChangedByWorkerId { get; set; }
 }

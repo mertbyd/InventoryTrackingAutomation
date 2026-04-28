@@ -15,13 +15,22 @@ namespace InventoryTrackingAutomation.Dtos.Movements;
 public class CreateMovementRequestWithLinesDto
 {
     public string RequestNumber { get; set; }          // Talep numarası. Örnek: "MR-2024-00123"
-    public Guid SourceWarehouseId { get; set; }             // Kaynak lokasyon Id.
-    public Guid TargetWarehouseId { get; set; }             // Hedef lokasyon Id.
-    public Guid RequestedVehicleId { get; set; }        // Talep edilen sevkiyat aracı Id.
-    public MovementPriorityEnum Priority { get; set; } // Öncelik. Örnek: MovementPriorityEnum.Normal
+    
+    public Guid SourceWarehouseId { get; set; }        // Kaynak lokasyon Id.
+    
+    public Guid? TargetWarehouseId { get; set; }       // (Opsiyonel) Hedef depo Id.
+    
+    public Guid? RequestedVehicleId { get; set; }      // (Opsiyonel) Talep edilen sevkiyat aracı Id.
+    
+    public Guid? AssignedTaskId { get; set; }          // (Opsiyonel) Bağlı olduğu saha görevi Id.
+    
+    public MovementPriorityEnum Priority { get; set; } // Öncelik.
+    
     public string RequestNote { get; set; }            // Talep gerekçesi.
+    
     public DateTime PlannedDate { get; set; }          // Planlanan teslim tarihi.
-    public List<CreateMovementRequestLineItemDto> Lines { get; set; } = new(); // Talep satırları (en az 1 zorunlu).
+    
+    public List<CreateMovementRequestLineItemDto> Lines { get; set; } = new(); // Talep satırları.
 }
 
 /// <summary>

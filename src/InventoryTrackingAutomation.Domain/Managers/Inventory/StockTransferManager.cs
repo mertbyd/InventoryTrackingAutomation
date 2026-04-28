@@ -25,11 +25,7 @@ public class StockTransferManager : DomainService
         _transactionManager = transactionManager;
     }
 
-    /// <summary>
-    /// Atomik transfer: kaynaktan dus, hedefe ekle, ledger'a yaz. Hepsi tek UoW; biri patlarsa hepsi rollback.
-    /// </summary>
-    //işlevi: İki lokasyon arasında güvenli (transactional) stok transferi yapar.
-    //sistemdeki görevi: Atomik stok operasyonlarının ve mutabakatın merkezi yöneticisidir.
+    /// Stok transfer işlemini gerçekleştirmek için kullanılır.
     public async Task<InventoryTransaction> ExecuteAsync(StockTransferModel model)
     {
         if (model.Quantity <= 0)

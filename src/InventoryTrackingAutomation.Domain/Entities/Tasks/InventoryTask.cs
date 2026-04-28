@@ -10,7 +10,7 @@ namespace InventoryTrackingAutomation.Entities.Tasks;
 /// <summary>
 /// Sahada yurutulen operasyonel envanter gorevini temsil eden aggregate.
 /// </summary>
-public class InventoryTask : FullAuditedAggregateRoot<Guid>, IMultiTenant
+public class InventoryTask : FullAuditedEntity<Guid>
 {
     public string Code { get; set; } = default!; // Gorevin kurumsal kodunu tasir.
     public string Name { get; set; } = default!; // Gorevin kullaniciya gorunen adini tasir.
@@ -21,7 +21,6 @@ public class InventoryTask : FullAuditedAggregateRoot<Guid>, IMultiTenant
     public string? Description { get; set; } // Gorevin operasyonel aciklama baglamini tasir.
     public Guid? ReturnWarehouseId { get; set; } // Gorev bitince stoklarin donecegi depo baglamini tasir.
     public bool IsActive { get; set; } // Gorevin operasyonel olarak aktif kabul edilip edilmedigini belirler.
-    public Guid? TenantId { get; set; } // Gorev verisini kiraci sinirinda tutar.
 
     protected InventoryTask() { }
     public InventoryTask(Guid id) : base(id) { }

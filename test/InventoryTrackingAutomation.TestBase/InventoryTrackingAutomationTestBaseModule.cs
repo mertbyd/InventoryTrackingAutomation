@@ -4,6 +4,7 @@ using Volo.Abp.Authorization;
 using Volo.Abp.Autofac;
 using Volo.Abp.Data;
 using Volo.Abp.Modularity;
+using Volo.Abp.PermissionManagement.Identity;
 using Volo.Abp.Threading;
 
 namespace InventoryTrackingAutomation;
@@ -12,6 +13,7 @@ namespace InventoryTrackingAutomation;
     typeof(AbpAutofacModule),
     typeof(AbpTestBaseModule),
     typeof(AbpAuthorizationModule),
+    typeof(AbpPermissionManagementDomainIdentityModule),
     typeof(InventoryTrackingAutomationDomainModule)
     )]
 public class InventoryTrackingAutomationTestBaseModule : AbpModule

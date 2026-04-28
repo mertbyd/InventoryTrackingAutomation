@@ -3,6 +3,7 @@ using System;
 using InventoryTrackingAutomation.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Volo.Abp.EntityFrameworkCore;
@@ -12,9 +13,11 @@ using Volo.Abp.EntityFrameworkCore;
 namespace InventoryTrackingAutomation.Migrations
 {
     [DbContext(typeof(InventoryTrackingAutomationDbContext))]
-    partial class InventoryTrackingAutomationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260428182456_Initial")]
+    partial class Initial
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -670,11 +673,6 @@ namespace InventoryTrackingAutomation.Migrations
                     b.Property<Guid?>("TargetWarehouseId")
                         .HasColumnType("uuid");
 
-                    b.Property<int>("Type")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(1);
-
                     b.Property<Guid?>("WorkflowInstanceId")
                         .HasColumnType("uuid");
 
@@ -699,9 +697,6 @@ namespace InventoryTrackingAutomation.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid");
 
-                    b.Property<int>("ConsumedQuantity")
-                        .HasColumnType("integer");
-
                     b.Property<DateTime>("CreationTime")
                         .HasColumnType("timestamp without time zone")
                         .HasColumnName("CreationTime");
@@ -709,9 +704,6 @@ namespace InventoryTrackingAutomation.Migrations
                     b.Property<Guid?>("CreatorId")
                         .HasColumnType("uuid")
                         .HasColumnName("CreatorId");
-
-                    b.Property<int>("DamagedQuantity")
-                        .HasColumnType("integer");
 
                     b.Property<Guid?>("DeleterId")
                         .HasColumnType("uuid")
@@ -735,9 +727,6 @@ namespace InventoryTrackingAutomation.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("LastModifierId");
 
-                    b.Property<int>("LostQuantity")
-                        .HasColumnType("integer");
-
                     b.Property<Guid>("MovementRequestId")
                         .HasColumnType("uuid");
 
@@ -745,13 +734,6 @@ namespace InventoryTrackingAutomation.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<int>("Quantity")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("ReceiveNote")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
-
-                    b.Property<int>("ReceivedQuantity")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
@@ -836,8 +818,6 @@ namespace InventoryTrackingAutomation.Migrations
 
                     b.HasIndex("Code")
                         .IsUnique();
-
-                    b.HasIndex("ReturnWarehouseId");
 
                     b.ToTable("tasks", "operation");
                 });
@@ -3136,14 +3116,6 @@ namespace InventoryTrackingAutomation.Migrations
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-                });
-
-            modelBuilder.Entity("InventoryTrackingAutomation.Entities.Tasks.InventoryTask", b =>
-                {
-                    b.HasOne("InventoryTrackingAutomation.Entities.Masters.Warehouse", null)
-                        .WithMany()
-                        .HasForeignKey("ReturnWarehouseId")
-                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("InventoryTrackingAutomation.Entities.Tasks.VehicleTask", b =>

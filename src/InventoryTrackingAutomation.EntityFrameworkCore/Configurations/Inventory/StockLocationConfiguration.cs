@@ -19,7 +19,6 @@ public class StockLocationConfiguration : IEntityTypeConfiguration<StockLocation
         builder.Property(x => x.ReservedQuantity).IsRequired();
 
         builder.Property(x => x.LocationId).IsRequired();
-        builder.HasIndex(x => new { x.TenantId, x.LocationType, x.LocationId, x.ProductId }).IsUnique();
 
         builder.HasOne<Product>()
             .WithMany()

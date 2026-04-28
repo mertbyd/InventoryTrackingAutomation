@@ -17,5 +17,6 @@ public class UpdateInventoryTaskModel
     public DateTime? EndDate { get; set; }           // Bitis tarihi.
     public TaskStatusEnum Status { get; set; } // Gorev durumu.
     public string? Description { get; set; }         // Gorev aciklamasi.
+    public Guid? ReturnWarehouseId { get; set; }     // Gorev bitince iadenin donecegi depo.
     public bool IsActive { get; set; }               // Aktiflik bilgisi.
 }

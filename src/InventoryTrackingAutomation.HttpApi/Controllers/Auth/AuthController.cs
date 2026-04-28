@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using InventoryTrackingAutomation.Dtos.Auth;
 using InventoryTrackingAutomation.Services.Auth;
 using InventoryTrackingAutomation.Permissions;
+using SystemStandards.Results;
 
 namespace InventoryTrackingAutomation.Controllers.Auth;
 
@@ -34,10 +35,10 @@ public class AuthController : InventoryTrackingAutomationController
     [AllowAnonymous]
 //işlevi: İlgili HTTP isteğini işler ve servis katmanına yönlendirir.
 //sistemdeki görevi: Belirli bir API aksiyonunun giriş noktasını tanımlar.
-    public async Task<TokenResponse> Login([FromBody] LoginDto input)
+    public async Task<Result<TokenResponse>> Login([FromBody] LoginDto input)
     {
         var token = await _authAppService.LoginAsync(input);
-        return token;
+        return Result<TokenResponse>.Success(token);
     }
 
     /// <summary>
@@ -48,10 +49,10 @@ public class AuthController : InventoryTrackingAutomationController
     [AllowAnonymous]
 //işlevi: İlgili HTTP isteğini işler ve servis katmanına yönlendirir.
 //sistemdeki görevi: Belirli bir API aksiyonunun giriş noktasını tanımlar.
-    public async Task<Guid> Register([FromBody] RegisterDto input)
+    public async Task<Result<Guid>> Register([FromBody] RegisterDto input)
     {
         var userId = await _authAppService.RegisterAsync(input);
-        return userId;
+        return Result<Guid>.Success(userId);
     }
 
     /// <summary>
@@ -62,8 +63,9 @@ public class AuthController : InventoryTrackingAutomationController
     [Authorize]
 //işlevi: İlgili HTTP isteğini işler ve servis katmanına yönlendirir.
 //sistemdeki görevi: Belirli bir API aksiyonunun giriş noktasını tanımlar.
-    public async Task<Guid?> GetMe()
+    public async Task<Result<Guid?>> GetMe()
     {
-        return await _authAppService.GetMeAsync();
+        var userId = await _authAppService.GetMeAsync();
+        return Result<Guid?>.Success(userId);
     }
 }

@@ -16,7 +16,6 @@ public class MovementApprovalMappingProfile : Profile
         CreateMap<MovementApproval, MovementApprovalDto>()
             .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
             .ReverseMap();
-
         CreateMap<PendingApprovalModel, PendingApprovalDto>();
     }
 }

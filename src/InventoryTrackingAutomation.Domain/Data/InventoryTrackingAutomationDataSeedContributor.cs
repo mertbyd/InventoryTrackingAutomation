@@ -481,6 +481,37 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
             await _workflowDefinitionRepository.InsertAsync(workflowDef, autoSave: true);
         }
 
+        // 8.1 TaskMovementRequest (Sahaya Çıkış) İş Akışı
+        if (await _workflowDefinitionRepository.FindAsync(w => w.Name == "TaskMovementRequest") == null)
+        {
+            var taskWorkflowDef = new InventoryTrackingAutomation.Entities.Workflows.WorkflowDefinition(
+                id: _guidGenerator.Create(),
+                name: "TaskMovementRequest",
+                description: "Sahaya malzeme çıkış onay akışı (Daha Hızlı)",
+                isActive: true
+            );
+
+            // Adım 1: Talebi başlatanın yöneticisi onaylamalı
+            taskWorkflowDef.Steps.Add(new InventoryTrackingAutomation.Entities.Workflows.WorkflowStepDefinition(
+                id: _guidGenerator.Create(),
+                workflowDefinitionId: taskWorkflowDef.Id,
+                stepOrder: 1,
+                requiredRoleName: null,
+                resolverKey: "InitiatorManager"
+            ));
+
+            // Adım 2: Lojistik Birimi Onayı (Basit Adım)
+            taskWorkflowDef.Steps.Add(new InventoryTrackingAutomation.Entities.Workflows.WorkflowStepDefinition(
+                id: _guidGenerator.Create(),
+                workflowDefinitionId: taskWorkflowDef.Id,
+                stepOrder: 2,
+                requiredRoleName: null,
+                resolverKey: "LogisticsManager"
+            ));
+
+            await _workflowDefinitionRepository.InsertAsync(taskWorkflowDef, autoSave: true);
+        }
+
         // 9. InventoryTask + VehicleTask + Araç Stokları + InventoryTransaction seed verileri
         // PDF senaryosu: "Telsiz 20 adet → 10 depoda, 5 araç-1'de, 5 araç-2'de"
         await SeedTasksAndTransactionsAsync();
@@ -742,6 +773,8 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
             InventoryTrackingAutomationPermissions.MovementRequests.Create,
             InventoryTrackingAutomationPermissions.MovementRequests.Edit,
             InventoryTrackingAutomationPermissions.MovementRequests.Delete,
+            InventoryTrackingAutomationPermissions.MovementRequests.Dispatch,
+            InventoryTrackingAutomationPermissions.MovementRequests.Receive,
             InventoryTrackingAutomationPermissions.Workflows.View,
             InventoryTrackingAutomationPermissions.Workflows.Approve,
             InventoryTrackingAutomationPermissions.Workflows.Reject,
@@ -749,6 +782,7 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
             InventoryTrackingAutomationPermissions.Inventory.Manage,
             InventoryTrackingAutomationPermissions.Tasks.View,
             InventoryTrackingAutomationPermissions.Tasks.Manage,
+            InventoryTrackingAutomationPermissions.Tasks.Complete,
             InventoryTrackingAutomationPermissions.VehicleTasks.View,
             InventoryTrackingAutomationPermissions.VehicleTasks.Manage,
             InventoryTrackingAutomationPermissions.Masters.View,
@@ -767,9 +801,12 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
                 InventoryTrackingAutomationPermissions.Masters.View,
                 InventoryTrackingAutomationPermissions.Workflows.Approve,
                 InventoryTrackingAutomationPermissions.Workflows.Reject,
+                InventoryTrackingAutomationPermissions.MovementRequests.Dispatch,
+                InventoryTrackingAutomationPermissions.MovementRequests.Receive,
                 InventoryTrackingAutomationPermissions.Inventory.Manage,
                 InventoryTrackingAutomationPermissions.Tasks.View,
                 InventoryTrackingAutomationPermissions.Tasks.Manage,
+                InventoryTrackingAutomationPermissions.Tasks.Complete,
                 InventoryTrackingAutomationPermissions.VehicleTasks.View,
                 InventoryTrackingAutomationPermissions.VehicleTasks.Manage
             },
@@ -793,6 +830,8 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
                 InventoryTrackingAutomationPermissions.Inventory.View,
                 InventoryTrackingAutomationPermissions.Masters.View,
                 InventoryTrackingAutomationPermissions.Workflows.Approve,
+                InventoryTrackingAutomationPermissions.MovementRequests.Dispatch,
+                InventoryTrackingAutomationPermissions.MovementRequests.Receive,
                 InventoryTrackingAutomationPermissions.Tasks.View,
                 InventoryTrackingAutomationPermissions.VehicleTasks.View
             },
@@ -804,6 +843,7 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
                 InventoryTrackingAutomationPermissions.Inventory.View,
                 InventoryTrackingAutomationPermissions.Masters.View,
                 InventoryTrackingAutomationPermissions.MovementRequests.Create,
+                InventoryTrackingAutomationPermissions.MovementRequests.Receive,
                 InventoryTrackingAutomationPermissions.Tasks.View,
                 InventoryTrackingAutomationPermissions.VehicleTasks.View
             },
@@ -816,9 +856,12 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
                 InventoryTrackingAutomationPermissions.Masters.View,
                 InventoryTrackingAutomationPermissions.Workflows.Approve,
                 InventoryTrackingAutomationPermissions.Workflows.Reject,
+                InventoryTrackingAutomationPermissions.MovementRequests.Dispatch,
+                InventoryTrackingAutomationPermissions.MovementRequests.Receive,
                 InventoryTrackingAutomationPermissions.Inventory.Manage,
                 InventoryTrackingAutomationPermissions.Tasks.View,
                 InventoryTrackingAutomationPermissions.Tasks.Manage,
+                InventoryTrackingAutomationPermissions.Tasks.Complete,
                 InventoryTrackingAutomationPermissions.VehicleTasks.View,
                 InventoryTrackingAutomationPermissions.VehicleTasks.Manage
             },
@@ -838,6 +881,7 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
             [InventoryTrackingAutomationRoleConstants.Driver] = new[]
             {
                 InventoryTrackingAutomationPermissions.Inventory.View,
+                InventoryTrackingAutomationPermissions.MovementRequests.Receive,
                 InventoryTrackingAutomationPermissions.Tasks.View,
                 InventoryTrackingAutomationPermissions.VehicleTasks.View,
                 InventoryTrackingAutomationPermissions.Masters.View

@@ -33,11 +33,7 @@ public class MovementRequestLineManager : BaseManager<MovementRequestLine>
         _productRepository = productRepository;
     }
 
-    /// <summary>
-    /// Yeni hareket talebi satırı oluşturur — MovementRequestId ve ProductId varlık kontrolü yapar.
-    /// </summary>
-//işlevi: Etki alanı kuralını veya validasyonunu işletir.
-//sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
+    /// Yeni bir hareket talebi satırı oluşturmak için kullanılır.
     public async Task<MovementRequestLine> CreateAsync(CreateMovementRequestLineModel model)
     {
         await EnsureExistsInAsync(
@@ -53,11 +49,7 @@ public class MovementRequestLineManager : BaseManager<MovementRequestLine>
         return entity;
     }
 
-    /// <summary>
-    /// Hareket talebi satırını günceller — MovementRequestId ve ProductId varlık kontrolleri yapar.
-    /// </summary>
-//işlevi: Etki alanı kuralını veya validasyonunu işletir.
-//sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
+    /// Mevcut bir hareket talebi satırını güncellemek için kullanılır.
     public async Task<MovementRequestLine> UpdateAsync(MovementRequestLine existing, UpdateMovementRequestLineModel model)
     {
         if (existing.MovementRequestId != model.MovementRequestId)

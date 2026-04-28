@@ -4,14 +4,19 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using InventoryTrackingAutomation.Dtos.Tasks;
 using InventoryTrackingAutomation.Entities.Tasks;
+using InventoryTrackingAutomation.Enums.Tasks;
+using InventoryTrackingAutomation.Interface.Masters;
 using InventoryTrackingAutomation.Interface.Tasks;
 using InventoryTrackingAutomation.Managers.Inventory;
 using InventoryTrackingAutomation.Managers.Tasks;
 using InventoryTrackingAutomation.Models.Tasks;
 using InventoryTrackingAutomation.Services.Tasks;
 using FluentValidation;
+using Volo.Abp;
 using Volo.Abp.Application.Dtos;
+using Volo.Abp.EventBus.Local;
 using Volo.Abp.Uow;
+using Volo.Abp.Users;
 
 namespace InventoryTrackingAutomation.Application.Services.Tasks;
 
@@ -21,23 +26,29 @@ namespace InventoryTrackingAutomation.Application.Services.Tasks;
 public class InventoryTaskAppService : InventoryTrackingAutomationAppService, IInventoryTaskAppService
 {
     private readonly IInventoryTaskRepository _repository;
+    private readonly IWorkerRepository _workerRepository;
     private readonly InventoryTaskManager _manager;
     private readonly InventoryQueryManager _inventoryQueryManager;
+    private readonly ILocalEventBus _localEventBus;
     private readonly IValidator<CreateInventoryTaskDto> _createValidator;
     private readonly IValidator<UpdateInventoryTaskDto> _updateValidator;
     private readonly IMapper _mapper;
 
     public InventoryTaskAppService(
         IInventoryTaskRepository repository,
+        IWorkerRepository workerRepository,
         InventoryTaskManager manager,
         InventoryQueryManager inventoryQueryManager,
+        ILocalEventBus localEventBus,
         IValidator<CreateInventoryTaskDto> createValidator,
         IValidator<UpdateInventoryTaskDto> updateValidator,
         IMapper mapper)
     {
         _repository = repository;
+        _workerRepository = workerRepository;
         _manager = manager;
         _inventoryQueryManager = inventoryQueryManager;
+        _localEventBus = localEventBus;
         _createValidator = createValidator;
         _updateValidator = updateValidator;
         _mapper = mapper;
@@ -112,9 +123,51 @@ public class InventoryTaskAppService : InventoryTrackingAutomationAppService, II
     {
         await _updateValidator.ValidateAndThrowAsync(input);
         var existing = await _manager.EnsureExistsAsync(id);
+        var targetStatus = input.Status;
         var model = _mapper.Map<UpdateInventoryTaskDto, UpdateInventoryTaskModel>(input);
         var updated = await _manager.UpdateAsync(existing, model);
+
+        if (updated.Status != targetStatus)
+        {
+            await _manager.TransitionStatusAsync(
+                updated,
+                targetStatus,
+                _localEventBus,
+                CurrentUser.GetId(),
+                await ResolveCurrentWorkerIdAsync());
+        }
+
         var saved = await _repository.UpdateAsync(updated, autoSave: true);
+        return _mapper.Map<InventoryTask, InventoryTaskDto>(saved);
+    }
+
+    [UnitOfWork]
+    public async Task<InventoryTaskDto> CompleteAsync(Guid id)
+    {
+        var task = await _manager.EnsureExistsAsync(id);
+        await _manager.TransitionStatusAsync(
+            task,
+            TaskStatusEnum.Completed,
+            _localEventBus,
+            CurrentUser.GetId(),
+            await ResolveCurrentWorkerIdAsync());
+
+        var saved = await _repository.UpdateAsync(task, autoSave: true);
+        return _mapper.Map<InventoryTask, InventoryTaskDto>(saved);
+    }
+
+    [UnitOfWork]
+    public async Task<InventoryTaskDto> CancelAsync(Guid id)
+    {
+        var task = await _manager.EnsureExistsAsync(id);
+        await _manager.TransitionStatusAsync(
+            task,
+            TaskStatusEnum.Cancelled,
+            _localEventBus,
+            CurrentUser.GetId(),
+            await ResolveCurrentWorkerIdAsync());
+
+        var saved = await _repository.UpdateAsync(task, autoSave: true);
         return _mapper.Map<InventoryTask, InventoryTaskDto>(saved);
     }
 
@@ -125,5 +178,18 @@ public class InventoryTaskAppService : InventoryTrackingAutomationAppService, II
     {
         await _manager.EnsureExistsAsync(id);
         await _repository.SoftDeleteAsync(id);
+    }
+
+    private async Task<Guid> ResolveCurrentWorkerIdAsync()
+    {
+        var userId = CurrentUser.GetId();
+        var worker = await _workerRepository.FindAsync(w => w.UserId == userId);
+        if (worker == null)
+        {
+            throw new BusinessException(InventoryTrackingAutomationErrorCodes.Workers.NotFound)
+                .WithData("UserId", userId);
+        }
+
+        return worker.Id;
     }
 }

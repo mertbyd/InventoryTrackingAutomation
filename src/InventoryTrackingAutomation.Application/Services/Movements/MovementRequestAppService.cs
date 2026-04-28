@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using InventoryTrackingAutomation.Dtos.Movements;
 using InventoryTrackingAutomation.Entities.Movements;
+using InventoryTrackingAutomation.Enums;
 using InventoryTrackingAutomation.Interface.Masters;
 using InventoryTrackingAutomation.Interface.Movements;
 using InventoryTrackingAutomation.Managers.Movements;
@@ -43,18 +44,14 @@ public class MovementRequestAppService : InventoryTrackingAutomationAppService, 
         _workerRepository = workerRepository;
     }
 
-    // Id ile hareket talebini getirir; yoksa EntityNotFoundException.
-//işlevi: İlgili iş senaryosunu (use-case) yürütür.
-//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
+    /// Hareket talebi verisini getirmek için kullanılır.
     public async Task<MovementRequestDto> GetAsync(Guid id)
     {
         var entity = await _manager.EnsureExistsAsync(id);
         return _mapper.Map<MovementRequest, MovementRequestDto>(entity);
     }
 
-    // Hareket taleplerini sayfalı listeler.
-//işlevi: İlgili iş senaryosunu (use-case) yürütür.
-//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
+    /// Hareket talebi listesini getirmek için kullanılır.
     public async Task<PagedResultDto<MovementRequestDto>> GetListAsync(PagedResultRequestDto input)
     {
         var totalCount = await _repository.GetCountAsync();
@@ -65,10 +62,8 @@ public class MovementRequestAppService : InventoryTrackingAutomationAppService, 
             _mapper.Map<List<MovementRequest>, List<MovementRequestDto>>(entities));
     }
 
-    // Yeni hareket talebi oluşturur — RequestedByWorkerId CurrentUser'dan çözümlenir, manager workflow'u tetikler.
+    /// Yeni bir hareket talebi oluşturmak için kullanılır.
     [UnitOfWork]
-//işlevi: İlgili iş senaryosunu (use-case) yürütür.
-//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<MovementRequestDto> CreateAsync(CreateMovementRequestDto input)
     {
         var currentUserId = CurrentUserId;
@@ -80,10 +75,8 @@ public class MovementRequestAppService : InventoryTrackingAutomationAppService, 
         return _mapper.Map<MovementRequest, MovementRequestDto>(inserted);
     }
 
-    // Birden fazla hareket talebini toplu oluşturur — her biri için workflow tetiklenir.
+    /// Birden fazla hareket talebini toplu olarak oluşturmak için kullanılır.
     [UnitOfWork]
-//işlevi: İlgili iş senaryosunu (use-case) yürütür.
-//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<List<MovementRequestDto>> CreateManyAsync(List<CreateMovementRequestDto> inputs)
     {
         var currentUserId = CurrentUserId;
@@ -104,10 +97,8 @@ public class MovementRequestAppService : InventoryTrackingAutomationAppService, 
         return _mapper.Map<List<MovementRequest>, List<MovementRequestDto>>(inserted);
     }
 
-    // Hareket talebini günceller — manager iş kurallarını işler, sonra repository persist eder.
+    /// Mevcut bir hareket talebini güncellemek için kullanılır.
     [UnitOfWork]
-//işlevi: İlgili iş senaryosunu (use-case) yürütür.
-//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<MovementRequestDto> UpdateAsync(Guid id, UpdateMovementRequestDto input)
     {
         var existing = await _manager.EnsureExistsAsync(id);
@@ -119,10 +110,34 @@ public class MovementRequestAppService : InventoryTrackingAutomationAppService, 
         return _mapper.Map<MovementRequest, MovementRequestDto>(saved);
     }
 
-    // Talebi + satırları + workflow'u tek atomik UoW içinde oluşturur.
+    /// Hareket talebi sevkiyatını gerçekleştirmek için kullanılır.
     [UnitOfWork]
-//işlevi: İlgili iş senaryosunu (use-case) yürütür.
-//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
+    public async Task<MovementRequestDto> DispatchAsync(Guid id, DispatchMovementRequestDto input)
+    {
+        var dispatched = await _manager.DispatchAsync(
+            id,
+            input.DispatchNote,
+            CurrentUserId,
+            await ResolveCurrentWorkerIdAsync());
+
+        return _mapper.Map<MovementRequest, MovementRequestDto>(dispatched);
+    }
+
+    /// Hareket talebini teslim almak için kullanılır.
+    [UnitOfWork]
+    public async Task<MovementRequestDto> ReceiveAsync(Guid id, ReceiveMovementRequestDto input)
+    {
+        var model = _mapper.Map<ReceiveMovementRequestDto, ReceiveMovementRequestModel>(input);
+        var received = await _manager.ReceiveAsync(
+            id,
+            model,
+            CurrentUserId);
+
+        return _mapper.Map<MovementRequest, MovementRequestDto>(received);
+    }
+
+    /// Hareket talebini satırları ile birlikte oluşturmak için kullanılır.
+    [UnitOfWork]
     public async Task<MovementRequestDto> CreateWithLinesAsync(CreateMovementRequestWithLinesDto input)
     {
         var currentUserId = CurrentUserId;
@@ -135,17 +150,23 @@ public class MovementRequestAppService : InventoryTrackingAutomationAppService, 
         return _mapper.Map<MovementRequest, MovementRequestDto>(inserted);
     }
 
-    // Hareket talebini soft delete ile siler.
+    /// Hareket talebini silmek için kullanılır.
     [UnitOfWork]
-//işlevi: İlgili iş senaryosunu (use-case) yürütür.
-//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task DeleteAsync(Guid id)
     {
-        await _manager.EnsureExistsAsync(id);
+        var request = await _manager.EnsureExistsAsync(id);
+        if (request.Status != MovementStatusEnum.Pending)
+        {
+            throw new BusinessException(InventoryTrackingAutomationErrorCodes.MovementRequests.InvalidStateTransition)
+                .WithData("MovementRequestId", id)
+                .WithData("CurrentStatus", request.Status)
+                .WithData("AllowedStatus", MovementStatusEnum.Pending);
+        }
+
         await _repository.SoftDeleteAsync(id);
     }
 
-    // Mevcut kullanıcının Worker Id'sini bulur; yoksa Workers.NotFound hatası fırlatır.
+    /// Mevcut çalışanın ID verisini getirir.
     private async Task<Guid> ResolveCurrentWorkerIdAsync()
     {
         var userId = CurrentUserId;
@@ -158,6 +179,6 @@ public class MovementRequestAppService : InventoryTrackingAutomationAppService, 
         return worker.Id;
     }
 
-    // Authenticated kullanıcının Id'sine kısa erişim helper'ı.
+    /// Mevcut kullanıcının ID verisini getirir.
     private Guid CurrentUserId => CurrentUser.GetId();
 }

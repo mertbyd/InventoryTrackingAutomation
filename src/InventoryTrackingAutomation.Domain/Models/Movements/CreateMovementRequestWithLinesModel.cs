@@ -14,8 +14,9 @@ public class CreateMovementRequestWithLinesModel
     public string RequestNumber { get; set; }
     public Guid RequestedByWorkerId { get; set; }      // Server-side: AppService CurrentUser'dan çözer.
     public Guid SourceWarehouseId { get; set; }
-    public Guid TargetWarehouseId { get; set; }
-    public Guid RequestedVehicleId { get; set; }
+    public Guid? TargetWarehouseId { get; set; }
+    public Guid? RequestedVehicleId { get; set; }
+    public Guid? AssignedTaskId { get; set; }
     public MovementPriorityEnum Priority { get; set; }
     public string RequestNote { get; set; }
     public DateTime PlannedDate { get; set; }
