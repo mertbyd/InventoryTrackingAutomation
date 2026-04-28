@@ -10,7 +10,7 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
 {
     public void Configure(EntityTypeBuilder<Product> builder)
     {
-        builder.ToTable("Products", InventoryTrackingAutomationDbProperties.MasterSchema);
+        builder.ToTable("products", InventoryTrackingAutomationDbProperties.MasterSchema);
         builder.ConfigureByConvention();
 
         builder.Property(x => x.Code).HasMaxLength(50);

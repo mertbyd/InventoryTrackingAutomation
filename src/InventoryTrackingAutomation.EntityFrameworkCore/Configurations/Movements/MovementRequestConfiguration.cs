@@ -10,7 +10,7 @@ public class MovementRequestConfiguration : IEntityTypeConfiguration<MovementReq
 {
     public void Configure(EntityTypeBuilder<MovementRequest> builder)
     {
-        builder.ToTable("MovementRequests", InventoryTrackingAutomationDbProperties.MovementSchema);
+        builder.ToTable("movement_requests", InventoryTrackingAutomationDbProperties.MovementSchema);
         builder.ConfigureByConvention();
 
         builder.Property(x => x.RequestNumber).IsRequired().HasMaxLength(50);

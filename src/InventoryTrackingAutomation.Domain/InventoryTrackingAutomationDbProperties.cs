@@ -8,7 +8,6 @@ public static class InventoryTrackingAutomationDbProperties
     // Schema tanımları — appsettings'ten override edilebilir
     public static string LookupSchema { get; set; } = "lookup";
     public static string MasterSchema { get; set; } = "master";
-    public static string StockSchema { get; set; } = "stock";
     public static string InventorySchema { get; set; } = "inventory";
     public static string OperationSchema { get; set; } = "operation";
     public static string MovementSchema { get; set; } = "movement";

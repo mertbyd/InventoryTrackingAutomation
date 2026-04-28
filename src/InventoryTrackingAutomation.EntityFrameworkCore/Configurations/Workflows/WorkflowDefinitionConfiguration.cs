@@ -12,7 +12,7 @@ public class WorkflowDefinitionConfiguration : IEntityTypeConfiguration<Workflow
 {
     public void Configure(EntityTypeBuilder<WorkflowDefinition> builder)
     {
-        builder.ToTable(InventoryTrackingAutomationDbProperties.DbTablePrefix + "WorkflowDefinitions", InventoryTrackingAutomationDbProperties.WorkflowSchema);
+        builder.ToTable("workflow_definitions", InventoryTrackingAutomationDbProperties.WorkflowSchema);
         
         builder.ConfigureByConvention(); // ABP'nin standart audit kolonlarını ekler
 

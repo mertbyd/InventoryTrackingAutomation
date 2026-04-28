@@ -12,7 +12,7 @@ public class WorkflowInstanceStepConfiguration : IEntityTypeConfiguration<Workfl
 {
     public void Configure(EntityTypeBuilder<WorkflowInstanceStep> builder)
     {
-        builder.ToTable(InventoryTrackingAutomationDbProperties.DbTablePrefix + "WorkflowInstanceSteps", InventoryTrackingAutomationDbProperties.WorkflowSchema);
+        builder.ToTable("workflow_instance_steps", InventoryTrackingAutomationDbProperties.WorkflowSchema);
         
         builder.ConfigureByConvention(); // ABP'nin standart audit kolonlarını ekler
 

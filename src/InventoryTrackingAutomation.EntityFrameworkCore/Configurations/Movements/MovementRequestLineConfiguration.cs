@@ -10,7 +10,7 @@ public class MovementRequestLineConfiguration : IEntityTypeConfiguration<Movemen
 {
     public void Configure(EntityTypeBuilder<MovementRequestLine> builder)
     {
-        builder.ToTable("MovementRequestLines", InventoryTrackingAutomationDbProperties.MovementSchema);
+        builder.ToTable("movement_request_lines", InventoryTrackingAutomationDbProperties.MovementSchema);
         builder.ConfigureByConvention();
 
         builder.HasOne<MovementRequest>()

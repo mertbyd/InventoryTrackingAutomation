@@ -10,7 +10,7 @@ public class MovementApprovalConfiguration : IEntityTypeConfiguration<MovementAp
 {
     public void Configure(EntityTypeBuilder<MovementApproval> builder)
     {
-        builder.ToTable("MovementApprovals", InventoryTrackingAutomationDbProperties.MovementSchema);
+        builder.ToTable("movement_approvals", InventoryTrackingAutomationDbProperties.MovementSchema);
         builder.ConfigureByConvention();
 
         builder.Property(x => x.Note).HasMaxLength(1000);

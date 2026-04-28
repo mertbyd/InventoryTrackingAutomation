@@ -9,7 +9,7 @@ public class VehicleConfiguration : IEntityTypeConfiguration<Vehicle>
 {
     public void Configure(EntityTypeBuilder<Vehicle> builder)
     {
-        builder.ToTable("Vehicles", InventoryTrackingAutomationDbProperties.MasterSchema);
+        builder.ToTable("vehicles", InventoryTrackingAutomationDbProperties.MasterSchema);
         builder.ConfigureByConvention();
 
         builder.Property(x => x.PlateNumber).IsRequired().HasMaxLength(20);

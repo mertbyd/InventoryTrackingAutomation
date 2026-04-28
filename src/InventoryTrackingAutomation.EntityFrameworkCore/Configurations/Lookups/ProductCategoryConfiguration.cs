@@ -9,7 +9,7 @@ public class ProductCategoryConfiguration : IEntityTypeConfiguration<ProductCate
 {
     public void Configure(EntityTypeBuilder<ProductCategory> builder)
     {
-        builder.ToTable("ProductCategories", InventoryTrackingAutomationDbProperties.LookupSchema);
+        builder.ToTable("product_categories", InventoryTrackingAutomationDbProperties.LookupSchema);
         builder.ConfigureByConvention();
 
         builder.Property(x => x.Code).HasMaxLength(50);
