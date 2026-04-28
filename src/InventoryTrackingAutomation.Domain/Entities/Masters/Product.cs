@@ -1,20 +1,22 @@
 using System;
 using InventoryTrackingAutomation.Enums;
 using Volo.Abp.Domain.Entities.Auditing;
+using Volo.Abp.MultiTenancy;
 
 namespace InventoryTrackingAutomation.Entities.Masters;
 
 /// <summary>
-/// Sistemdeki ürünleri temsil eden master data entity'si.
+/// Stokta takip edilen urunu temsil eden master aggregate.
 /// </summary>
-public class Product : FullAuditedEntity<Guid>
+public class Product : FullAuditedAggregateRoot<Guid>, IMultiTenant
 {
-    public string Code { get; set; }            // Ürünün benzersiz kodu. Örnek: "PRD-001"
-    public string Name { get; set; }            // Ürünün adı. Örnek: "Vida M8x20"
-    public Guid? CategoryId { get; set; }       // Bağlı olduğu ürün kategorisi. Örnek: ProductCategory Id'si
-    public UnitTypeEnum BaseUnit { get; set; }  // Temel ölçü birimi. Örnek: UnitTypeEnum.Piece
-    public bool IsActive { get; set; }          // Ürün aktif mi. Örnek: true
-    public bool IsSerializable { get; set; }    // Seri numarası takibi var mı. Örnek: false
+    public string Code { get; set; } = default!; // Urunun kurumsal kodunu tasir.
+    public string Name { get; set; } = default!; // Urunun operasyonlarda gorunen adini tasir.
+    public Guid? CategoryId { get; set; } // Urunun bagli oldugu kategori baglamini tasir.
+    public UnitTypeEnum BaseUnit { get; set; } // Urunun stok olcum birimini belirler.
+    public bool IsActive { get; set; } // Urunun operasyonlarda kullanilip kullanilamayacagini belirler.
+    public bool IsSerializable { get; set; } // Urunun seri bazli takip gerektirip gerektirmedigini belirler.
+    public Guid? TenantId { get; set; } // Urun katalog verisini kiraci sinirinda tutar.
 
     protected Product() { }
     public Product(Guid id) : base(id) { }

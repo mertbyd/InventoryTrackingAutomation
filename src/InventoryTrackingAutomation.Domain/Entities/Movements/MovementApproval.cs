@@ -1,20 +1,22 @@
 using System;
 using InventoryTrackingAutomation.Enums;
 using Volo.Abp.Domain.Entities.Auditing;
+using Volo.Abp.MultiTenancy;
 
 namespace InventoryTrackingAutomation.Entities.Movements;
 
 /// <summary>
-/// Hareket talebinin çok aşamalı onay sürecindeki her onaycının kararını tutan entity.
+/// Hareket talebinin onay surecindeki karar izini temsil eden aggregate.
 /// </summary>
-public class MovementApproval : FullAuditedAggregateRoot<Guid>
+public class MovementApproval : FullAuditedAggregateRoot<Guid>, IMultiTenant
 {
-    public Guid MovementRequestId { get; set; }         // Bağlı olduğu talep kimliği. Örnek: MovementRequest Id'si
-    public Guid ApproverWorkerId { get; set; }          // Bu adımda karar veren onaycı çalışanın kimliği. Örnek: Worker Id'si
-    public int StepOrder { get; set; }                  // Onay sırası (1'den başlar). Örnek: 1 = 1. Onaycı, 2 = 2. Onaycı
-    public ApprovalStatusEnum Status { get; set; }      // Bu adımın durumu. Örnek: ApprovalStatusEnum.Pending
-    public DateTime? DecidedAt { get; set; }            // Kararın verildiği tarih ve saat. Örnek: DateTime.UtcNow
-    public string? Note { get; set; }                   // Onaycının yorumu veya red gerekçesi. Örnek: "Stok yetersiz, 2 hafta sonra tekrar değerlendirilecek"
+    public Guid MovementRequestId { get; set; } // Kararin bagli oldugu talep baglamini tasir.
+    public Guid ApproverWorkerId { get; set; } // Karari verecek veya veren onayci calisan baglamini tasir.
+    public int StepOrder { get; set; } // Onay zincirindeki sira bilgisini tasir.
+    public ApprovalStatusEnum Status { get; set; } // Onay adiminin karar durumunu belirler.
+    public DateTime? DecidedAt { get; set; } // Kararin verildigi zamani tasir.
+    public string? Note { get; set; } // Onaycinin operasyonel notunu veya red gerekcesini tasir.
+    public Guid? TenantId { get; set; } // Onay kaydini kiraci sinirinda tutar.
 
     protected MovementApproval() { }
     public MovementApproval(Guid id) : base(id) { }
