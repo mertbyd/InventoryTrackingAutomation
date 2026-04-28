@@ -29,7 +29,7 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
     private readonly IRepository<Site, Guid> _siteRepository;
     private readonly IRepository<Worker, Guid> _workerRepository;
     private readonly IRepository<Vehicle, Guid> _vehicleRepository;
-    private readonly IRepository<InventoryTrackingAutomation.Entities.Stock.ProductStock, Guid> _productStockRepository;
+    private readonly IRepository<InventoryTrackingAutomation.Entities.Stock.StockLocation, Guid> _stockLocationRepository;
     private readonly InventoryTrackingAutomation.Interface.Workflows.IWorkflowDefinitionRepository _workflowDefinitionRepository;
     private readonly IdentityRoleManager _identityRoleManager;
     private readonly IdentityUserManager _identityUserManager;
@@ -43,7 +43,7 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
         IRepository<Site, Guid> siteRepository,
         IRepository<Worker, Guid> workerRepository,
         IRepository<Vehicle, Guid> vehicleRepository,
-        IRepository<InventoryTrackingAutomation.Entities.Stock.ProductStock, Guid> productStockRepository,
+        IRepository<InventoryTrackingAutomation.Entities.Stock.StockLocation, Guid> stockLocationRepository,
         InventoryTrackingAutomation.Interface.Workflows.IWorkflowDefinitionRepository workflowDefinitionRepository,
         IdentityRoleManager identityRoleManager,
         IdentityUserManager identityUserManager,
@@ -56,7 +56,7 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
         _siteRepository = siteRepository;
         _workerRepository = workerRepository;
         _vehicleRepository = vehicleRepository;
-        _productStockRepository = productStockRepository;
+        _stockLocationRepository = stockLocationRepository;
         _workflowDefinitionRepository = workflowDefinitionRepository;
         _identityRoleManager = identityRoleManager;
         _identityUserManager = identityUserManager;
@@ -310,8 +310,8 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
         // 7. Site manager atamalarını deterministik RegNo lookup ile yap
         await AssignSiteManagersAsync();
 
-        // 8. ProductStock (Stok) verileri
-        if (await _productStockRepository.GetCountAsync() == 0)
+        // 8. StockLocation (Stok) verileri
+        if (await _stockLocationRepository.GetCountAsync() == 0)
         {
             var allProducts = await _productRepository.GetListAsync();
             var allSites = await _siteRepository.GetListAsync();
@@ -327,11 +327,12 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
                 var beton = allProducts.FirstOrDefault(x => x.Code == "PRD-01");
                 if (beton != null)
                 {
-                    await _productStockRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Stock.ProductStock(_guidGenerator.Create())
+                    await _stockLocationRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Stock.StockLocation(_guidGenerator.Create())
                     {
                         ProductId = beton.Id,
-                        SiteId = warehouse1.Id,
-                        TotalQuantity = 1000,
+                        LocationType = InventoryLocationTypeEnum.Warehouse,
+                        LocationId = warehouse1.Id,
+                        Quantity = 1000,
                         ReservedQuantity = 150
                     }, autoSave: true);
                 }
@@ -340,11 +341,12 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
                 var demir = allProducts.FirstOrDefault(x => x.Code == "PRD-02");
                 if (demir != null)
                 {
-                    await _productStockRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Stock.ProductStock(_guidGenerator.Create())
+                    await _stockLocationRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Stock.StockLocation(_guidGenerator.Create())
                     {
                         ProductId = demir.Id,
-                        SiteId = warehouse1.Id,
-                        TotalQuantity = 50,
+                        LocationType = InventoryLocationTypeEnum.Warehouse,
+                        LocationId = warehouse1.Id,
+                        Quantity = 50,
                         ReservedQuantity = 10
                     }, autoSave: true);
                 }
@@ -353,11 +355,12 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
                 var kum = allProducts.FirstOrDefault(x => x.Code == "PRD-03");
                 if (kum != null)
                 {
-                    await _productStockRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Stock.ProductStock(_guidGenerator.Create())
+                    await _stockLocationRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Stock.StockLocation(_guidGenerator.Create())
                     {
                         ProductId = kum.Id,
-                        SiteId = warehouse1.Id,
-                        TotalQuantity = 500,
+                        LocationType = InventoryLocationTypeEnum.Warehouse,
+                        LocationId = warehouse1.Id,
+                        Quantity = 500,
                         ReservedQuantity = 100
                     }, autoSave: true);
                 }
@@ -366,11 +369,12 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
                 var cakil = allProducts.FirstOrDefault(x => x.Code == "PRD-04");
                 if (cakil != null)
                 {
-                    await _productStockRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Stock.ProductStock(_guidGenerator.Create())
+                    await _stockLocationRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Stock.StockLocation(_guidGenerator.Create())
                     {
                         ProductId = cakil.Id,
-                        SiteId = warehouse1.Id,
-                        TotalQuantity = 800,
+                        LocationType = InventoryLocationTypeEnum.Warehouse,
+                        LocationId = warehouse1.Id,
+                        Quantity = 800,
                         ReservedQuantity = 200
                     }, autoSave: true);
                 }
@@ -379,11 +383,12 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
                 var hilti = allProducts.FirstOrDefault(x => x.Code == "EQP-01");
                 if (hilti != null)
                 {
-                    await _productStockRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Stock.ProductStock(_guidGenerator.Create())
+                    await _stockLocationRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Stock.StockLocation(_guidGenerator.Create())
                     {
                         ProductId = hilti.Id,
-                        SiteId = warehouse1.Id,
-                        TotalQuantity = 10,
+                        LocationType = InventoryLocationTypeEnum.Warehouse,
+                        LocationId = warehouse1.Id,
+                        Quantity = 10,
                         ReservedQuantity = 2
                     }, autoSave: true);
                 }
@@ -392,11 +397,12 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
                 var bosch = allProducts.FirstOrDefault(x => x.Code == "EQP-02");
                 if (bosch != null)
                 {
-                    await _productStockRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Stock.ProductStock(_guidGenerator.Create())
+                    await _stockLocationRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Stock.StockLocation(_guidGenerator.Create())
                     {
                         ProductId = bosch.Id,
-                        SiteId = warehouse1.Id,
-                        TotalQuantity = 8,
+                        LocationType = InventoryLocationTypeEnum.Warehouse,
+                        LocationId = warehouse1.Id,
+                        Quantity = 8,
                         ReservedQuantity = 1
                     }, autoSave: true);
                 }
@@ -405,11 +411,12 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
                 var iskele = allProducts.FirstOrDefault(x => x.Code == "EQP-03");
                 if (iskele != null)
                 {
-                    await _productStockRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Stock.ProductStock(_guidGenerator.Create())
+                    await _stockLocationRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Stock.StockLocation(_guidGenerator.Create())
                     {
                         ProductId = iskele.Id,
-                        SiteId = warehouse1.Id,
-                        TotalQuantity = 50,
+                        LocationType = InventoryLocationTypeEnum.Warehouse,
+                        LocationId = warehouse1.Id,
+                        Quantity = 50,
                         ReservedQuantity = 15
                     }, autoSave: true);
                 }
@@ -418,11 +425,12 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
                 var kemeri = allProducts.FirstOrDefault(x => x.Code == "EQP-04");
                 if (kemeri != null)
                 {
-                    await _productStockRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Stock.ProductStock(_guidGenerator.Create())
+                    await _stockLocationRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Stock.StockLocation(_guidGenerator.Create())
                     {
                         ProductId = kemeri.Id,
-                        SiteId = warehouse1.Id,
-                        TotalQuantity = 100,
+                        LocationType = InventoryLocationTypeEnum.Warehouse,
+                        LocationId = warehouse1.Id,
+                        Quantity = 100,
                         ReservedQuantity = 20
                     }, autoSave: true);
                 }
@@ -433,11 +441,12 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
                     var warehouse2 = warehouseSites[1];
                     if (beton != null)
                     {
-                        await _productStockRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Stock.ProductStock(_guidGenerator.Create())
+                        await _stockLocationRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Stock.StockLocation(_guidGenerator.Create())
                         {
                             ProductId = beton.Id,
-                            SiteId = warehouse2.Id,
-                            TotalQuantity = 600,
+                            LocationType = InventoryLocationTypeEnum.Warehouse,
+                            LocationId = warehouse2.Id,
+                            Quantity = 600,
                             ReservedQuantity = 50
                         }, autoSave: true);
                     }
@@ -452,11 +461,12 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
 
                 foreach (var product in equipmentProducts)
                 {
-                    await _productStockRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Stock.ProductStock(_guidGenerator.Create())
+                    await _stockLocationRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Stock.StockLocation(_guidGenerator.Create())
                     {
                         ProductId = product.Id,
-                        SiteId = fieldSite.Id,
-                        TotalQuantity = 2,
+                        LocationType = InventoryLocationTypeEnum.Warehouse,
+                        LocationId = fieldSite.Id,
+                        Quantity = 2,
                         ReservedQuantity = 0
                     }, autoSave: true);
                 }

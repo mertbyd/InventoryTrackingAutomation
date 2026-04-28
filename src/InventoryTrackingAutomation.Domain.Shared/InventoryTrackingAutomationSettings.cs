@@ -64,12 +64,12 @@ public static class InventoryTrackingAutomationSettings
     }
 
     /// <summary>
-    /// Stok hareketi modulune ait StockMovementTypeEnum setting anahtarlari.
+    /// Envanter hareketi modulune ait InventoryTransactionTypeEnum setting anahtarlari.
     /// </summary>
-    public static class StockMovements
+    public static class InventoryTransactions
     {
-        public const string DefaultType = Prefix + ".StockMovements.DefaultType";  // Varsayilan stok hareket tipi. Ornek: "1" (In)
-        public const string AllowedTypes = Prefix + ".StockMovements.AllowedTypes"; // Izin verilen stok hareket tipleri.
+        public const string DefaultType = Prefix + ".InventoryTransactions.DefaultType";  // Varsayilan envanter hareket tipi.
+        public const string AllowedTypes = Prefix + ".InventoryTransactions.AllowedTypes"; // Izin verilen envanter hareket tipleri.
     }
 
     /// <summary>
@@ -98,6 +98,6 @@ public static class InventoryTrackingAutomationSettings
     /// </summary>
     public static class Stock
     {
-        public const string AllowedStockMovementTypes = StockMovements.AllowedTypes;
+        public const string AllowedInventoryTransactionTypes = InventoryTransactions.AllowedTypes;
     }
 }

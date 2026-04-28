@@ -16,18 +16,15 @@ namespace InventoryTrackingAutomation.Managers.Stock;
 /// </summary>
 public class MovementRequestStockManager : DomainService
 {
-    private readonly IProductStockRepository _productStockRepository;
     private readonly IStockLocationRepository _stockLocationRepository;
     private readonly IInventoryTransactionRepository _inventoryTransactionRepository;
     private readonly IVehicleTaskRepository _vehicleTaskRepository;
 
     public MovementRequestStockManager(
-        IProductStockRepository productStockRepository,
         IStockLocationRepository stockLocationRepository,
         IInventoryTransactionRepository inventoryTransactionRepository,
         IVehicleTaskRepository vehicleTaskRepository)
     {
-        _productStockRepository = productStockRepository;
         _stockLocationRepository = stockLocationRepository;
         _inventoryTransactionRepository = inventoryTransactionRepository;
         _vehicleTaskRepository = vehicleTaskRepository;
@@ -39,61 +36,29 @@ public class MovementRequestStockManager : DomainService
 
         foreach (var line in lines)
         {
-            var remainingSourceQuantity = await DecreaseLegacySourceStockAsync(request, line);
-            await SyncSourceWarehouseStockLocationAsync(request, line, remainingSourceQuantity);
+            await DecreaseSourceStockLocationAsync(request, line);
             await IncreaseTargetStockLocationAsync(request, line);
             await CreateInventoryTransactionAsync(request, line, activeVehicleTaskId);
         }
     }
 
-    private async Task<int> DecreaseLegacySourceStockAsync(MovementRequest request, MovementRequestLine line)
+    private async Task DecreaseSourceStockLocationAsync(MovementRequest request, MovementRequestLine line)
     {
-        // Eski ProductStock tablosu simdilik mevcut stok dogrulamasinin kaynagi olmaya devam eder.
-        var stock = await _productStockRepository.FindAsync(x =>
-            x.ProductId == line.ProductId &&
-            x.SiteId == request.SourceSiteId);
-
-        if (stock == null || stock.TotalQuantity < line.Quantity)
-        {
-            // Yetersiz stokta exception firlatilir; UnitOfWork tum onay islemini geri alir.
-            throw new BusinessException(InventoryTrackingAutomationErrorCodes.ProductStocks.InsufficientStock)
-                .WithData("ProductId", line.ProductId)
-                .WithData("RequestedQuantity", line.Quantity)
-                .WithData("AvailableQuantity", stock?.TotalQuantity ?? 0);
-        }
-
-        stock.TotalQuantity -= line.Quantity;
-        await _productStockRepository.UpdateAsync(stock, autoSave: true);
-        return stock.TotalQuantity;
-    }
-
-    private async Task SyncSourceWarehouseStockLocationAsync(
-        MovementRequest request,
-        MovementRequestLine line,
-        int remainingSourceQuantity)
-    {
-        // Yeni PITON stok lokasyonu eski kaynak stok ile senkron tutulur.
+        // Onaylanan hareket sadece yeni polymorphic stok lokasyonundan dusulur.
         var sourceLocation = await _stockLocationRepository.FindAsync(x =>
             x.ProductId == line.ProductId &&
             x.LocationType == InventoryLocationTypeEnum.Warehouse &&
             x.LocationId == request.SourceSiteId);
 
-        if (sourceLocation == null)
+        if (sourceLocation == null || sourceLocation.Quantity < line.Quantity)
         {
-            sourceLocation = new StockLocation(GuidGenerator.Create())
-            {
-                ProductId = line.ProductId,
-                LocationType = InventoryLocationTypeEnum.Warehouse,
-                LocationId = request.SourceSiteId,
-                Quantity = remainingSourceQuantity,
-                ReservedQuantity = 0
-            };
-
-            await _stockLocationRepository.InsertAsync(sourceLocation, autoSave: true);
-            return;
+            throw new BusinessException(InventoryTrackingAutomationErrorCodes.StockLocations.InsufficientStock)
+                .WithData("ProductId", line.ProductId)
+                .WithData("RequestedQuantity", line.Quantity)
+                .WithData("AvailableQuantity", sourceLocation?.Quantity ?? 0);
         }
 
-        sourceLocation.Quantity = remainingSourceQuantity;
+        sourceLocation.Quantity -= line.Quantity;
         await _stockLocationRepository.UpdateAsync(sourceLocation, autoSave: true);
     }
 
