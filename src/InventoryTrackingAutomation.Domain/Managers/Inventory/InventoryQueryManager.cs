@@ -5,15 +5,15 @@ using System.Threading.Tasks;
 using InventoryTrackingAutomation.Enums.Tasks;
 using InventoryTrackingAutomation.Enums.Inventory;
 using InventoryTrackingAutomation.Enums;
-using InventoryTrackingAutomation.Interface.Stock;
+using InventoryTrackingAutomation.Interface.Inventory;
 using InventoryTrackingAutomation.Interface.Tasks;
 using InventoryTrackingAutomation.Managers.Masters;
 using InventoryTrackingAutomation.Managers.Tasks;
-using InventoryTrackingAutomation.Models.Stock;
+using InventoryTrackingAutomation.Models.Inventory;
 using InventoryTrackingAutomation.Models.Tasks;
 using Volo.Abp.DependencyInjection;
 
-namespace InventoryTrackingAutomation.Managers.Stock;
+namespace InventoryTrackingAutomation.Managers.Inventory;
 
 /// <summary>
 /// PITON stok gorunurlugu icin urun, arac ve gorev bazli okuma kurallarini yonetir.
@@ -159,7 +159,7 @@ public class InventoryQueryManager : ITransientDependency
     }
 
     private static ProductStockLocationSummaryModel CreateLocationSummary(
-        Entities.Stock.StockLocation location,
+        Entities.Inventory.StockLocation location,
         IReadOnlyCollection<Entities.Tasks.VehicleTask> activeVehicleTasks)
     {
         // Arac lokasyonlarinda aktif gorev baglami gorunurluge eklenir.

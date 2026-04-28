@@ -54,6 +54,7 @@ public static class InventoryTrackingAutomationErrorCodes
         public const string NotFound = Prefix + ":MovementRequest.NotFound";
         public const string InvalidStatus = Prefix + ":MovementRequest.InvalidStatus";
         public const string RequestNumberNotUnique = Prefix + ":MovementRequest.RequestNumberNotUnique";
+        public const string TargetRequired = Prefix + ":MovementRequest.TargetRequired";
     }
 
     public static class MovementRequestLines
@@ -94,6 +95,8 @@ public static class InventoryTrackingAutomationErrorCodes
     {
         public const string NotFound = Prefix + ":InventoryTransaction.NotFound";
         public const string InvalidTransfer = Prefix + ":InventoryTransaction.InvalidTransfer";
+        public const string QuantityMustBePositive = Prefix + ":InventoryTransaction.QuantityMustBePositive";
+        public const string InvalidLocationPair = Prefix + ":InventoryTransaction.InvalidLocationPair";
     }
 
     public static class Workflows

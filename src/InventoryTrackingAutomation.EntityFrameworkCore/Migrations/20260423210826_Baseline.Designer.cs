@@ -756,7 +756,7 @@ namespace InventoryTrackingAutomation.Migrations
                     b.ToTable("ShipmentLines", "shipment");
                 });
 
-            modelBuilder.Entity("InventoryTrackingAutomation.Entities.Stock.ProductStock", b =>
+            modelBuilder.Entity("InventoryTrackingAutomation.Entities.Inventory.ProductStock", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid");
@@ -813,7 +813,7 @@ namespace InventoryTrackingAutomation.Migrations
                     b.ToTable("ProductStocks", "stock");
                 });
 
-            modelBuilder.Entity("InventoryTrackingAutomation.Entities.Stock.StockMovement", b =>
+            modelBuilder.Entity("InventoryTrackingAutomation.Entities.Inventory.StockMovement", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid");
@@ -1244,7 +1244,7 @@ namespace InventoryTrackingAutomation.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("InventoryTrackingAutomation.Entities.Stock.ProductStock", b =>
+            modelBuilder.Entity("InventoryTrackingAutomation.Entities.Inventory.ProductStock", b =>
                 {
                     b.HasOne("InventoryTrackingAutomation.Entities.Masters.Product", null)
                         .WithMany()
@@ -1259,7 +1259,7 @@ namespace InventoryTrackingAutomation.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("InventoryTrackingAutomation.Entities.Stock.StockMovement", b =>
+            modelBuilder.Entity("InventoryTrackingAutomation.Entities.Inventory.StockMovement", b =>
                 {
                     b.HasOne("InventoryTrackingAutomation.Entities.Masters.Product", null)
                         .WithMany()

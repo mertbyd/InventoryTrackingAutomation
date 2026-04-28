@@ -1,7 +1,7 @@
 using AutoMapper;
-using InventoryTrackingAutomation.Dtos.Stock;
-using InventoryTrackingAutomation.Entities.Stock;
-using InventoryTrackingAutomation.Models.Stock;
+using InventoryTrackingAutomation.Dtos.Inventory;
+using InventoryTrackingAutomation.Entities.Inventory;
+using InventoryTrackingAutomation.Models.Inventory;
 using Volo.Abp.AutoMapper;
 
 namespace InventoryTrackingAutomation.ObjectMapping.Stock;

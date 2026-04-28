@@ -84,4 +84,36 @@ public class VehicleTaskManager : BaseManager<VehicleTask>
             throw new BusinessException(InventoryTrackingAutomationErrorCodes.General.InvalidOperation);
         }
     }
+
+    //işlevi: Aracın ilgili göreve atanmasını garantiler; zaten atanmışsa işlem yapmaz.
+    //sistemdeki görevi: Stok transferi sırasında, eğer araca ürün yükleniyorsa o aracın göreve resmi olarak atanmış olmasını (tutarlılık) sağlar.
+    public async Task EnsureAssignedAsync(Guid inventoryTaskId, Guid vehicleId, Guid driverWorkerId)
+    {
+        var existing = await Repository.FindAsync(x => x.InventoryTaskId == inventoryTaskId && x.VehicleId == vehicleId && x.IsActive);
+        if (existing != null)
+            return;
+
+        var entity = new VehicleTask(GuidGenerator.Create())
+        {
+            InventoryTaskId = inventoryTaskId,
+            VehicleId = vehicleId,
+            DriverWorkerId = driverWorkerId,
+            AssignedAt = System.DateTime.UtcNow,
+            IsActive = true
+        };
+        await Repository.InsertAsync(entity, autoSave: true);
+    }
+
+    //işlevi: Bir göreve bağlı tüm aktif araç atamalarını sonlandırır.
+    //sistemdeki görevi: Task tamamlandığında veya iptal edildiğinde araçların üzerindeki bağları (kilitleri) kaldırıp onları serbest bırakır.
+    public async Task ReleaseAllForTaskAsync(Guid taskId)
+    {
+        var actives = await Repository.GetListAsync(x => x.InventoryTaskId == taskId && x.IsActive);
+        foreach (var vt in actives)
+        {
+            vt.ReleasedAt = System.DateTime.UtcNow;
+            vt.IsActive = false;
+            await Repository.UpdateAsync(vt, autoSave: true);
+        }
+    }
 }

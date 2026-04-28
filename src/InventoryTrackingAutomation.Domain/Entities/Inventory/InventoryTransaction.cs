@@ -5,7 +5,7 @@ using InventoryTrackingAutomation.Enums;
 using Volo.Abp.Domain.Entities.Auditing;
 using Volo.Abp.MultiTenancy;
 
-namespace InventoryTrackingAutomation.Entities.Stock;
+namespace InventoryTrackingAutomation.Entities.Inventory;
 
 /// <summary>
 /// Depo ve arac stok hareketlerinin degistirilemez ledger kaydini temsil eden aggregate.

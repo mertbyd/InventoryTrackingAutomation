@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using SystemStandards.Results;
 using InventoryTrackingAutomation.Dtos.Masters;
-using InventoryTrackingAutomation.Dtos.Stock;
+using InventoryTrackingAutomation.Dtos.Inventory;
 using InventoryTrackingAutomation.Services.Masters;
 using InventoryTrackingAutomation.Permissions;
 

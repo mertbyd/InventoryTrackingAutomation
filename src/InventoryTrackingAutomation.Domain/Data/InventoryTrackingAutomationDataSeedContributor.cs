@@ -31,7 +31,7 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
     private readonly IRepository<Warehouse, Guid> _warehouseRepository;
     private readonly IRepository<Worker, Guid> _workerRepository;
     private readonly IRepository<Vehicle, Guid> _vehicleRepository;
-    private readonly IRepository<InventoryTrackingAutomation.Entities.Stock.StockLocation, Guid> _stockLocationRepository;
+    private readonly IRepository<InventoryTrackingAutomation.Entities.Inventory.StockLocation, Guid> _stockLocationRepository;
     private readonly InventoryTrackingAutomation.Interface.Workflows.IWorkflowDefinitionRepository _workflowDefinitionRepository;
     private readonly IdentityRoleManager _identityRoleManager;
     private readonly IdentityUserManager _identityUserManager;
@@ -45,7 +45,7 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
         IRepository<Warehouse, Guid> warehouseRepository,
         IRepository<Worker, Guid> workerRepository,
         IRepository<Vehicle, Guid> vehicleRepository,
-        IRepository<InventoryTrackingAutomation.Entities.Stock.StockLocation, Guid> stockLocationRepository,
+        IRepository<InventoryTrackingAutomation.Entities.Inventory.StockLocation, Guid> stockLocationRepository,
         InventoryTrackingAutomation.Interface.Workflows.IWorkflowDefinitionRepository workflowDefinitionRepository,
         IdentityRoleManager identityRoleManager,
         IdentityUserManager identityUserManager,
@@ -304,7 +304,7 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
                 var beton = allProducts.FirstOrDefault(x => x.Code == "PRD-01");
                 if (beton != null)
                 {
-                    await _stockLocationRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Stock.StockLocation(_guidGenerator.Create())
+                    await _stockLocationRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Inventory.StockLocation(_guidGenerator.Create())
                     {
                         ProductId = beton.Id,
                         LocationType = StockLocationTypeEnum.Warehouse,
@@ -318,7 +318,7 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
                 var demir = allProducts.FirstOrDefault(x => x.Code == "PRD-02");
                 if (demir != null)
                 {
-                    await _stockLocationRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Stock.StockLocation(_guidGenerator.Create())
+                    await _stockLocationRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Inventory.StockLocation(_guidGenerator.Create())
                     {
                         ProductId = demir.Id,
                         LocationType = StockLocationTypeEnum.Warehouse,
@@ -332,7 +332,7 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
                 var kum = allProducts.FirstOrDefault(x => x.Code == "PRD-03");
                 if (kum != null)
                 {
-                    await _stockLocationRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Stock.StockLocation(_guidGenerator.Create())
+                    await _stockLocationRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Inventory.StockLocation(_guidGenerator.Create())
                     {
                         ProductId = kum.Id,
                         LocationType = StockLocationTypeEnum.Warehouse,
@@ -346,7 +346,7 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
                 var cakil = allProducts.FirstOrDefault(x => x.Code == "PRD-04");
                 if (cakil != null)
                 {
-                    await _stockLocationRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Stock.StockLocation(_guidGenerator.Create())
+                    await _stockLocationRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Inventory.StockLocation(_guidGenerator.Create())
                     {
                         ProductId = cakil.Id,
                         LocationType = StockLocationTypeEnum.Warehouse,
@@ -360,7 +360,7 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
                 var hilti = allProducts.FirstOrDefault(x => x.Code == "EQP-01");
                 if (hilti != null)
                 {
-                    await _stockLocationRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Stock.StockLocation(_guidGenerator.Create())
+                    await _stockLocationRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Inventory.StockLocation(_guidGenerator.Create())
                     {
                         ProductId = hilti.Id,
                         LocationType = StockLocationTypeEnum.Warehouse,
@@ -374,7 +374,7 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
                 var bosch = allProducts.FirstOrDefault(x => x.Code == "EQP-02");
                 if (bosch != null)
                 {
-                    await _stockLocationRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Stock.StockLocation(_guidGenerator.Create())
+                    await _stockLocationRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Inventory.StockLocation(_guidGenerator.Create())
                     {
                         ProductId = bosch.Id,
                         LocationType = StockLocationTypeEnum.Warehouse,
@@ -388,7 +388,7 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
                 var iskele = allProducts.FirstOrDefault(x => x.Code == "EQP-03");
                 if (iskele != null)
                 {
-                    await _stockLocationRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Stock.StockLocation(_guidGenerator.Create())
+                    await _stockLocationRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Inventory.StockLocation(_guidGenerator.Create())
                     {
                         ProductId = iskele.Id,
                         LocationType = StockLocationTypeEnum.Warehouse,
@@ -402,7 +402,7 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
                 var kemeri = allProducts.FirstOrDefault(x => x.Code == "EQP-04");
                 if (kemeri != null)
                 {
-                    await _stockLocationRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Stock.StockLocation(_guidGenerator.Create())
+                    await _stockLocationRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Inventory.StockLocation(_guidGenerator.Create())
                     {
                         ProductId = kemeri.Id,
                         LocationType = StockLocationTypeEnum.Warehouse,
@@ -418,7 +418,7 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
                     var warehouse2 = warehouseWarehouses[1];
                     if (beton != null)
                     {
-                        await _stockLocationRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Stock.StockLocation(_guidGenerator.Create())
+                        await _stockLocationRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Inventory.StockLocation(_guidGenerator.Create())
                         {
                             ProductId = beton.Id,
                             LocationType = StockLocationTypeEnum.Warehouse,

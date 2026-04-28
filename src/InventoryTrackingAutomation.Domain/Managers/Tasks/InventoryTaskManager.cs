@@ -69,4 +69,35 @@ public class InventoryTaskManager : BaseManager<InventoryTask>
             throw new BusinessException(InventoryTrackingAutomationErrorCodes.General.InvalidOperation);
         }
     }
+
+    //işlevi: Görevin durum (status) geçişlerini (Draft → InProgress vb.) doğrular ve geçerli ise uygular, olay fırlatır.
+    //sistemdeki görevi: Görev yaşam döngüsünün durum makinesi (state machine) kurallarını işletir.
+    public async Task TransitionStatusAsync(InventoryTask task, InventoryTrackingAutomation.Enums.Tasks.TaskStatusEnum target, Volo.Abp.EventBus.Local.ILocalEventBus localEventBus)
+    {
+        if (task.Status == target) return;
+
+        var previous = task.Status;
+
+        var allowed = (task.Status, target) switch
+        {
+            (InventoryTrackingAutomation.Enums.Tasks.TaskStatusEnum.Draft, InventoryTrackingAutomation.Enums.Tasks.TaskStatusEnum.InProgress) => true,
+            (InventoryTrackingAutomation.Enums.Tasks.TaskStatusEnum.InProgress, InventoryTrackingAutomation.Enums.Tasks.TaskStatusEnum.Completed) => true,
+            (InventoryTrackingAutomation.Enums.Tasks.TaskStatusEnum.Draft, InventoryTrackingAutomation.Enums.Tasks.TaskStatusEnum.Cancelled) => true,
+            (InventoryTrackingAutomation.Enums.Tasks.TaskStatusEnum.InProgress, InventoryTrackingAutomation.Enums.Tasks.TaskStatusEnum.Cancelled) => true,
+            _ => false
+        };
+
+        if (!allowed)
+            throw new BusinessException(InventoryTrackingAutomationErrorCodes.General.InvalidOperation)
+                .WithData("From", task.Status).WithData("To", target);
+
+        task.Status = target;
+
+        await localEventBus.PublishAsync(new InventoryTrackingAutomation.Events.Tasks.InventoryTaskStatusChangedEto
+        {
+            TaskId = task.Id,
+            PreviousStatus = previous,
+            NewStatus = target
+        });
+    }
 }
