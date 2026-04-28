@@ -9,6 +9,8 @@ namespace InventoryTrackingAutomation.Managers.Workflows.Approvers;
 
 // Hareket talebinin kaynak (Source) lokasyonunun yöneticisini onaycı olarak çözer.
 // Şu an sadece MovementRequest tipinde aktif; başka entity tipleri için ayrı bir strategy eklenmeli.
+//işlevi: SourceWarehouseManagerApproverStrategy.cs etki alanı (domain) kurallarını ve karmaşık veri bütünlüğünü sağlar.
+//sistemdeki görevi: Domain katmanındaki iş kurallarının merkezi yönetimini ve validasyonunu sağlar.
 public class SourceWarehouseManagerApproverStrategy : IApproverStrategy, ITransientDependency
 {
     private readonly IMovementRequestRepository _movementRequestRepository;
@@ -27,6 +29,8 @@ public class SourceWarehouseManagerApproverStrategy : IApproverStrategy, ITransi
 
     public string Key => WorkflowResolverKeys.SourceWarehouseManager;
 
+//işlevi: Etki alanı kuralını veya validasyonunu işletir.
+//sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
     public Task<Guid?> ResolveAsync(ApproverContext context)
         => WarehouseApproverResolver.ResolveAsync(
             context, useSourceWarehouse: true,

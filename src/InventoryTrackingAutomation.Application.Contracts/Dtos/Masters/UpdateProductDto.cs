@@ -8,6 +8,8 @@ namespace InventoryTrackingAutomation.Dtos.Masters;
 /// <summary>
 /// Ürün güncelleme request DTO'su.
 /// </summary>
+//işlevi: UpdateProduct verisinin transferi sırasında taşınacak olan yapıyı tanımlar.
+//sistemdeki görevi: Katmanlar arası veri alışverişini standartlaştırır.
 public class UpdateProductDto
 {
     public string Code { get; set; }            // Ürün kodu. Örnek: "PRD-001"

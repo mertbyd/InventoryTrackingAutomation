@@ -9,6 +9,8 @@ namespace InventoryTrackingAutomation.Managers.Masters;
 /// <summary>
 /// Depo domain manager'i; depo is kurallarini merkezi uygular.
 /// </summary>
+//işlevi: Warehouse etki alanı (domain) kurallarını ve karmaşık veri bütünlüğünü sağlar.
+//sistemdeki görevi: Domain katmanındaki iş kurallarının merkezi yönetimini ve validasyonunu sağlar.
 public class WarehouseManager : BaseManager<Warehouse>
 {
     private readonly IWorkerRepository _workerRepository;    // Depo sorumlusu FK kontrolu icin.
@@ -30,6 +32,8 @@ public class WarehouseManager : BaseManager<Warehouse>
     /// <summary>
     /// Yeni depo olusturur; kod tekilligi ve sorumlu calisan varligi kontrol edilir.
     /// </summary>
+//işlevi: Etki alanı kuralını veya validasyonunu işletir.
+//sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
     public async Task<Warehouse> CreateAsync(CreateWarehouseModel model)
     {
         if (!string.IsNullOrWhiteSpace(model.Code))
@@ -47,6 +51,8 @@ public class WarehouseManager : BaseManager<Warehouse>
     /// <summary>
     /// Depoyu gunceller; kod tekilligi ve sorumlu calisan varligi kontrol edilir.
     /// </summary>
+//işlevi: Etki alanı kuralını veya validasyonunu işletir.
+//sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
     public async Task<Warehouse> UpdateAsync(Warehouse existing, UpdateWarehouseModel model)
     {
         if (!string.IsNullOrWhiteSpace(model.Code) && existing.Code != model.Code)

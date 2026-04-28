@@ -10,6 +10,8 @@ namespace InventoryTrackingAutomation.Dtos.Movements;
 /// Hareket talebi + satırlarını tek atomik istekle oluşturmak için DTO.
 /// RequestedByWorkerId, WorkflowInstanceId, Status server-side çözümlenir; client'tan alınmaz.
 /// </summary>
+//işlevi: CreateMovementRequestWithLines verisinin transferi sırasında taşınacak olan yapıyı tanımlar.
+//sistemdeki görevi: Katmanlar arası veri alışverişini standartlaştırır.
 public class CreateMovementRequestWithLinesDto
 {
     public string RequestNumber { get; set; }          // Talep numarası. Örnek: "MR-2024-00123"
@@ -25,6 +27,8 @@ public class CreateMovementRequestWithLinesDto
 /// <summary>
 /// With-lines isteğindeki tek satır — MovementRequestId server-side set edileceği için burada YOK.
 /// </summary>
+//işlevi: CreateMovementRequestWithLines verisinin transferi sırasında taşınacak olan yapıyı tanımlar.
+//sistemdeki görevi: Katmanlar arası veri alışverişini standartlaştırır.
 public class CreateMovementRequestLineItemDto
 {
     public Guid ProductId { get; set; } // Ürün Id.

@@ -18,6 +18,8 @@ namespace InventoryTrackingAutomation.Application.Services.Movements;
 
 // Hareket talebi application servisi — HTTP endpoint'leri için ince orkestra katmanı.
 // İş kuralları manager'da, persist sorumluluğu manager + repository'de.
+//işlevi: MovementRequest iş mantığını koordine eder ve DTO dönüşümlerini yönetir.
+//sistemdeki görevi: Uygulama katmanındaki kullanım senaryolarını (use-case) gerçekleştiren ana servis birimidir.
 public class MovementRequestAppService : InventoryTrackingAutomationAppService, IMovementRequestAppService
 {
     // Read/list ve update/delete persist için ana repository.
@@ -42,6 +44,8 @@ public class MovementRequestAppService : InventoryTrackingAutomationAppService, 
     }
 
     // Id ile hareket talebini getirir; yoksa EntityNotFoundException.
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<MovementRequestDto> GetAsync(Guid id)
     {
         var entity = await _manager.EnsureExistsAsync(id);
@@ -49,6 +53,8 @@ public class MovementRequestAppService : InventoryTrackingAutomationAppService, 
     }
 
     // Hareket taleplerini sayfalı listeler.
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<PagedResultDto<MovementRequestDto>> GetListAsync(PagedResultRequestDto input)
     {
         var totalCount = await _repository.GetCountAsync();
@@ -61,6 +67,8 @@ public class MovementRequestAppService : InventoryTrackingAutomationAppService, 
 
     // Yeni hareket talebi oluşturur — RequestedByWorkerId CurrentUser'dan çözümlenir, manager workflow'u tetikler.
     [UnitOfWork]
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<MovementRequestDto> CreateAsync(CreateMovementRequestDto input)
     {
         var currentUserId = CurrentUserId;
@@ -74,6 +82,8 @@ public class MovementRequestAppService : InventoryTrackingAutomationAppService, 
 
     // Birden fazla hareket talebini toplu oluşturur — her biri için workflow tetiklenir.
     [UnitOfWork]
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<List<MovementRequestDto>> CreateManyAsync(List<CreateMovementRequestDto> inputs)
     {
         var currentUserId = CurrentUserId;
@@ -96,6 +106,8 @@ public class MovementRequestAppService : InventoryTrackingAutomationAppService, 
 
     // Hareket talebini günceller — manager iş kurallarını işler, sonra repository persist eder.
     [UnitOfWork]
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<MovementRequestDto> UpdateAsync(Guid id, UpdateMovementRequestDto input)
     {
         var existing = await _manager.EnsureExistsAsync(id);
@@ -109,6 +121,8 @@ public class MovementRequestAppService : InventoryTrackingAutomationAppService, 
 
     // Talebi + satırları + workflow'u tek atomik UoW içinde oluşturur.
     [UnitOfWork]
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<MovementRequestDto> CreateWithLinesAsync(CreateMovementRequestWithLinesDto input)
     {
         var currentUserId = CurrentUserId;
@@ -123,6 +137,8 @@ public class MovementRequestAppService : InventoryTrackingAutomationAppService, 
 
     // Hareket talebini soft delete ile siler.
     [UnitOfWork]
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task DeleteAsync(Guid id)
     {
         await _manager.EnsureExistsAsync(id);

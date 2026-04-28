@@ -22,6 +22,8 @@ using Volo.Abp.Identity;
 namespace InventoryTrackingAutomation.Managers.Movements;
 
 // Hareket talebi onay süreci domain manager'ı — onay/red iş kuralları, validasyon ve state machine.
+//işlevi: MovementApproval etki alanı (domain) kurallarını ve karmaşık veri bütünlüğünü sağlar.
+//sistemdeki görevi: Domain katmanındaki iş kurallarının merkezi yönetimini ve validasyonunu sağlar.
 public class MovementApprovalManager : DomainService
 {
     // MovementRequest okuma/yazma için repository.
@@ -73,6 +75,8 @@ public class MovementApprovalManager : DomainService
     }
 
     // Hareket talebini onaylar — yetki kontrolü yapar, approval kaydı oluşturur, sonraki adıma routing.
+//işlevi: Etki alanı kuralını veya validasyonunu işletir.
+//sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
     public async Task<MovementApproval> ApproveAsync(Guid movementRequestId, Guid approvingUserId, string comment)
     {
         // Hareket talebini doğrula (var, InReview durumunda)
@@ -95,6 +99,8 @@ public class MovementApprovalManager : DomainService
     }
 
     // Hareket talebini reddeder — workflow anında sonlanır, talep Rejected olur.
+//işlevi: Etki alanı kuralını veya validasyonunu işletir.
+//sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
     public async Task<MovementApproval> RejectAsync(Guid movementRequestId, Guid approvingUserId, string reason)
     {
         // Hareket talebini doğrula
@@ -117,6 +123,8 @@ public class MovementApprovalManager : DomainService
     }
 
     // Verilen kullanıcının onaylaması gereken bekleyen talepleri liste olarak döner.
+//işlevi: Etki alanı kuralını veya validasyonunu işletir.
+//sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
     public async Task<List<PendingApprovalModel>> GetPendingApprovalsForUserAsync(Guid userId)
     {
         // Kullanıcıya atanmış ve henüz karar verilmemiş step'leri bul

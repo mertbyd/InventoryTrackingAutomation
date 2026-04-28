@@ -9,6 +9,8 @@ namespace InventoryTrackingAutomation.Managers.Masters;
 /// <summary>
 /// Araç domain manager'ı — Vehicle entity'si için iş kuralları ve validasyonları.
 /// </summary>
+//işlevi: Vehicle etki alanı (domain) kurallarını ve karmaşık veri bütünlüğünü sağlar.
+//sistemdeki görevi: Domain katmanındaki iş kurallarının merkezi yönetimini ve validasyonunu sağlar.
 public class VehicleManager : BaseManager<Vehicle>
 {
     /// <summary>
@@ -26,6 +28,8 @@ public class VehicleManager : BaseManager<Vehicle>
     /// <summary>
     /// Yeni araç oluşturur — PlateNumber unique kontrolü yapar.
     /// </summary>
+//işlevi: Etki alanı kuralını veya validasyonunu işletir.
+//sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
     public async Task<Vehicle> CreateAsync(CreateVehicleModel model)
     {
         if (!string.IsNullOrWhiteSpace(model.PlateNumber))
@@ -44,6 +48,8 @@ public class VehicleManager : BaseManager<Vehicle>
     /// <summary>
     /// Aracı günceller — PlateNumber unique (self hariç) kontrolü yapar.
     /// </summary>
+//işlevi: Etki alanı kuralını veya validasyonunu işletir.
+//sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
     public async Task<Vehicle> UpdateAsync(Vehicle existing, UpdateVehicleModel model)
     {
         if (!string.IsNullOrWhiteSpace(model.PlateNumber) && existing.PlateNumber != model.PlateNumber)

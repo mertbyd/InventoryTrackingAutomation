@@ -9,6 +9,8 @@ namespace InventoryTrackingAutomation.Dtos.Masters;
 /// <summary>
 /// Araç response DTO'su — GetAll ve GetById operasyonlarında döner.
 /// </summary>
+//işlevi: Vehicle verisinin transferi sırasında taşınacak olan yapıyı tanımlar.
+//sistemdeki görevi: Katmanlar arası veri alışverişini standartlaştırır.
 public class VehicleDto : FullAuditedEntityDto<Guid>
 {
     public string PlateNumber { get; set; }           // Plaka numarası. Örnek: "34 ABC 123"

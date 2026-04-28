@@ -15,6 +15,8 @@ using Volo.Abp.Uow;
 namespace InventoryTrackingAutomation.Application.Services.Lookups;
 
 // Departman application servisi — HTTP endpoint'leri için ince orkestra katmanı; iş kuralları DepartmentManager'da.
+//işlevi: Department iş mantığını koordine eder ve DTO dönüşümlerini yönetir.
+//sistemdeki görevi: Uygulama katmanındaki kullanım senaryolarını (use-case) gerçekleştiren ana servis birimidir.
 public class DepartmentAppService : InventoryTrackingAutomationAppService, IDepartmentAppService
 {
     // Read/list/persist için ana repository.
@@ -41,6 +43,8 @@ public class DepartmentAppService : InventoryTrackingAutomationAppService, IDepa
     }
 
     // Id ile departmanı getirir; yoksa EntityNotFoundException.
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<DepartmentDto> GetAsync(Guid id)
     {
         var entity = await _manager.EnsureExistsAsync(id);
@@ -48,6 +52,8 @@ public class DepartmentAppService : InventoryTrackingAutomationAppService, IDepa
     }
 
     // Departmanları sayfalı listeler.
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<PagedResultDto<DepartmentDto>> GetListAsync(PagedResultRequestDto input)
     {
         var totalCount = await _repository.GetCountAsync();
@@ -60,6 +66,8 @@ public class DepartmentAppService : InventoryTrackingAutomationAppService, IDepa
 
     // Yeni departman oluşturur — manager iş kurallarını uygular, repository persist eder.
     [UnitOfWork]
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<DepartmentDto> CreateAsync(CreateDepartmentDto input)
     {
         await _createValidator.ValidateAndThrowAsync(input);
@@ -71,6 +79,8 @@ public class DepartmentAppService : InventoryTrackingAutomationAppService, IDepa
 
     // Birden fazla departmanı toplu oluşturur.
     [UnitOfWork]
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<List<DepartmentDto>> CreateManyAsync(List<CreateDepartmentDto> inputs)
     {
         var entities = new List<Department>();
@@ -87,6 +97,8 @@ public class DepartmentAppService : InventoryTrackingAutomationAppService, IDepa
 
     // Departmanı günceller — manager iş kurallarını uygular, repository persist eder.
     [UnitOfWork]
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<DepartmentDto> UpdateAsync(Guid id, UpdateDepartmentDto input)
     {
         await _updateValidator.ValidateAndThrowAsync(input);
@@ -99,6 +111,8 @@ public class DepartmentAppService : InventoryTrackingAutomationAppService, IDepa
 
     // Departmanı soft delete ile siler.
     [UnitOfWork]
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task DeleteAsync(Guid id)
     {
         await _manager.EnsureExistsAsync(id);

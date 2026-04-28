@@ -8,6 +8,8 @@ namespace InventoryTrackingAutomation.Dtos.Masters;
 /// <summary>
 /// Ürün oluşturma request DTO'su.
 /// </summary>
+//işlevi: CreateProduct verisinin transferi sırasında taşınacak olan yapıyı tanımlar.
+//sistemdeki görevi: Katmanlar arası veri alışverişini standartlaştırır.
 public class CreateProductDto
 {
     public string Code { get; set; }            // Ürün kodu. Örnek: "PRD-001"

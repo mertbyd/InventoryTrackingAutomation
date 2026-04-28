@@ -21,6 +21,8 @@ namespace InventoryTrackingAutomation.Controllers.Masters;
 [ApiVersion("1.0")]
 [ApiExplorerSettings(GroupName = "Masters")]
 [Tags("Vehicles")]
+//işlevi: Vehicle modülü için HTTP isteklerini karşılar.
+//sistemdeki görevi: Dış dünya ile sistem arasındaki iletişimi sağlayan API uç noktasıdır.
 public class VehicleController : InventoryTrackingAutomationController
 {
     private readonly IVehicleAppService _appService;
@@ -33,6 +35,8 @@ public class VehicleController : InventoryTrackingAutomationController
     /// <summary> Id'ye gÃ¶re tek araÃ§ getirir. </summary>
     [HttpGet("{id}")]
     [Authorize(InventoryTrackingAutomationPermissions.Masters.View)]
+//işlevi: İlgili HTTP isteğini işler ve servis katmanına yönlendirir.
+//sistemdeki görevi: Belirli bir API aksiyonunun giriş noktasını tanımlar.
     public async Task<Result<VehicleDto>> Get(Guid id)
     {
         var result = await _appService.GetAsync(id);
@@ -42,6 +46,8 @@ public class VehicleController : InventoryTrackingAutomationController
     /// <summary> Aracin uzerindeki envanterleri getirir. </summary>
     [HttpGet("{id}/inventories")]
     [Authorize(InventoryTrackingAutomationPermissions.Inventory.View)]
+//işlevi: İlgili HTTP isteğini işler ve servis katmanına yönlendirir.
+//sistemdeki görevi: Belirli bir API aksiyonunun giriş noktasını tanımlar.
     public async Task<Result<List<VehicleInventoryDto>>> GetInventories(Guid id)
     {
         var result = await _appService.GetInventoriesAsync(id);
@@ -51,6 +57,8 @@ public class VehicleController : InventoryTrackingAutomationController
     /// <summary> TÃ¼m araÃ§larÄ± listeler. </summary>
     [HttpGet]
     [Authorize(InventoryTrackingAutomationPermissions.Masters.View)]
+//işlevi: İlgili HTTP isteğini işler ve servis katmanına yönlendirir.
+//sistemdeki görevi: Belirli bir API aksiyonunun giriş noktasını tanımlar.
     public async Task<Result<Volo.Abp.Application.Dtos.PagedResultDto<VehicleDto>>> GetList([FromQuery] Volo.Abp.Application.Dtos.PagedResultRequestDto input)
     {
         var result = await _appService.GetListAsync(input);
@@ -60,6 +68,8 @@ public class VehicleController : InventoryTrackingAutomationController
     /// <summary> Yeni araÃ§ oluÅŸturur. </summary>
     [HttpPost]
     [Authorize(InventoryTrackingAutomationPermissions.Masters.Manage)]
+//işlevi: İlgili HTTP isteğini işler ve servis katmanına yönlendirir.
+//sistemdeki görevi: Belirli bir API aksiyonunun giriş noktasını tanımlar.
     public async Task<Result<VehicleDto>> Create([FromBody] CreateVehicleDto input)
     {
         var result = await _appService.CreateAsync(input);
@@ -69,6 +79,8 @@ public class VehicleController : InventoryTrackingAutomationController
     /// <summary> Birden fazla aracÄ± toplu oluÅŸturur. </summary>
     [HttpPost("bulk")]
     [Authorize(InventoryTrackingAutomationPermissions.Masters.Manage)]
+//işlevi: İlgili HTTP isteğini işler ve servis katmanına yönlendirir.
+//sistemdeki görevi: Belirli bir API aksiyonunun giriş noktasını tanımlar.
     public async Task<Result<List<VehicleDto>>> CreateMany([FromBody] List<CreateVehicleDto> inputs)
     {
         var result = await _appService.CreateManyAsync(inputs);
@@ -78,6 +90,8 @@ public class VehicleController : InventoryTrackingAutomationController
     /// <summary> AracÄ± gÃ¼nceller. </summary>
     [HttpPut("{id}")]
     [Authorize(InventoryTrackingAutomationPermissions.Masters.Manage)]
+//işlevi: İlgili HTTP isteğini işler ve servis katmanına yönlendirir.
+//sistemdeki görevi: Belirli bir API aksiyonunun giriş noktasını tanımlar.
     public async Task<Result<VehicleDto>> Update(Guid id, [FromBody] UpdateVehicleDto input)
     {
         var result = await _appService.UpdateAsync(id, input);
@@ -87,6 +101,8 @@ public class VehicleController : InventoryTrackingAutomationController
     /// <summary> AracÄ± soft delete ile siler. </summary>
     [HttpDelete("{id}")]
     [Authorize(InventoryTrackingAutomationPermissions.Masters.Manage)]
+//işlevi: İlgili HTTP isteğini işler ve servis katmanına yönlendirir.
+//sistemdeki görevi: Belirli bir API aksiyonunun giriş noktasını tanımlar.
     public async Task<Result> Delete(Guid id)
     {
         await _appService.DeleteAsync(id);

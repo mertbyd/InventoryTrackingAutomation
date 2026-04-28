@@ -20,6 +20,8 @@ namespace InventoryTrackingAutomation.Controllers.Stock;
 [ApiVersion("1.0")]
 [ApiExplorerSettings(GroupName = "Stock")]
 [Tags("InventoryTransactions")]
+//işlevi: InventoryTransaction modülü için HTTP isteklerini karşılar.
+//sistemdeki görevi: Dış dünya ile sistem arasındaki iletişimi sağlayan API uç noktasıdır.
 public class InventoryTransactionController : InventoryTrackingAutomationController
 {
     private readonly IInventoryTransactionAppService _appService;
@@ -31,6 +33,8 @@ public class InventoryTransactionController : InventoryTrackingAutomationControl
 
     [HttpGet("{id}")]
     [Authorize(InventoryTrackingAutomationPermissions.Inventory.View)]
+//işlevi: İlgili HTTP isteğini işler ve servis katmanına yönlendirir.
+//sistemdeki görevi: Belirli bir API aksiyonunun giriş noktasını tanımlar.
     public async Task<Result<InventoryTransactionDto>> Get(Guid id)
     {
         var result = await _appService.GetAsync(id);
@@ -39,6 +43,8 @@ public class InventoryTransactionController : InventoryTrackingAutomationControl
 
     [HttpGet]
     [Authorize(InventoryTrackingAutomationPermissions.Inventory.View)]
+//işlevi: İlgili HTTP isteğini işler ve servis katmanına yönlendirir.
+//sistemdeki görevi: Belirli bir API aksiyonunun giriş noktasını tanımlar.
     public async Task<Result<PagedResultDto<InventoryTransactionDto>>> GetList([FromQuery] PagedResultRequestDto input)
     {
         var result = await _appService.GetListAsync(input);
@@ -47,6 +53,8 @@ public class InventoryTransactionController : InventoryTrackingAutomationControl
 
     [HttpPost]
     [Authorize(InventoryTrackingAutomationPermissions.Inventory.Manage)]
+//işlevi: İlgili HTTP isteğini işler ve servis katmanına yönlendirir.
+//sistemdeki görevi: Belirli bir API aksiyonunun giriş noktasını tanımlar.
     public async Task<Result<InventoryTransactionDto>> Create([FromBody] CreateInventoryTransactionDto input)
     {
         var result = await _appService.CreateAsync(input);
@@ -55,6 +63,8 @@ public class InventoryTransactionController : InventoryTrackingAutomationControl
 
     [HttpPost("bulk")]
     [Authorize(InventoryTrackingAutomationPermissions.Inventory.Manage)]
+//işlevi: İlgili HTTP isteğini işler ve servis katmanına yönlendirir.
+//sistemdeki görevi: Belirli bir API aksiyonunun giriş noktasını tanımlar.
     public async Task<Result<List<InventoryTransactionDto>>> CreateMany([FromBody] List<CreateInventoryTransactionDto> inputs)
     {
         var result = await _appService.CreateManyAsync(inputs);
@@ -63,6 +73,8 @@ public class InventoryTransactionController : InventoryTrackingAutomationControl
 
     [HttpPut("{id}")]
     [Authorize(InventoryTrackingAutomationPermissions.Inventory.Manage)]
+//işlevi: İlgili HTTP isteğini işler ve servis katmanına yönlendirir.
+//sistemdeki görevi: Belirli bir API aksiyonunun giriş noktasını tanımlar.
     public async Task<Result<InventoryTransactionDto>> Update(Guid id, [FromBody] UpdateInventoryTransactionDto input)
     {
         var result = await _appService.UpdateAsync(id, input);
@@ -71,6 +83,8 @@ public class InventoryTransactionController : InventoryTrackingAutomationControl
 
     [HttpDelete("{id}")]
     [Authorize(InventoryTrackingAutomationPermissions.Inventory.Manage)]
+//işlevi: İlgili HTTP isteğini işler ve servis katmanına yönlendirir.
+//sistemdeki görevi: Belirli bir API aksiyonunun giriş noktasını tanımlar.
     public async Task<Result> Delete(Guid id)
     {
         await _appService.DeleteAsync(id);

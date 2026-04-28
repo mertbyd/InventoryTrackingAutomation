@@ -18,6 +18,8 @@ namespace InventoryTrackingAutomation.Controllers.Movements;
 [Route("api/movement-requests")]
 [ApiExplorerSettings(GroupName = "Movements")]
 [Tags("MovementApprovals")]
+//işlevi: MovementApproval modülü için HTTP isteklerini karşılar.
+//sistemdeki görevi: Dış dünya ile sistem arasındaki iletişimi sağlayan API uç noktasıdır.
 public class MovementApprovalController : InventoryTrackingAutomationController
 {
     private readonly IMovementApprovalAppService _appService;
@@ -30,6 +32,8 @@ public class MovementApprovalController : InventoryTrackingAutomationController
     /// <summary> Hareket talebinin onay geçmişini getirir. </summary>
     [HttpGet("{id}/approvals")]
     [Authorize(InventoryTrackingAutomationPermissions.Workflows.View)]
+//işlevi: İlgili HTTP isteğini işler ve servis katmanına yönlendirir.
+//sistemdeki görevi: Belirli bir API aksiyonunun giriş noktasını tanımlar.
     public async Task<Result<List<MovementApprovalDto>>> GetApprovals(Guid id)
     {
         var result = await _appService.GetApprovalHistoryAsync(id);
@@ -39,6 +43,8 @@ public class MovementApprovalController : InventoryTrackingAutomationController
     /// <summary> Hareket talebini onaylar veya reddeder. </summary>
     [HttpPost("{id}/process-approval")]
     [Authorize(InventoryTrackingAutomationPermissions.Workflows.Approve)] // Veya Workflows.Reject
+//işlevi: İlgili HTTP isteğini işler ve servis katmanına yönlendirir.
+//sistemdeki görevi: Belirli bir API aksiyonunun giriş noktasını tanımlar.
     public async Task<Result<MovementApprovalDto>> ProcessApproval(Guid id, [FromBody] ProcessMovementApprovalDto input)
     {
         var result = await _appService.ProcessApprovalAsync(id, input);
@@ -48,6 +54,8 @@ public class MovementApprovalController : InventoryTrackingAutomationController
     /// <summary> Geçerli kullanıcının onaylaması gereken talepleri listeler. </summary>
     [HttpGet("pending-approvals")]
     [Authorize(InventoryTrackingAutomationPermissions.Workflows.View)]
+//işlevi: İlgili HTTP isteğini işler ve servis katmanına yönlendirir.
+//sistemdeki görevi: Belirli bir API aksiyonunun giriş noktasını tanımlar.
     public async Task<Result<List<PendingApprovalDto>>> GetPendingApprovals()
     {
         var result = await _appService.GetPendingApprovalsAsync();

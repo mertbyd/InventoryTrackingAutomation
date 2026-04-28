@@ -5,6 +5,8 @@ namespace InventoryTrackingAutomation.Dtos.Workflows;
 /// <summary>
 /// İş akışı tanımı oluşturmak için kullanılan DTO.
 /// </summary>
+//işlevi: CreateWorkflowDefinition verisinin transferi sırasında taşınacak olan yapıyı tanımlar.
+//sistemdeki görevi: Katmanlar arası veri alışverişini standartlaştırır.
 public class CreateWorkflowDefinitionDto
 {
     public string Name { get; set; } = string.Empty;

@@ -6,6 +6,8 @@ namespace InventoryTrackingAutomation.Dtos.Workflows;
 /// <summary>
 /// Mevcut kullanıcının onaylaması bekleyen iş akışı adımını dönen entity-agnostic DTO.
 /// </summary>
+//işlevi: PendingWorkflowStep verisinin transferi sırasında taşınacak olan yapıyı tanımlar.
+//sistemdeki görevi: Katmanlar arası veri alışverişini standartlaştırır.
 public class PendingWorkflowStepDto
 {
     /// <summary>İş akışı adım Id'si.</summary>

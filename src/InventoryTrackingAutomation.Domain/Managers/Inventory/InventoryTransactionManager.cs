@@ -15,6 +15,8 @@ namespace InventoryTrackingAutomation.Managers.Inventory;
 /// </summary>
 //işlevi: Stok hareketlerinin (ledger/defter) kayıt altına alınmasını yönetir.
 //sistemdeki görevii: Tüm stok değişimlerinin tarihçesini (audit trail) tutar ve geçmişe dönük izlenebilirlik sağlar.
+//işlevi: InventoryTransaction etki alanı (domain) kurallarını ve karmaşık veri bütünlüğünü sağlar.
+//sistemdeki görevi: Domain katmanındaki iş kurallarının merkezi yönetimini ve validasyonunu sağlar.
 public class InventoryTransactionManager : BaseManager<InventoryTransaction>
 {
     private readonly IProductRepository _productRepository;
@@ -36,6 +38,8 @@ public class InventoryTransactionManager : BaseManager<InventoryTransaction>
         _mapper = mapper;
     }
 
+//işlevi: Etki alanı kuralını veya validasyonunu işletir.
+//sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
     public async Task<InventoryTransaction> CreateAsync(CreateInventoryTransactionModel model)
     {
         await ValidateReferencesAsync(model.ProductId, model.RelatedMovementRequestId, model.RelatedTaskId);
@@ -46,6 +50,8 @@ public class InventoryTransactionManager : BaseManager<InventoryTransaction>
         return entity;
     }
 
+//işlevi: Etki alanı kuralını veya validasyonunu işletir.
+//sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
     public async Task<InventoryTransaction> UpdateAsync(InventoryTransaction existing, UpdateInventoryTransactionModel model)
     {
         await ValidateReferencesAsync(model.ProductId, model.RelatedMovementRequestId, model.RelatedTaskId);
@@ -74,6 +80,8 @@ public class InventoryTransactionManager : BaseManager<InventoryTransaction>
 
     //işlevi: Immutable (değiştirilemez) yeni bir stok hareket (ledger) kaydı oluşturur.
     //sistemdeki görevi: Gerçekleşen transferlerin veritabanına kalıcı logunu yazar.
+//işlevi: Etki alanı kuralını veya validasyonunu işletir.
+//sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
     public async Task<InventoryTransaction> RecordAsync(InventoryTrackingAutomation.Models.Inventory.StockTransferModel model)
     {
         var entity = new InventoryTransaction(GuidGenerator.Create())

@@ -9,6 +9,8 @@ namespace InventoryTrackingAutomation.Dtos.Inventory;
 /// <summary>
 /// Envanter hareketi response DTO'su.
 /// </summary>
+//işlevi: InventoryTransaction verisinin transferi sırasında taşınacak olan yapıyı tanımlar.
+//sistemdeki görevi: Katmanlar arası veri alışverişini standartlaştırır.
 public class InventoryTransactionDto : FullAuditedEntityDto<Guid>
 {
     public Guid ProductId { get; set; }                                  // Urun Id'si.

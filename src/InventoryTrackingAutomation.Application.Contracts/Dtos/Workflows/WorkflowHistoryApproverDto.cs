@@ -5,6 +5,8 @@ namespace InventoryTrackingAutomation.Dtos.Workflows;
 /// <summary>
 /// Bir adımdaki onaycı bilgisini temsil eden DTO.
 /// </summary>
+//işlevi: WorkflowHistoryApprover verisinin transferi sırasında taşınacak olan yapıyı tanımlar.
+//sistemdeki görevi: Katmanlar arası veri alışverişini standartlaştırır.
 public class WorkflowHistoryApproverDto
 {
     /// <summary>Onaycı kullanıcı Id'si.</summary>

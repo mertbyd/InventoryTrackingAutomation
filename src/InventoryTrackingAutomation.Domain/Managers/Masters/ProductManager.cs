@@ -10,6 +10,8 @@ namespace InventoryTrackingAutomation.Managers.Masters;
 /// <summary>
 /// Ürün domain manager'ı — Product entity'si için iş kuralları ve validasyonları.
 /// </summary>
+//işlevi: Product etki alanı (domain) kurallarını ve karmaşık veri bütünlüğünü sağlar.
+//sistemdeki görevi: Domain katmanındaki iş kurallarının merkezi yönetimini ve validasyonunu sağlar.
 public class ProductManager : BaseManager<Product>
 {
     private readonly IProductCategoryRepository _categoryRepository;  // CategoryId FK validasyonu için
@@ -31,6 +33,8 @@ public class ProductManager : BaseManager<Product>
     /// <summary>
     /// Yeni ürün oluşturur — Code unique ve CategoryId varlık kontrolü yapar.
     /// </summary>
+//işlevi: Etki alanı kuralını veya validasyonunu işletir.
+//sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
     public async Task<Product> CreateAsync(CreateProductModel model)
     {
         if (!string.IsNullOrWhiteSpace(model.Code))
@@ -56,6 +60,8 @@ public class ProductManager : BaseManager<Product>
     /// <summary>
     /// Ürünü günceller — Code unique (self hariç) ve CategoryId varlık kontrolü yapar.
     /// </summary>
+//işlevi: Etki alanı kuralını veya validasyonunu işletir.
+//sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
     public async Task<Product> UpdateAsync(Product existing, UpdateProductModel model)
     {
         if (!string.IsNullOrWhiteSpace(model.Code) && existing.Code != model.Code)

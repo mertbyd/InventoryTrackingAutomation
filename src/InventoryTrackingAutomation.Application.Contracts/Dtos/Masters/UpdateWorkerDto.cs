@@ -8,6 +8,8 @@ namespace InventoryTrackingAutomation.Dtos.Masters;
 /// <summary>
 /// Çalışan güncelleme request DTO'su.
 /// </summary>
+//işlevi: UpdateWorker verisinin transferi sırasında taşınacak olan yapıyı tanımlar.
+//sistemdeki görevi: Katmanlar arası veri alışverişini standartlaştırır.
 public class UpdateWorkerDto
 {
     public Guid UserId { get; set; }                  // ABP Identity kullanıcı kimliği.

@@ -14,6 +14,8 @@ using Volo.Abp.Uow;
 namespace InventoryTrackingAutomation.Application.Services.Movements;
 
 // Hareket talebi satırı application servisi — HTTP endpoint'leri için ince orkestra katmanı; iş kuralları MovementRequestLineManager'da.
+//işlevi: MovementRequestLine iş mantığını koordine eder ve DTO dönüşümlerini yönetir.
+//sistemdeki görevi: Uygulama katmanındaki kullanım senaryolarını (use-case) gerçekleştiren ana servis birimidir.
 public class MovementRequestLineAppService : InventoryTrackingAutomationAppService, IMovementRequestLineAppService
 {
     // Read/list/persist için ana repository.
@@ -34,6 +36,8 @@ public class MovementRequestLineAppService : InventoryTrackingAutomationAppServi
     }
 
     // Id ile hareket talebi satırını getirir; yoksa EntityNotFoundException.
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<MovementRequestLineDto> GetAsync(Guid id)
     {
         var entity = await _manager.EnsureExistsAsync(id);
@@ -41,6 +45,8 @@ public class MovementRequestLineAppService : InventoryTrackingAutomationAppServi
     }
 
     // Hareket talebi satırlarını sayfalı listeler.
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<PagedResultDto<MovementRequestLineDto>> GetListAsync(PagedResultRequestDto input)
     {
         var totalCount = await _repository.GetCountAsync();
@@ -53,6 +59,8 @@ public class MovementRequestLineAppService : InventoryTrackingAutomationAppServi
 
     // Yeni hareket talebi satırı oluşturur — manager iş kurallarını uygular, repository persist eder.
     [UnitOfWork]
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<MovementRequestLineDto> CreateAsync(CreateMovementRequestLineDto input)
     {
         var model = _mapper.Map<CreateMovementRequestLineDto, CreateMovementRequestLineModel>(input);
@@ -63,6 +71,8 @@ public class MovementRequestLineAppService : InventoryTrackingAutomationAppServi
 
     // Birden fazla hareket talebi satırını toplu oluşturur.
     [UnitOfWork]
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<List<MovementRequestLineDto>> CreateManyAsync(List<CreateMovementRequestLineDto> inputs)
     {
         var entities = new List<MovementRequestLine>();
@@ -78,6 +88,8 @@ public class MovementRequestLineAppService : InventoryTrackingAutomationAppServi
 
     // Hareket talebi satırını günceller — manager iş kurallarını uygular, repository persist eder.
     [UnitOfWork]
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<MovementRequestLineDto> UpdateAsync(Guid id, UpdateMovementRequestLineDto input)
     {
         var existing = await _manager.EnsureExistsAsync(id);
@@ -89,6 +101,8 @@ public class MovementRequestLineAppService : InventoryTrackingAutomationAppServi
 
     // Hareket talebi satırını soft delete ile siler.
     [UnitOfWork]
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task DeleteAsync(Guid id)
     {
         await _manager.EnsureExistsAsync(id);

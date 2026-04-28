@@ -18,6 +18,8 @@ using Volo.Abp.Uow;
 namespace InventoryTrackingAutomation.Application.Services.Masters;
 
 // Ürün application servisi — HTTP endpoint'leri için ince orkestra katmanı; iş kuralları ProductManager'da.
+//işlevi: Product iş mantığını koordine eder ve DTO dönüşümlerini yönetir.
+//sistemdeki görevi: Uygulama katmanındaki kullanım senaryolarını (use-case) gerçekleştiren ana servis birimidir.
 public class ProductAppService : InventoryTrackingAutomationAppService, IProductAppService
 {
     // Read/list/persist için ana repository.
@@ -48,6 +50,8 @@ public class ProductAppService : InventoryTrackingAutomationAppService, IProduct
     }
 
     // Id ile ürünü getirir; yoksa EntityNotFoundException.
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<ProductDto> GetAsync(Guid id)
     {
         var entity = await _manager.EnsureExistsAsync(id);
@@ -55,6 +59,8 @@ public class ProductAppService : InventoryTrackingAutomationAppService, IProduct
     }
 
     // Ürünleri sayfalı listeler.
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<PagedResultDto<ProductDto>> GetListAsync(PagedResultRequestDto input)
     {
         var totalCount = await _repository.GetCountAsync();
@@ -66,6 +72,8 @@ public class ProductAppService : InventoryTrackingAutomationAppService, IProduct
     }
 
     // Urunun lokasyon bazli stok ozetini getirir; okuma kurallari manager tarafinda kalir.
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<ProductStockSummaryDto> GetStockSummaryAsync(Guid id)
     {
         var summary = await _inventoryQueryManager.GetProductStockSummaryAsync(id);
@@ -74,6 +82,8 @@ public class ProductAppService : InventoryTrackingAutomationAppService, IProduct
 
     // Yeni ürün oluşturur — manager iş kurallarını uygular, repository persist eder.
     [UnitOfWork]
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<ProductDto> CreateAsync(CreateProductDto input)
     {
         await _createValidator.ValidateAndThrowAsync(input);
@@ -85,6 +95,8 @@ public class ProductAppService : InventoryTrackingAutomationAppService, IProduct
 
     // Birden fazla ürünü toplu oluşturur.
     [UnitOfWork]
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<List<ProductDto>> CreateManyAsync(List<CreateProductDto> inputs)
     {
         var entities = new List<Product>();
@@ -101,6 +113,8 @@ public class ProductAppService : InventoryTrackingAutomationAppService, IProduct
 
     // Ürünü günceller — manager iş kurallarını uygular, repository persist eder.
     [UnitOfWork]
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<ProductDto> UpdateAsync(Guid id, UpdateProductDto input)
     {
         await _updateValidator.ValidateAndThrowAsync(input);
@@ -113,6 +127,8 @@ public class ProductAppService : InventoryTrackingAutomationAppService, IProduct
 
     // Ürünü soft delete ile siler.
     [UnitOfWork]
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task DeleteAsync(Guid id)
     {
         await _manager.EnsureExistsAsync(id);

@@ -15,6 +15,8 @@ using Volo.Abp.Uow;
 namespace InventoryTrackingAutomation.Application.Services.Masters;
 
 // Çalışan application servisi — HTTP endpoint'leri için ince orkestra katmanı; iş kuralları WorkerManager'da.
+//işlevi: Worker iş mantığını koordine eder ve DTO dönüşümlerini yönetir.
+//sistemdeki görevi: Uygulama katmanındaki kullanım senaryolarını (use-case) gerçekleştiren ana servis birimidir.
 public class WorkerAppService : InventoryTrackingAutomationAppService, IWorkerAppService
 {
     // Read/list/persist için ana repository.
@@ -41,6 +43,8 @@ public class WorkerAppService : InventoryTrackingAutomationAppService, IWorkerAp
     }
 
     // Id ile çalışanı getirir; yoksa EntityNotFoundException.
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<WorkerDto> GetAsync(Guid id)
     {
         var entity = await _manager.EnsureExistsAsync(id);
@@ -48,6 +52,8 @@ public class WorkerAppService : InventoryTrackingAutomationAppService, IWorkerAp
     }
 
     // Çalışanları sayfalı listeler.
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<PagedResultDto<WorkerDto>> GetListAsync(PagedResultRequestDto input)
     {
         var totalCount = await _repository.GetCountAsync();
@@ -60,6 +66,8 @@ public class WorkerAppService : InventoryTrackingAutomationAppService, IWorkerAp
 
     // Yeni çalışan oluşturur — manager iş kurallarını uygular, repository persist eder.
     [UnitOfWork]
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<WorkerDto> CreateAsync(CreateWorkerDto input)
     {
         await _createValidator.ValidateAndThrowAsync(input);
@@ -71,6 +79,8 @@ public class WorkerAppService : InventoryTrackingAutomationAppService, IWorkerAp
 
     // Birden fazla çalışanı toplu oluşturur.
     [UnitOfWork]
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<List<WorkerDto>> CreateManyAsync(List<CreateWorkerDto> inputs)
     {
         var entities = new List<Worker>();
@@ -87,6 +97,8 @@ public class WorkerAppService : InventoryTrackingAutomationAppService, IWorkerAp
 
     // Çalışanı günceller — manager iş kurallarını uygular, repository persist eder.
     [UnitOfWork]
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<WorkerDto> UpdateAsync(Guid id, UpdateWorkerDto input)
     {
         await _updateValidator.ValidateAndThrowAsync(input);
@@ -99,6 +111,8 @@ public class WorkerAppService : InventoryTrackingAutomationAppService, IWorkerAp
 
     // Çalışanı soft delete ile siler.
     [UnitOfWork]
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task DeleteAsync(Guid id)
     {
         await _manager.EnsureExistsAsync(id);

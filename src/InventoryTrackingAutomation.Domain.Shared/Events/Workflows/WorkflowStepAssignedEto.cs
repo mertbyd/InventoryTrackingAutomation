@@ -6,6 +6,8 @@ namespace InventoryTrackingAutomation.Events.Workflows;
 /// Bir is akisi adimi onayciya atandiginda firlatilan Event Transfer Object.
 /// </summary>
 [Serializable]
+//işlevi: WorkflowStepAssigned olayı (event) gerçekleştiğinde taşınacak olan veriyi tanımlar.
+//sistemdeki görevi: Dağıtık sistemde veya uygulama içinde olay tabanlı iletişimi sağlar.
 public class WorkflowStepAssignedEto
 {
     public Guid WorkflowInstanceId { get; set; }

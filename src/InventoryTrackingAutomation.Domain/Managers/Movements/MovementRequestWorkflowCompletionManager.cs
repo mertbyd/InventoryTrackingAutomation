@@ -19,6 +19,8 @@ namespace InventoryTrackingAutomation.Managers.Movements;
 /// </summary>
 //işlevi: Workflow (onay süreci) tamamlandığında veya reddedildiğinde MovementRequest üzerinde nihai durumu ve stok hareketlerini tetikler.
 //sistemdeki görevii: Onay zincirinin son halkasıdır; başarılı onay sonrası stok transferini başlatır ve talebi kapatır.
+//işlevi: MovementRequestWorkflowCompletion etki alanı (domain) kurallarını ve karmaşık veri bütünlüğünü sağlar.
+//sistemdeki görevi: Domain katmanındaki iş kurallarının merkezi yönetimini ve validasyonunu sağlar.
 public class MovementRequestWorkflowCompletionManager : DomainService
 {
     private readonly IMovementRequestRepository _movementRequestRepository;
@@ -38,6 +40,8 @@ public class MovementRequestWorkflowCompletionManager : DomainService
         _vehicleTaskManager = vehicleTaskManager;
     }
 
+//işlevi: Etki alanı kuralını veya validasyonunu işletir.
+//sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
     public async Task ApplyWorkflowResultAsync(Guid movementRequestId, WorkflowState finalState)
     {
         var request = await _movementRequestRepository.FindAsync(movementRequestId);

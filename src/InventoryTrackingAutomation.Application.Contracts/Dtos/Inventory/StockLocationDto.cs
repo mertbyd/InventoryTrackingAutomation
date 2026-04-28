@@ -9,6 +9,8 @@ namespace InventoryTrackingAutomation.Dtos.Inventory;
 /// <summary>
 /// Lokasyon bazli stok response DTO'su.
 /// </summary>
+//işlevi: StockLocation verisinin transferi sırasında taşınacak olan yapıyı tanımlar.
+//sistemdeki görevi: Katmanlar arası veri alışverişini standartlaştırır.
 public class StockLocationDto : FullAuditedEntityDto<Guid>
 {
     public Guid ProductId { get; set; }                       // Urun Id'si.

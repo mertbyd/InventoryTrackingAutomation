@@ -21,6 +21,8 @@ namespace InventoryTrackingAutomation.Application.Services.Auth;
 /// AppService katmanı, Domain Service'ten gelen iş mantığını HTTP (OpenIddict) ile birleştirir.
 /// </summary>
 [RemoteService(IsEnabled = false)]
+//işlevi: Auth iş mantığını koordine eder ve DTO dönüşümlerini yönetir.
+//sistemdeki görevi: Uygulama katmanındaki kullanım senaryolarını (use-case) gerçekleştiren ana servis birimidir.
 public class AuthAppService : InventoryTrackingAutomationAppService, IAuthAppService
 {
     // Domain manager — kullanıcı oluşturma ve giriş doğrulama iş kuralları.
@@ -54,6 +56,8 @@ public class AuthAppService : InventoryTrackingAutomationAppService, IAuthAppSer
     /// DTO → Model mapping, AuthManager.CreateUserAsync çağrısı, kullanıcı ID'sini döner.
     /// </summary>
     [UnitOfWork]
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<Guid> RegisterAsync(RegisterDto input)
     {
         // DTO → Model mapping
@@ -70,6 +74,8 @@ public class AuthAppService : InventoryTrackingAutomationAppService, IAuthAppSer
     /// Kullanıcı girişi (login) işlemini gerçekleştirir.
     /// Kimlik doğrulama (AuthManager) + OpenIddict token istek kombinasyonu.
     /// </summary>
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<TokenResponse> LoginAsync(LoginDto input)
     {
         // DTO → Model mapping
@@ -90,6 +96,8 @@ public class AuthAppService : InventoryTrackingAutomationAppService, IAuthAppSer
     /// <summary>
     /// Giriş yapmış mevcut kullanıcının ID'sini döner.
     /// </summary>
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<Guid?> GetMeAsync()
     {
         return CurrentUser.Id;

@@ -19,6 +19,8 @@ namespace InventoryTrackingAutomation.Controllers.Masters;
 [ApiVersion("1.0")]
 [ApiExplorerSettings(GroupName = "Masters")]
 [Tags("Warehouses")]
+//işlevi: Warehouse modülü için HTTP isteklerini karşılar.
+//sistemdeki görevi: Dış dünya ile sistem arasındaki iletişimi sağlayan API uç noktasıdır.
 public class WarehouseController : InventoryTrackingAutomationController
 {
     private readonly IWarehouseAppService _appService;
@@ -31,6 +33,8 @@ public class WarehouseController : InventoryTrackingAutomationController
     /// <summary> Id'ye gÃ¶re tek lokasyon getirir. </summary>
     [HttpGet("{id}")]
     [Authorize(InventoryTrackingAutomationPermissions.Masters.View)]
+//işlevi: İlgili HTTP isteğini işler ve servis katmanına yönlendirir.
+//sistemdeki görevi: Belirli bir API aksiyonunun giriş noktasını tanımlar.
     public async Task<Result<WarehouseDto>> Get(Guid id)
     {
         var result = await _appService.GetAsync(id);
@@ -40,6 +44,8 @@ public class WarehouseController : InventoryTrackingAutomationController
     /// <summary> TÃ¼m lokasyonlarÄ± listeler. </summary>
     [HttpGet]
     [Authorize(InventoryTrackingAutomationPermissions.Masters.View)]
+//işlevi: İlgili HTTP isteğini işler ve servis katmanına yönlendirir.
+//sistemdeki görevi: Belirli bir API aksiyonunun giriş noktasını tanımlar.
     public async Task<Result<Volo.Abp.Application.Dtos.PagedResultDto<WarehouseDto>>> GetList([FromQuery] Volo.Abp.Application.Dtos.PagedResultRequestDto input)
     {
         var result = await _appService.GetListAsync(input);
@@ -49,6 +55,8 @@ public class WarehouseController : InventoryTrackingAutomationController
     /// <summary> Yeni lokasyon oluÅŸturur. </summary>
     [HttpPost]
     [Authorize(InventoryTrackingAutomationPermissions.Masters.Manage)]
+//işlevi: İlgili HTTP isteğini işler ve servis katmanına yönlendirir.
+//sistemdeki görevi: Belirli bir API aksiyonunun giriş noktasını tanımlar.
     public async Task<Result<WarehouseDto>> Create([FromBody] CreateWarehouseDto input)
     {
         var result = await _appService.CreateAsync(input);
@@ -58,6 +66,8 @@ public class WarehouseController : InventoryTrackingAutomationController
     /// <summary> Birden fazla lokasyonu toplu oluÅŸturur. </summary>
     [HttpPost("bulk")]
     [Authorize(InventoryTrackingAutomationPermissions.Masters.Manage)]
+//işlevi: İlgili HTTP isteğini işler ve servis katmanına yönlendirir.
+//sistemdeki görevi: Belirli bir API aksiyonunun giriş noktasını tanımlar.
     public async Task<Result<List<WarehouseDto>>> CreateMany([FromBody] List<CreateWarehouseDto> inputs)
     {
         var result = await _appService.CreateManyAsync(inputs);
@@ -67,6 +77,8 @@ public class WarehouseController : InventoryTrackingAutomationController
     /// <summary> Lokasyonu gÃ¼nceller. </summary>
     [HttpPut("{id}")]
     [Authorize(InventoryTrackingAutomationPermissions.Masters.Manage)]
+//işlevi: İlgili HTTP isteğini işler ve servis katmanına yönlendirir.
+//sistemdeki görevi: Belirli bir API aksiyonunun giriş noktasını tanımlar.
     public async Task<Result<WarehouseDto>> Update(Guid id, [FromBody] UpdateWarehouseDto input)
     {
         var result = await _appService.UpdateAsync(id, input);
@@ -76,6 +88,8 @@ public class WarehouseController : InventoryTrackingAutomationController
     /// <summary> Lokasyonu soft delete ile siler. </summary>
     [HttpDelete("{id}")]
     [Authorize(InventoryTrackingAutomationPermissions.Masters.Manage)]
+//işlevi: İlgili HTTP isteğini işler ve servis katmanına yönlendirir.
+//sistemdeki görevi: Belirli bir API aksiyonunun giriş noktasını tanımlar.
     public async Task<Result> Delete(Guid id)
     {
         await _appService.DeleteAsync(id);

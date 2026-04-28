@@ -17,6 +17,8 @@ namespace InventoryTrackingAutomation.Controllers.Lookups;
 [Route("api/departments")]
 [ApiExplorerSettings(GroupName = "Lookups")]
 [Tags("Departments")]
+//işlevi: Department modülü için HTTP isteklerini karşılar.
+//sistemdeki görevi: Dış dünya ile sistem arasındaki iletişimi sağlayan API uç noktasıdır.
 public class DepartmentController : InventoryTrackingAutomationController
 {
     private readonly IDepartmentAppService _appService;
@@ -29,6 +31,8 @@ public class DepartmentController : InventoryTrackingAutomationController
     /// <summary> Id'ye gÃ¶re tek departman getirir. </summary>
     [HttpGet("{id}")]
     [Authorize(InventoryTrackingAutomationPermissions.Masters.View)]
+//işlevi: İlgili HTTP isteğini işler ve servis katmanına yönlendirir.
+//sistemdeki görevi: Belirli bir API aksiyonunun giriş noktasını tanımlar.
     public async Task<Result<DepartmentDto>> Get(Guid id)
     {
         var result = await _appService.GetAsync(id);
@@ -38,6 +42,8 @@ public class DepartmentController : InventoryTrackingAutomationController
     /// <summary> TÃ¼m departmanlarÄ± listeler. </summary>
     [HttpGet]
     [Authorize(InventoryTrackingAutomationPermissions.Masters.View)]
+//işlevi: İlgili HTTP isteğini işler ve servis katmanına yönlendirir.
+//sistemdeki görevi: Belirli bir API aksiyonunun giriş noktasını tanımlar.
     public async Task<Result<Volo.Abp.Application.Dtos.PagedResultDto<DepartmentDto>>> GetList([FromQuery] Volo.Abp.Application.Dtos.PagedResultRequestDto input)
     {
         var result = await _appService.GetListAsync(input);
@@ -47,6 +53,8 @@ public class DepartmentController : InventoryTrackingAutomationController
     /// <summary> Yeni departman oluÅŸturur. </summary>
     [HttpPost]
     [Authorize(InventoryTrackingAutomationPermissions.Masters.Manage)]
+//işlevi: İlgili HTTP isteğini işler ve servis katmanına yönlendirir.
+//sistemdeki görevi: Belirli bir API aksiyonunun giriş noktasını tanımlar.
     public async Task<Result<DepartmentDto>> Create([FromBody] CreateDepartmentDto input)
     {
         var result = await _appService.CreateAsync(input);
@@ -56,6 +64,8 @@ public class DepartmentController : InventoryTrackingAutomationController
     /// <summary> Birden fazla departmanÄ± toplu oluÅŸturur. </summary>
     [HttpPost("bulk")]
     [Authorize(InventoryTrackingAutomationPermissions.Masters.Manage)]
+//işlevi: İlgili HTTP isteğini işler ve servis katmanına yönlendirir.
+//sistemdeki görevi: Belirli bir API aksiyonunun giriş noktasını tanımlar.
     public async Task<Result<List<DepartmentDto>>> CreateMany([FromBody] List<CreateDepartmentDto> inputs)
     {
         var result = await _appService.CreateManyAsync(inputs);
@@ -65,6 +75,8 @@ public class DepartmentController : InventoryTrackingAutomationController
     /// <summary> DepartmanÄ± gÃ¼nceller. </summary>
     [HttpPut("{id}")]
     [Authorize(InventoryTrackingAutomationPermissions.Masters.Manage)]
+//işlevi: İlgili HTTP isteğini işler ve servis katmanına yönlendirir.
+//sistemdeki görevi: Belirli bir API aksiyonunun giriş noktasını tanımlar.
     public async Task<Result<DepartmentDto>> Update(Guid id, [FromBody] UpdateDepartmentDto input)
     {
         var result = await _appService.UpdateAsync(id, input);
@@ -74,6 +86,8 @@ public class DepartmentController : InventoryTrackingAutomationController
     /// <summary> DepartmanÄ± soft delete ile siler. </summary>
     [HttpDelete("{id}")]
     [Authorize(InventoryTrackingAutomationPermissions.Masters.Manage)]
+//işlevi: İlgili HTTP isteğini işler ve servis katmanına yönlendirir.
+//sistemdeki görevi: Belirli bir API aksiyonunun giriş noktasını tanımlar.
     public async Task<Result> Delete(Guid id)
     {
         await _appService.DeleteAsync(id);

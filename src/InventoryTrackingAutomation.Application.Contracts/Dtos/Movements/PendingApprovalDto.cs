@@ -6,6 +6,8 @@ using InventoryTrackingAutomation.Enums;
 namespace InventoryTrackingAutomation.Dtos.Movements;
 
 // Shows pending approvals assigned to current user. Lists movement requests waiting for this user's decision.
+//işlevi: PendingApproval verisinin transferi sırasında taşınacak olan yapıyı tanımlar.
+//sistemdeki görevi: Katmanlar arası veri alışverişini standartlaştırır.
 public class PendingApprovalDto
 {
     public Guid MovementRequestId { get; set; }

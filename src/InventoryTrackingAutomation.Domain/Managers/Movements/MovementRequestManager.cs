@@ -17,6 +17,8 @@ namespace InventoryTrackingAutomation.Managers.Movements;
 // Hareket talebi domain manager'i - MovementRequest icin is kurallari, FK validasyonu ve workflow tetikleme.
 //işlevi: Hareket taleplerinin (MovementRequest) oluşturulması, güncellenmesi ve workflow süreçlerinin başlatılmasını yönetir.
 //sistemdeki görevii: Talep aşamasındaki iş kurallarını (validasyonlar, benzersizlik kontrolleri) uygular ve onay sürecini tetikler.
+//işlevi: MovementRequest etki alanı (domain) kurallarını ve karmaşık veri bütünlüğünü sağlar.
+//sistemdeki görevi: Domain katmanındaki iş kurallarının merkezi yönetimini ve validasyonunu sağlar.
 public class MovementRequestManager : BaseManager<MovementRequest>
 {
     private readonly IWarehouseRepository _warehouseRepository;
@@ -57,6 +59,8 @@ public class MovementRequestManager : BaseManager<MovementRequest>
     }
 
     // Yeni hareket talebi entity'si olusturur; persist sorumlulugu cagirandadir.
+//işlevi: Etki alanı kuralını veya validasyonunu işletir.
+//sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
     public async Task<MovementRequest> CreateAsync(CreateMovementRequestModel model)
     {
         await ValidateRequestNumberForCreateAsync(model.RequestNumber);
@@ -70,6 +74,8 @@ public class MovementRequestManager : BaseManager<MovementRequest>
     }
 
     // Hareket talebini gunceller; degisen alanlar icin validasyon yapar.
+//işlevi: Etki alanı kuralını veya validasyonunu işletir.
+//sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
     public async Task<MovementRequest> UpdateAsync(MovementRequest existing, UpdateMovementRequestModel model)
     {
         await ValidateRequestNumberForUpdateAsync(existing, model.RequestNumber);
@@ -82,6 +88,8 @@ public class MovementRequestManager : BaseManager<MovementRequest>
     }
 
     // Hareket talebini olusturur, workflow'u baslatir ve veritabanina kaydeder.
+//işlevi: Etki alanı kuralını veya validasyonunu işletir.
+//sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
     public async Task<MovementRequest> CreateWithWorkflowAsync(CreateMovementRequestModel model, Guid currentUserId)
     {
         var entity = await CreateAsync(model);
@@ -93,6 +101,8 @@ public class MovementRequestManager : BaseManager<MovementRequest>
     }
 
     // Birden fazla hareket talebini workflow ile birlikte sirasiyla olusturur.
+//işlevi: Etki alanı kuralını veya validasyonunu işletir.
+//sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
     public async Task<List<MovementRequest>> CreateManyWithWorkflowAsync(List<CreateMovementRequestModel> models, Guid currentUserId)
     {
         var entities = new List<MovementRequest>();
@@ -120,6 +130,8 @@ public class MovementRequestManager : BaseManager<MovementRequest>
     }
 
     // Talep header'i, satirlari ve workflow'u ayni UnitOfWork icinde olusturur.
+//işlevi: Etki alanı kuralını veya validasyonunu işletir.
+//sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
     public async Task<MovementRequest> CreateWithLinesAndWorkflowAsync(
         CreateMovementRequestWithLinesModel model,
         Guid currentUserId)

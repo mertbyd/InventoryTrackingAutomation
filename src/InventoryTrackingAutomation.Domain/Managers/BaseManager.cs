@@ -12,6 +12,8 @@ namespace InventoryTrackingAutomation.Managers;
 
 // Tüm domain manager'larının türeyeceği generic base — varlık/unique/mapping/enum doğrulama helper'larını merkezileştirir.
 // Türetilmiş manager'lar tekrarlı kontrolleri buradan kullanır, sadece kendine özgü iş kurallarını ekler.
+//işlevi: Base etki alanı (domain) kurallarını ve karmaşık veri bütünlüğünü sağlar.
+//sistemdeki görevi: Domain katmanındaki iş kurallarının merkezi yönetimini ve validasyonunu sağlar.
 public abstract class BaseManager<TEntity> : DomainService
     where TEntity : class, IEntity<Guid>
 {
@@ -29,6 +31,8 @@ public abstract class BaseManager<TEntity> : DomainService
     // ════════════════════════════════════════════════════════
 
     // Id'ye ait entity DB'de varsa döner, yoksa EntityNotFoundException fırlatır.
+//işlevi: Etki alanı kuralını veya validasyonunu işletir.
+//sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
     public async Task<TEntity> EnsureExistsAsync(Guid id)
     {
         var entity = await Repository.FindAsync(id);
@@ -93,6 +97,8 @@ public abstract class BaseManager<TEntity> : DomainService
     // ════════════════════════════════════════════════════════
 
     // Create için unique kontrol — predicate'e uyan kayıt varsa BusinessException fırlatır.
+//işlevi: Etki alanı kuralını veya validasyonunu işletir.
+//sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
     public async Task EnsureUniqueAsync(
         Expression<Func<TEntity, bool>> predicate)
     {
@@ -104,6 +110,8 @@ public abstract class BaseManager<TEntity> : DomainService
     }
 
     // Update için unique kontrol — kendisi (excludeId) hariç tutularak kontrol yapılır.
+//işlevi: Etki alanı kuralını veya validasyonunu işletir.
+//sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
     public async Task EnsureUniqueAsync(
         Expression<Func<TEntity, bool>> predicate,
         Guid excludeId)

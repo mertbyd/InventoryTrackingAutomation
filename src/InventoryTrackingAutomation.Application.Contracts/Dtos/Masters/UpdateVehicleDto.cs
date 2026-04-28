@@ -7,6 +7,8 @@ namespace InventoryTrackingAutomation.Dtos.Masters;
 /// <summary>
 /// Araç güncelleme request DTO'su.
 /// </summary>
+//işlevi: UpdateVehicle verisinin transferi sırasında taşınacak olan yapıyı tanımlar.
+//sistemdeki görevi: Katmanlar arası veri alışverişini standartlaştırır.
 public class UpdateVehicleDto
 {
     public string PlateNumber { get; set; }           // Plaka numarası. Örnek: "34 ABC 123"

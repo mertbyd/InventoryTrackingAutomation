@@ -12,6 +12,8 @@ namespace InventoryTrackingAutomation.Managers.Tasks;
 /// </summary>
 //işlevi: Saha görevlerinin (InventoryTask) yaşam döngüsünü, kod benzersizliğini ve tarih geçerliliğini yönetir.
 //sistemdeki görevii: Operasyonel görevlerin oluşturulması ve güncellenmesi aşamasındaki iş kurallarını denetler.
+//işlevi: InventoryTask etki alanı (domain) kurallarını ve karmaşık veri bütünlüğünü sağlar.
+//sistemdeki görevi: Domain katmanındaki iş kurallarının merkezi yönetimini ve validasyonunu sağlar.
 public class InventoryTaskManager : BaseManager<InventoryTask>
 {
     private readonly IMapper _mapper;
@@ -24,6 +26,8 @@ public class InventoryTaskManager : BaseManager<InventoryTask>
         _mapper = mapper;
     }
 
+//işlevi: Etki alanı kuralını veya validasyonunu işletir.
+//sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
     public async Task<InventoryTask> CreateAsync(CreateInventoryTaskModel model)
     {
         await ValidateCodeForCreateAsync(model.Code);
@@ -34,6 +38,8 @@ public class InventoryTaskManager : BaseManager<InventoryTask>
         return entity;
     }
 
+//işlevi: Etki alanı kuralını veya validasyonunu işletir.
+//sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
     public async Task<InventoryTask> UpdateAsync(InventoryTask existing, UpdateInventoryTaskModel model)
     {
         await ValidateCodeForUpdateAsync(existing, model.Code);
@@ -72,6 +78,8 @@ public class InventoryTaskManager : BaseManager<InventoryTask>
 
     //işlevi: Görevin durum (status) geçişlerini (Draft → InProgress vb.) doğrular ve geçerli ise uygular, olay fırlatır.
     //sistemdeki görevi: Görev yaşam döngüsünün durum makinesi (state machine) kurallarını işletir.
+//işlevi: Etki alanı kuralını veya validasyonunu işletir.
+//sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
     public async Task TransitionStatusAsync(InventoryTask task, InventoryTrackingAutomation.Enums.Tasks.TaskStatusEnum target, Volo.Abp.EventBus.Local.ILocalEventBus localEventBus)
     {
         if (task.Status == target) return;

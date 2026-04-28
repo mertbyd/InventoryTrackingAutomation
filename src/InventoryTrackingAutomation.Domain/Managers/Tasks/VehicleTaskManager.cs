@@ -16,6 +16,8 @@ namespace InventoryTrackingAutomation.Managers.Tasks;
 /// </summary>
 //işlevi: Araçların saha görevlerine (InventoryTask) atanması ve bu atamaların geçerliliğini (çakışma kontrolü vb.) yönetir.
 //sistemdeki görevii: Araç-Görev eşleşmelerinin bütünlüğünü sağlar; bir aracın aynı anda birden fazla görevde aktif olmasını engeller.
+//işlevi: VehicleTask etki alanı (domain) kurallarını ve karmaşık veri bütünlüğünü sağlar.
+//sistemdeki görevi: Domain katmanındaki iş kurallarının merkezi yönetimini ve validasyonunu sağlar.
 public class VehicleTaskManager : BaseManager<VehicleTask>
 {
     private readonly IVehicleRepository _vehicleRepository;
@@ -34,6 +36,8 @@ public class VehicleTaskManager : BaseManager<VehicleTask>
         _mapper = mapper;
     }
 
+//işlevi: Etki alanı kuralını veya validasyonunu işletir.
+//sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
     public async Task<VehicleTask> CreateAsync(CreateVehicleTaskModel model)
     {
         await ValidateReferencesAsync(model.VehicleId, model.InventoryTaskId);
@@ -45,6 +49,8 @@ public class VehicleTaskManager : BaseManager<VehicleTask>
         return entity;
     }
 
+//işlevi: Etki alanı kuralını veya validasyonunu işletir.
+//sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
     public async Task<VehicleTask> UpdateAsync(VehicleTask existing, UpdateVehicleTaskModel model)
     {
         await ValidateReferencesAsync(model.VehicleId, model.InventoryTaskId);
@@ -87,6 +93,8 @@ public class VehicleTaskManager : BaseManager<VehicleTask>
 
     //işlevi: Aracın ilgili göreve atanmasını garantiler; zaten atanmışsa işlem yapmaz.
     //sistemdeki görevi: Stok transferi sırasında, eğer araca ürün yükleniyorsa o aracın göreve resmi olarak atanmış olmasını (tutarlılık) sağlar.
+//işlevi: Etki alanı kuralını veya validasyonunu işletir.
+//sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
     public async Task EnsureAssignedAsync(Guid inventoryTaskId, Guid vehicleId, Guid driverWorkerId)
     {
         var existing = await Repository.FindAsync(x => x.InventoryTaskId == inventoryTaskId && x.VehicleId == vehicleId && x.IsActive);
@@ -106,6 +114,8 @@ public class VehicleTaskManager : BaseManager<VehicleTask>
 
     //işlevi: Bir göreve bağlı tüm aktif araç atamalarını sonlandırır.
     //sistemdeki görevi: Task tamamlandığında veya iptal edildiğinde araçların üzerindeki bağları (kilitleri) kaldırıp onları serbest bırakır.
+//işlevi: Etki alanı kuralını veya validasyonunu işletir.
+//sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
     public async Task ReleaseAllForTaskAsync(Guid taskId)
     {
         var actives = await Repository.GetListAsync(x => x.InventoryTaskId == taskId && x.IsActive);

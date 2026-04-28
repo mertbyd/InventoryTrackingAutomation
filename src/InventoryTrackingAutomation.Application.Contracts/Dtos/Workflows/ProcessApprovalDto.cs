@@ -5,6 +5,8 @@ namespace InventoryTrackingAutomation.Dtos.Workflows;
 /// <summary>
 /// İş akışında bir onayı veya reddi işlemek için kullanılan DTO.
 /// </summary>
+//işlevi: ProcessApproval verisinin transferi sırasında taşınacak olan yapıyı tanımlar.
+//sistemdeki görevi: Katmanlar arası veri alışverişini standartlaştırır.
 public class ProcessApprovalDto
 {
     /// <summary>

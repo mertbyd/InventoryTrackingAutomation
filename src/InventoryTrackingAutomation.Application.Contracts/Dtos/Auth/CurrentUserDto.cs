@@ -3,6 +3,8 @@ using System.Collections.Generic;
 
 namespace InventoryTrackingAutomation.Dtos.Auth;
 
+//işlevi: CurrentUser verisinin transferi sırasında taşınacak olan yapıyı tanımlar.
+//sistemdeki görevi: Katmanlar arası veri alışverişini standartlaştırır.
 public class CurrentUserDto
 {
     public Guid Id { get; set; }

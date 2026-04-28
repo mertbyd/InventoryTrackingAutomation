@@ -10,6 +10,8 @@ namespace InventoryTrackingAutomation.Managers.Inventory;
 /// <summary>
 /// Atomik stok transfer orkestratöru. (PITON plani - 8.6)
 /// </summary>
+//işlevi: StockTransfer etki alanı (domain) kurallarını ve karmaşık veri bütünlüğünü sağlar.
+//sistemdeki görevi: Domain katmanındaki iş kurallarının merkezi yönetimini ve validasyonunu sağlar.
 public class StockTransferManager : DomainService
 {
     private readonly StockLocationManager _stockLocationManager;

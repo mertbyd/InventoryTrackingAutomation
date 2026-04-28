@@ -15,6 +15,8 @@ using Volo.Abp.Uow;
 namespace InventoryTrackingAutomation.Application.Services.Tasks;
 
 // Arac-gorev atamasi application servisi - is kurallari VehicleTaskManager'da kalir.
+//işlevi: VehicleTask iş mantığını koordine eder ve DTO dönüşümlerini yönetir.
+//sistemdeki görevi: Uygulama katmanındaki kullanım senaryolarını (use-case) gerçekleştiren ana servis birimidir.
 public class VehicleTaskAppService : InventoryTrackingAutomationAppService, IVehicleTaskAppService
 {
     private readonly IVehicleTaskRepository _repository;
@@ -37,12 +39,16 @@ public class VehicleTaskAppService : InventoryTrackingAutomationAppService, IVeh
         _mapper = mapper;
     }
 
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<VehicleTaskDto> GetAsync(Guid id)
     {
         var entity = await _manager.EnsureExistsAsync(id);
         return _mapper.Map<VehicleTask, VehicleTaskDto>(entity);
     }
 
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<PagedResultDto<VehicleTaskDto>> GetListAsync(PagedResultRequestDto input)
     {
         var totalCount = await _repository.GetCountAsync();
@@ -51,6 +57,8 @@ public class VehicleTaskAppService : InventoryTrackingAutomationAppService, IVeh
     }
 
     [UnitOfWork]
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<VehicleTaskDto> CreateAsync(CreateVehicleTaskDto input)
     {
         await _createValidator.ValidateAndThrowAsync(input);
@@ -61,6 +69,8 @@ public class VehicleTaskAppService : InventoryTrackingAutomationAppService, IVeh
     }
 
     [UnitOfWork]
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<List<VehicleTaskDto>> CreateManyAsync(List<CreateVehicleTaskDto> inputs)
     {
         var entities = new List<VehicleTask>();
@@ -76,6 +86,8 @@ public class VehicleTaskAppService : InventoryTrackingAutomationAppService, IVeh
     }
 
     [UnitOfWork]
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<VehicleTaskDto> UpdateAsync(Guid id, UpdateVehicleTaskDto input)
     {
         await _updateValidator.ValidateAndThrowAsync(input);
@@ -87,6 +99,8 @@ public class VehicleTaskAppService : InventoryTrackingAutomationAppService, IVeh
     }
 
     [UnitOfWork]
+//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task DeleteAsync(Guid id)
     {
         await _manager.EnsureExistsAsync(id);

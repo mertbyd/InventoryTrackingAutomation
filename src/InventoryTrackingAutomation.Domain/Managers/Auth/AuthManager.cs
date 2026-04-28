@@ -12,6 +12,8 @@ using InventoryTrackingAutomation.Roles;
 namespace InventoryTrackingAutomation.Managers.Auth;
 
 // Kimlik doğrulama domain servisi — kullanıcı oluşturma ve giriş doğrulama iş kurallarını yönetir.
+//işlevi: Auth etki alanı (domain) kurallarını ve karmaşık veri bütünlüğünü sağlar.
+//sistemdeki görevi: Domain katmanındaki iş kurallarının merkezi yönetimini ve validasyonunu sağlar.
 public class AuthManager : DomainService
 {
     // ABP Identity user manager — CRUD ve şifre işlemleri için.
@@ -39,6 +41,8 @@ public class AuthManager : DomainService
         _logger = logger;
     }
     // Yeni kullanıcı oluşturur — email/username uniqueness kontrolü, şifre eşleşme doğrulaması ve varsayılan rol ataması yapar.
+//işlevi: Etki alanı kuralını veya validasyonunu işletir.
+//sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
     public async Task<IdentityUser> CreateUserAsync(RegisterModel model)
     {
         // Email ve username uniqueness kontrolü.
@@ -70,6 +74,8 @@ public class AuthManager : DomainService
     }
 
     // Kullanıcı giriş bilgilerini doğrular — username + password eşleşmesi yoksa InvalidCredentials atar.
+//işlevi: Etki alanı kuralını veya validasyonunu işletir.
+//sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
     public async Task<IdentityUser> ValidateLoginAsync(LoginModel model)
     {
         // Username ile kullanıcıyı bul.

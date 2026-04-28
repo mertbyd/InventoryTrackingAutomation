@@ -18,6 +18,8 @@ namespace InventoryTrackingAutomation.Managers.Inventory;
 /// <summary>
 /// PITON stok gorunurlugu icin urun, arac ve gorev bazli okuma kurallarini yonetir.
 /// </summary>
+//işlevi: InventoryQuery etki alanı (domain) kurallarını ve karmaşık veri bütünlüğünü sağlar.
+//sistemdeki görevi: Domain katmanındaki iş kurallarının merkezi yönetimini ve validasyonunu sağlar.
 public class InventoryQueryManager : ITransientDependency
 {
     private readonly IStockLocationRepository _stockLocationRepository;
@@ -40,6 +42,8 @@ public class InventoryQueryManager : ITransientDependency
         _inventoryTaskManager = inventoryTaskManager;
     }
 
+//işlevi: Etki alanı kuralını veya validasyonunu işletir.
+//sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
     public async Task<ProductStockSummaryModel> GetProductStockSummaryAsync(Guid productId)
     {
         await _productManager.EnsureExistsAsync(productId);
@@ -70,6 +74,8 @@ public class InventoryQueryManager : ITransientDependency
         };
     }
 
+//işlevi: Etki alanı kuralını veya validasyonunu işletir.
+//sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
     public async Task<List<VehicleInventoryModel>> GetVehicleInventoriesAsync(Guid vehicleId)
     {
         await _vehicleManager.EnsureExistsAsync(vehicleId);
@@ -95,6 +101,8 @@ public class InventoryQueryManager : ITransientDependency
             .ToList();
     }
 
+//işlevi: Etki alanı kuralını veya validasyonunu işletir.
+//sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
     public async Task<List<TaskVehicleModel>> GetTaskVehiclesAsync(Guid inventoryTaskId)
     {
         await _inventoryTaskManager.EnsureExistsAsync(inventoryTaskId);
@@ -113,6 +121,8 @@ public class InventoryQueryManager : ITransientDependency
             .ToList();
     }
 
+//işlevi: Etki alanı kuralını veya validasyonunu işletir.
+//sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
     public async Task<List<TaskInventoryModel>> GetTaskInventoryAsync(Guid inventoryTaskId)
     {
         await _inventoryTaskManager.EnsureExistsAsync(inventoryTaskId);

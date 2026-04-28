@@ -18,6 +18,8 @@ namespace InventoryTrackingAutomation.Controllers.Movements;
 [Route("api/movement-requests")]
 [ApiExplorerSettings(GroupName = "Movements")]
 [Tags("MovementRequests")]
+//işlevi: MovementRequest modülü için HTTP isteklerini karşılar.
+//sistemdeki görevi: Dış dünya ile sistem arasındaki iletişimi sağlayan API uç noktasıdır.
 public class MovementRequestController : InventoryTrackingAutomationController
 {
     private readonly IMovementRequestAppService _appService;
@@ -30,6 +32,8 @@ public class MovementRequestController : InventoryTrackingAutomationController
     /// <summary> Id'ye gÃ¶re tek hareket talebi getirir. </summary>
     [HttpGet("{id}")]
     [Authorize(InventoryTrackingAutomationPermissions.MovementRequests.View)]
+//işlevi: İlgili HTTP isteğini işler ve servis katmanına yönlendirir.
+//sistemdeki görevi: Belirli bir API aksiyonunun giriş noktasını tanımlar.
     public async Task<Result<MovementRequestDto>> Get(Guid id)
     {
         var result = await _appService.GetAsync(id);
@@ -39,6 +43,8 @@ public class MovementRequestController : InventoryTrackingAutomationController
     /// <summary> TÃ¼m hareket taleplerini listeler. </summary>
     [HttpGet]
     [Authorize(InventoryTrackingAutomationPermissions.MovementRequests.View)]
+//işlevi: İlgili HTTP isteğini işler ve servis katmanına yönlendirir.
+//sistemdeki görevi: Belirli bir API aksiyonunun giriş noktasını tanımlar.
     public async Task<Result<Volo.Abp.Application.Dtos.PagedResultDto<MovementRequestDto>>> GetList([FromQuery] Volo.Abp.Application.Dtos.PagedResultRequestDto input)
     {
         var result = await _appService.GetListAsync(input);
@@ -48,6 +54,8 @@ public class MovementRequestController : InventoryTrackingAutomationController
     /// <summary> Yeni hareket talebi oluÅŸturur. </summary>
     [HttpPost]
     [Authorize(InventoryTrackingAutomationPermissions.MovementRequests.Create)]
+//işlevi: İlgili HTTP isteğini işler ve servis katmanına yönlendirir.
+//sistemdeki görevi: Belirli bir API aksiyonunun giriş noktasını tanımlar.
     public async Task<Result<MovementRequestDto>> Create([FromBody] CreateMovementRequestDto input)
     {
         var result = await _appService.CreateAsync(input);
@@ -57,6 +65,8 @@ public class MovementRequestController : InventoryTrackingAutomationController
     /// <summary> Talebi ve satırlarını tek atomik istekle oluşturur. </summary>
     [HttpPost("with-lines")]
     [Authorize(InventoryTrackingAutomationPermissions.MovementRequests.Create)]
+//işlevi: İlgili HTTP isteğini işler ve servis katmanına yönlendirir.
+//sistemdeki görevi: Belirli bir API aksiyonunun giriş noktasını tanımlar.
     public async Task<Result<MovementRequestDto>> CreateWithLines([FromBody] CreateMovementRequestWithLinesDto input)
     {
         var result = await _appService.CreateWithLinesAsync(input);
@@ -66,6 +76,8 @@ public class MovementRequestController : InventoryTrackingAutomationController
     /// <summary> Birden fazla hareket talebini toplu oluÅŸturur. </summary>
     [HttpPost("bulk")]
     [Authorize(InventoryTrackingAutomationPermissions.MovementRequests.Create)]
+//işlevi: İlgili HTTP isteğini işler ve servis katmanına yönlendirir.
+//sistemdeki görevi: Belirli bir API aksiyonunun giriş noktasını tanımlar.
     public async Task<Result<List<MovementRequestDto>>> CreateMany([FromBody] List<CreateMovementRequestDto> inputs)
     {
         var result = await _appService.CreateManyAsync(inputs);
@@ -75,6 +87,8 @@ public class MovementRequestController : InventoryTrackingAutomationController
     /// <summary> Hareket talebini gÃ¼nceller. </summary>
     [HttpPut("{id}")]
     [Authorize(InventoryTrackingAutomationPermissions.MovementRequests.Edit)]
+//işlevi: İlgili HTTP isteğini işler ve servis katmanına yönlendirir.
+//sistemdeki görevi: Belirli bir API aksiyonunun giriş noktasını tanımlar.
     public async Task<Result<MovementRequestDto>> Update(Guid id, [FromBody] UpdateMovementRequestDto input)
     {
         var result = await _appService.UpdateAsync(id, input);
@@ -84,6 +98,8 @@ public class MovementRequestController : InventoryTrackingAutomationController
     /// <summary> Hareket talebini soft delete ile siler. </summary>
     [HttpDelete("{id}")]
     [Authorize(InventoryTrackingAutomationPermissions.MovementRequests.Delete)]
+//işlevi: İlgili HTTP isteğini işler ve servis katmanına yönlendirir.
+//sistemdeki görevi: Belirli bir API aksiyonunun giriş noktasını tanımlar.
     public async Task<Result> Delete(Guid id)
     {
         await _appService.DeleteAsync(id);

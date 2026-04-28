@@ -6,6 +6,8 @@ namespace InventoryTrackingAutomation.Dtos.Masters;
 /// <summary>
 /// Depo response DTO'su.
 /// </summary>
+//işlevi: Warehouse verisinin transferi sırasında taşınacak olan yapıyı tanımlar.
+//sistemdeki görevi: Katmanlar arası veri alışverişini standartlaştırır.
 public class WarehouseDto : FullAuditedEntityDto<Guid>
 {
     public string Code { get; set; } = default!;      // Deponun benzersiz is kodu.
