@@ -2,7 +2,7 @@ name: .NET CI
 
 on:
   push:
-    branches: [main, master, feature/**, hotfix/**]
+    branches: [main, master, development, feature/**, hotfix/**]
     paths:
       - '**/*.cs'
       - '**/*.csproj'
