@@ -106,10 +106,6 @@ public class InventoryTrackingAutomationEntityFrameworkCoreModule : AbpModule
         if (!string.IsNullOrEmpty(masterSchema))
             InventoryTrackingAutomationDbProperties.MasterSchema = masterSchema;
 
-        var stockSchema = schemas["Inventory.Stock"];
-        if (!string.IsNullOrEmpty(stockSchema))
-            InventoryTrackingAutomationDbProperties.StockSchema = stockSchema;
-
         var inventorySchema = schemas["Inventory.Inventory"];
         if (!string.IsNullOrEmpty(inventorySchema))
             InventoryTrackingAutomationDbProperties.InventorySchema = inventorySchema;

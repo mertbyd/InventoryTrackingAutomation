@@ -10,7 +10,7 @@ public class WorkerConfiguration : IEntityTypeConfiguration<Worker>
 {
     public void Configure(EntityTypeBuilder<Worker> builder)
     {
-        builder.ToTable("Workers", InventoryTrackingAutomationDbProperties.MasterSchema);
+        builder.ToTable("workers", InventoryTrackingAutomationDbProperties.MasterSchema);
         builder.ConfigureByConvention();
 
         builder.Property(x => x.RegistrationNumber).HasMaxLength(20);

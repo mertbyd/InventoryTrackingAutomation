@@ -9,7 +9,7 @@ public class DepartmentConfiguration : IEntityTypeConfiguration<Department>
 {
     public void Configure(EntityTypeBuilder<Department> builder)
     {
-        builder.ToTable("Departments", InventoryTrackingAutomationDbProperties.LookupSchema);
+        builder.ToTable("departments", InventoryTrackingAutomationDbProperties.LookupSchema);
         builder.ConfigureByConvention();
 
         builder.Property(x => x.Code).HasMaxLength(50);
