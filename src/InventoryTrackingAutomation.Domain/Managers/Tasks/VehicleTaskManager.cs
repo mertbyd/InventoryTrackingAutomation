@@ -36,8 +36,7 @@ public class VehicleTaskManager : BaseManager<VehicleTask>
         _mapper = mapper;
     }
 
-//işlevi: Etki alanı kuralını veya validasyonunu işletir.
-//sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
+    /// Yeni bir araç görev ataması oluşturmak için kullanılır.
     public async Task<VehicleTask> CreateAsync(CreateVehicleTaskModel model)
     {
         await ValidateReferencesAsync(model.VehicleId, model.InventoryTaskId);
@@ -49,8 +48,7 @@ public class VehicleTaskManager : BaseManager<VehicleTask>
         return entity;
     }
 
-//işlevi: Etki alanı kuralını veya validasyonunu işletir.
-//sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
+    /// Mevcut bir araç görev atamasını güncellemek için kullanılır.
     public async Task<VehicleTask> UpdateAsync(VehicleTask existing, UpdateVehicleTaskModel model)
     {
         await ValidateReferencesAsync(model.VehicleId, model.InventoryTaskId);
@@ -61,6 +59,7 @@ public class VehicleTaskManager : BaseManager<VehicleTask>
         return existing;
     }
 
+    /// Atama referanslarını doğrulamak için kullanılır.
     private async Task ValidateReferencesAsync(Guid vehicleId, Guid inventoryTaskId)
     {
         // Arac ve gorev varligi domain katmaninda dogrulanir.
@@ -68,6 +67,7 @@ public class VehicleTaskManager : BaseManager<VehicleTask>
         await EnsureExistsInAsync(_inventoryTaskRepository, inventoryTaskId);
     }
 
+    /// Aracın aktif görev durumunu doğrulamak için kullanılır.
     private async Task ValidateVehicleActiveTaskAsync(Guid vehicleId, Guid? excludeId)
     {
         // Ayni arac ayni anda yalnizca bir aktif gorevde bulunabilir.
@@ -82,6 +82,7 @@ public class VehicleTaskManager : BaseManager<VehicleTask>
         }
     }
 
+    /// Atama zaman aralığını doğrulamak için kullanılır.
     private static void ValidateDateRange(DateTime assignedAt, DateTime? releasedAt)
     {
         // Birakma zamani atama zamanindan once olamaz.
@@ -91,15 +92,23 @@ public class VehicleTaskManager : BaseManager<VehicleTask>
         }
     }
 
-    //işlevi: Aracın ilgili göreve atanmasını garantiler; zaten atanmışsa işlem yapmaz.
-    //sistemdeki görevi: Stok transferi sırasında, eğer araca ürün yükleniyorsa o aracın göreve resmi olarak atanmış olmasını (tutarlılık) sağlar.
-//işlevi: Etki alanı kuralını veya validasyonunu işletir.
-//sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
+    /// Aracın göreve atanmış olmasını garantilemek için kullanılır.
     public async Task EnsureAssignedAsync(Guid inventoryTaskId, Guid vehicleId, Guid driverWorkerId)
     {
-        var existing = await Repository.FindAsync(x => x.InventoryTaskId == inventoryTaskId && x.VehicleId == vehicleId && x.IsActive);
+        await ValidateReferencesAsync(vehicleId, inventoryTaskId);
+
+        var existing = await Repository.FindAsync(x =>
+            x.InventoryTaskId == inventoryTaskId &&
+            x.VehicleId == vehicleId &&
+            x.IsActive &&
+            !x.ReleasedAt.HasValue);
+
         if (existing != null)
+        {
             return;
+        }
+
+        await ValidateVehicleActiveTaskAsync(vehicleId, null);
 
         var entity = new VehicleTask(GuidGenerator.Create())
         {
@@ -112,13 +121,25 @@ public class VehicleTaskManager : BaseManager<VehicleTask>
         await Repository.InsertAsync(entity, autoSave: true);
     }
 
-    //işlevi: Bir göreve bağlı tüm aktif araç atamalarını sonlandırır.
-    //sistemdeki görevi: Task tamamlandığında veya iptal edildiğinde araçların üzerindeki bağları (kilitleri) kaldırıp onları serbest bırakır.
-//işlevi: Etki alanı kuralını veya validasyonunu işletir.
-//sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
+    /// Göreve bağlı tüm araçları serbest bırakmak için kullanılır.
     public async Task ReleaseAllForTaskAsync(Guid taskId)
     {
         var actives = await Repository.GetListAsync(x => x.InventoryTaskId == taskId && x.IsActive);
+        foreach (var vt in actives)
+        {
+            vt.IsActive = false;
+            await Repository.UpdateAsync(vt, autoSave: true);
+        }
+    }
+
+    /// Göreve bağlı belirli bir aracı serbest bırakmak için kullanılır.
+    public async Task ReleaseForTaskVehicleAsync(Guid taskId, Guid vehicleId)
+    {
+        var actives = await Repository.GetListAsync(x =>
+            x.InventoryTaskId == taskId &&
+            x.VehicleId == vehicleId &&
+            x.IsActive);
+
         foreach (var vt in actives)
         {
             vt.ReleasedAt = System.DateTime.UtcNow;

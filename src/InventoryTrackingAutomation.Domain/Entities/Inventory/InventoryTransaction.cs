@@ -10,7 +10,7 @@ namespace InventoryTrackingAutomation.Entities.Inventory;
 /// <summary>
 /// Depo ve arac stok hareketlerinin degistirilemez ledger kaydini temsil eden aggregate.
 /// </summary>
-public class InventoryTransaction : FullAuditedAggregateRoot<Guid>, IMultiTenant
+public class InventoryTransaction : FullAuditedEntity<Guid>
 {
     public Guid ProductId { get; set; } // Hareket eden urun baglamini tasir.
     public InventoryTransactionTypeEnum TransactionType { get; set; } // Hareketin yon ve sebep tipini belirler.
@@ -24,7 +24,6 @@ public class InventoryTransaction : FullAuditedAggregateRoot<Guid>, IMultiTenant
     public Guid? PerformedByUserId { get; set; } // Hareketi baslatan kullanici baglamini tasir.
     public DateTime OccurredAt { get; set; } // Hareketin gerceklestigi zamani tasir.
     public string? Note { get; set; } // Hareket icin operasyonel aciklama baglamini tasir.
-    public Guid? TenantId { get; set; } // Ledger kaydini kiraci sinirinda tutar.
 
     protected InventoryTransaction() { }
     public InventoryTransaction(Guid id) : base(id) { }

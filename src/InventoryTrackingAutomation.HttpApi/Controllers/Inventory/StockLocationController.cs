@@ -31,60 +31,54 @@ public class StockLocationController : InventoryTrackingAutomationController
         _appService = appService;
     }
 
+    /// Stok lokasyon verisini getirmek için kullanılır.
     [HttpGet("{id}")]
     [Authorize(InventoryTrackingAutomationPermissions.Inventory.View)]
-//işlevi: İlgili HTTP isteğini işler ve servis katmanına yönlendirir.
-//sistemdeki görevi: Belirli bir API aksiyonunun giriş noktasını tanımlar.
     public async Task<Result<StockLocationDto>> Get(Guid id)
     {
         var result = await _appService.GetAsync(id);
         return result;
     }
 
+    /// Stok lokasyon listesini getirmek için kullanılır.
     [HttpGet]
     [Authorize(InventoryTrackingAutomationPermissions.Inventory.View)]
-//işlevi: İlgili HTTP isteğini işler ve servis katmanına yönlendirir.
-//sistemdeki görevi: Belirli bir API aksiyonunun giriş noktasını tanımlar.
     public async Task<Result<PagedResultDto<StockLocationDto>>> GetList([FromQuery] PagedResultRequestDto input)
     {
         var result = await _appService.GetListAsync(input);
         return result;
     }
 
+    /// Yeni bir stok lokasyon kaydı oluşturmak için kullanılır.
     [HttpPost]
     [Authorize(InventoryTrackingAutomationPermissions.Inventory.Manage)]
-//işlevi: İlgili HTTP isteğini işler ve servis katmanına yönlendirir.
-//sistemdeki görevi: Belirli bir API aksiyonunun giriş noktasını tanımlar.
     public async Task<Result<StockLocationDto>> Create([FromBody] CreateStockLocationDto input)
     {
         var result = await _appService.CreateAsync(input);
         return result;
     }
 
+    /// Birden fazla stok lokasyon kaydını toplu olarak oluşturmak için kullanılır.
     [HttpPost("bulk")]
     [Authorize(InventoryTrackingAutomationPermissions.Inventory.Manage)]
-//işlevi: İlgili HTTP isteğini işler ve servis katmanına yönlendirir.
-//sistemdeki görevi: Belirli bir API aksiyonunun giriş noktasını tanımlar.
     public async Task<Result<List<StockLocationDto>>> CreateMany([FromBody] List<CreateStockLocationDto> inputs)
     {
         var result = await _appService.CreateManyAsync(inputs);
         return result;
     }
 
+    /// Mevcut bir stok lokasyon kaydını güncellemek için kullanılır.
     [HttpPut("{id}")]
     [Authorize(InventoryTrackingAutomationPermissions.Inventory.Manage)]
-//işlevi: İlgili HTTP isteğini işler ve servis katmanına yönlendirir.
-//sistemdeki görevi: Belirli bir API aksiyonunun giriş noktasını tanımlar.
     public async Task<Result<StockLocationDto>> Update(Guid id, [FromBody] UpdateStockLocationDto input)
     {
         var result = await _appService.UpdateAsync(id, input);
         return result;
     }
 
+    /// Stok lokasyon kaydını silmek için kullanılır.
     [HttpDelete("{id}")]
     [Authorize(InventoryTrackingAutomationPermissions.Inventory.Manage)]
-//işlevi: İlgili HTTP isteğini işler ve servis katmanına yönlendirir.
-//sistemdeki görevi: Belirli bir API aksiyonunun giriş noktasını tanımlar.
     public async Task<Result> Delete(Guid id)
     {
         await _appService.DeleteAsync(id);

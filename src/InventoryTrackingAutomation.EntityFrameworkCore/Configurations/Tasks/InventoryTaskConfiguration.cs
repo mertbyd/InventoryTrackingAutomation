@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using InventoryTrackingAutomation.Entities.Masters;
 using InventoryTrackingAutomation.Entities.Tasks;
 using Volo.Abp.EntityFrameworkCore.Modeling;
 
@@ -21,5 +22,10 @@ public class InventoryTaskConfiguration : IEntityTypeConfiguration<InventoryTask
         builder.Property(x => x.IsActive).IsRequired();
 
         builder.HasIndex(x => x.Code).IsUnique();
+
+        builder.HasOne<Warehouse>()
+            .WithMany()
+            .HasForeignKey(x => x.ReturnWarehouseId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

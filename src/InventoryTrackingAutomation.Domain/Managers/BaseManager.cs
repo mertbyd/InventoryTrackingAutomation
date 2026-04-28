@@ -30,9 +30,7 @@ public abstract class BaseManager<TEntity> : DomainService
     //  VARLIK KONTROL HELPER'LARI
     // ════════════════════════════════════════════════════════
 
-    // Id'ye ait entity DB'de varsa döner, yoksa EntityNotFoundException fırlatır.
-//işlevi: Etki alanı kuralını veya validasyonunu işletir.
-//sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
+    /// Entity'nin varlığını doğrulamak ve getirmek için kullanılır.
     public async Task<TEntity> EnsureExistsAsync(Guid id)
     {
         var entity = await Repository.FindAsync(id);
@@ -44,7 +42,7 @@ public abstract class BaseManager<TEntity> : DomainService
         return entity;
     }
 
-    // Başka tipteki bir repository'de Id'nin varlığını kontrol eder (FK validasyonu için).
+    /// Belirli bir repository'de entity varlığını doğrulamak için kullanılır.
     public async Task EnsureExistsInAsync<TOther>(
         IBaseRepository<TOther> otherRepository,
         Guid id)
@@ -57,7 +55,7 @@ public abstract class BaseManager<TEntity> : DomainService
         }
     }
 
-    // Opsiyonel FK için — null ise kontrolü atlar, dolu ise non-nullable overload'a delege eder.
+    /// Opsiyonel entity varlığını doğrulamak için kullanılır.
     public async Task EnsureExistsInAsync<TOther>(
         IBaseRepository<TOther> otherRepository,
         Guid? id)
@@ -69,7 +67,7 @@ public abstract class BaseManager<TEntity> : DomainService
         }
     }
 
-    // Id listesindeki tüm entity'lerin başka bir repository'de var olduğunu doğrular — eksik olanı raporlar.
+    /// Verilen tüm ID'lerin varlığını topluca doğrulamak için kullanılır.
     public async Task EnsureAllExistInAsync<TOther>(
         IBaseRepository<TOther> otherRepository,
         IEnumerable<Guid> ids)
@@ -96,9 +94,7 @@ public abstract class BaseManager<TEntity> : DomainService
     //  UNIQUE KONTROL HELPER'LARI
     // ════════════════════════════════════════════════════════
 
-    // Create için unique kontrol — predicate'e uyan kayıt varsa BusinessException fırlatır.
-//işlevi: Etki alanı kuralını veya validasyonunu işletir.
-//sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
+    /// Yeni kayıt için benzersizlik kontrolü yapmak için kullanılır.
     public async Task EnsureUniqueAsync(
         Expression<Func<TEntity, bool>> predicate)
     {
@@ -109,9 +105,7 @@ public abstract class BaseManager<TEntity> : DomainService
         }
     }
 
-    // Update için unique kontrol — kendisi (excludeId) hariç tutularak kontrol yapılır.
-//işlevi: Etki alanı kuralını veya validasyonunu işletir.
-//sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
+    /// Güncelleme için benzersizlik kontrolü yapmak için kullanılır.
     public async Task EnsureUniqueAsync(
         Expression<Func<TEntity, bool>> predicate,
         Guid excludeId)
@@ -126,7 +120,7 @@ public abstract class BaseManager<TEntity> : DomainService
         }
     }
 
-    // Entity tipi adına göre AlreadyExists error code'unu oluşturur (ErrorCodes pattern'iyle uyumlu).
+    /// 'Zaten mevcut' hata kodunu oluşturmak için kullanılır.
     private static string BuildAlreadyExistsErrorCode()
         => $"InventoryTrackingAutomation:{typeof(TEntity).Name}.AlreadyExists";
 
@@ -134,8 +128,7 @@ public abstract class BaseManager<TEntity> : DomainService
     //  ENUM VALIDASYON HELPER'LARI
     // ════════════════════════════════════════════════════════
 
-    // Enum değerinin SettingProvider'daki izinli değerler listesinde olup olmadığını doğrular.
-    // Base sınıfların constructor imzasını şişirmemek için EnumValidationManager LazyServiceProvider üzerinden çözülür.
+    /// Enum değerinin geçerliliğini doğrulamak için kullanılır.
     protected async Task EnsureValidEnumAsync<TEnum>(TEnum value, string settingName) where TEnum : struct, Enum
     {
         var enumValidationManager = LazyServiceProvider.LazyGetRequiredService<InventoryTrackingAutomation.Managers.Shared.EnumValidationManager>();

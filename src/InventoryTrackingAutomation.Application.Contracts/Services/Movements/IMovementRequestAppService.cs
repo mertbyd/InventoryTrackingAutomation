@@ -30,6 +30,12 @@ public interface IMovementRequestAppService : IApplicationService
     /// <summary> Hareket talebini günceller. </summary>
     Task<MovementRequestDto> UpdateAsync(Guid id, UpdateMovementRequestDto input);
 
+    /// <summary> Onaylanmis hareket talebini depodan araca yukler. </summary>
+    Task<MovementRequestDto> DispatchAsync(Guid id, DispatchMovementRequestDto input);
+
+    /// <summary> Yoldaki hareket talebini teslim alir. </summary>
+    Task<MovementRequestDto> ReceiveAsync(Guid id, ReceiveMovementRequestDto input);
+
     /// <summary> Hareket talebini soft delete ile siler. </summary>
     Task DeleteAsync(Guid id);
 }

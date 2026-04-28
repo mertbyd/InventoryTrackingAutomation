@@ -29,33 +29,27 @@ public class MovementApprovalController : InventoryTrackingAutomationController
         _appService = appService;
     }
 
-    /// <summary> Hareket talebinin onay geçmişini getirir. </summary>
+    /// Onay geçmişini getirmek için kullanılır.
     [HttpGet("{id}/approvals")]
     [Authorize(InventoryTrackingAutomationPermissions.Workflows.View)]
-//işlevi: İlgili HTTP isteğini işler ve servis katmanına yönlendirir.
-//sistemdeki görevi: Belirli bir API aksiyonunun giriş noktasını tanımlar.
     public async Task<Result<List<MovementApprovalDto>>> GetApprovals(Guid id)
     {
         var result = await _appService.GetApprovalHistoryAsync(id);
         return result;
     }
 
-    /// <summary> Hareket talebini onaylar veya reddeder. </summary>
+    /// Onay işlemini gerçekleştirmek için kullanılır.
     [HttpPost("{id}/process-approval")]
     [Authorize(InventoryTrackingAutomationPermissions.Workflows.Approve)] // Veya Workflows.Reject
-//işlevi: İlgili HTTP isteğini işler ve servis katmanına yönlendirir.
-//sistemdeki görevi: Belirli bir API aksiyonunun giriş noktasını tanımlar.
     public async Task<Result<MovementApprovalDto>> ProcessApproval(Guid id, [FromBody] ProcessMovementApprovalDto input)
     {
         var result = await _appService.ProcessApprovalAsync(id, input);
         return result;
     }
 
-    /// <summary> Geçerli kullanıcının onaylaması gereken talepleri listeler. </summary>
+    /// Bekleyen onayları getirmek için kullanılır.
     [HttpGet("pending-approvals")]
     [Authorize(InventoryTrackingAutomationPermissions.Workflows.View)]
-//işlevi: İlgili HTTP isteğini işler ve servis katmanına yönlendirir.
-//sistemdeki görevi: Belirli bir API aksiyonunun giriş noktasını tanımlar.
     public async Task<Result<List<PendingApprovalDto>>> GetPendingApprovals()
     {
         var result = await _appService.GetPendingApprovalsAsync();

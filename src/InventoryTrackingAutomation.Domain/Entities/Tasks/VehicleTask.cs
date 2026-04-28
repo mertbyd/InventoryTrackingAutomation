@@ -7,7 +7,7 @@ namespace InventoryTrackingAutomation.Entities.Tasks;
 /// <summary>
 /// Bir aracin belirli bir envanter gorevine atanma gecmisini temsil eden aggregate.
 /// </summary>
-public class VehicleTask : FullAuditedAggregateRoot<Guid>, IMultiTenant
+public class VehicleTask : FullAuditedEntity<Guid>
 {
     public Guid VehicleId { get; set; } // Goreve atanan arac baglamini tasir.
     public Guid InventoryTaskId { get; set; } // Aracin bagli oldugu gorev baglamini tasir.
@@ -15,7 +15,6 @@ public class VehicleTask : FullAuditedAggregateRoot<Guid>, IMultiTenant
     public DateTime AssignedAt { get; set; } // Aracin goreve dahil edildigi zamani tasir.
     public DateTime? ReleasedAt { get; set; } // Aracin gorevden ayrildigi zamani tasir.
     public bool IsActive { get; set; } // Atamanin halen aktif olup olmadigini belirler.
-    public Guid? TenantId { get; set; } // Arac-gorev atamasini kiraci sinirinda tutar.
 
     protected VehicleTask() { }
     public VehicleTask(Guid id) : base(id) { }

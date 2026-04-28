@@ -8,6 +8,14 @@ using InventoryTrackingAutomation.Entities.Movements;
 using InventoryTrackingAutomation.Entities.Inventory;
 using InventoryTrackingAutomation.Entities.Tasks;
 using InventoryTrackingAutomation.Entities.Workflows;
+using Volo.Abp.AuditLogging.EntityFrameworkCore;
+using Volo.Abp.BackgroundJobs.EntityFrameworkCore;
+using Volo.Abp.FeatureManagement.EntityFrameworkCore;
+using Volo.Abp.Identity.EntityFrameworkCore;
+using Volo.Abp.OpenIddict.EntityFrameworkCore;
+using Volo.Abp.PermissionManagement.EntityFrameworkCore;
+using Volo.Abp.SettingManagement.EntityFrameworkCore;
+using Volo.Abp.TenantManagement.EntityFrameworkCore;
 
 namespace InventoryTrackingAutomation.EntityFrameworkCore;
 
@@ -46,6 +54,18 @@ public class InventoryTrackingAutomationDbContext : AbpDbContext<InventoryTracki
     {
         base.OnModelCreating(builder);
 
+        /* Include modules to your migration db context */
+
+        builder.ConfigurePermissionManagement();
+        builder.ConfigureSettingManagement();
+        builder.ConfigureBackgroundJobs();
+        builder.ConfigureAuditLogging();
+        builder.ConfigureIdentity();
+        builder.ConfigureOpenIddict();
+        builder.ConfigureFeatureManagement();
+        builder.ConfigureTenantManagement();
+
+        /* Configure your own tables/entities inside here */
         builder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
     }
 }

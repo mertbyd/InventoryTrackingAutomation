@@ -40,6 +40,18 @@ public class InventoryTrackingAutomationPermissionDefinitionProvider : Permissio
             L("Permission:MovementRequests.View")
         );
 
+        // Hareket talebini depodan araca sevk etme
+        movementRequestsPermission.AddChild(
+            InventoryTrackingAutomationPermissions.MovementRequests.Dispatch,
+            L("Permission:MovementRequests.Dispatch")
+        );
+
+        // Hareket talebini teslim alma
+        movementRequestsPermission.AddChild(
+            InventoryTrackingAutomationPermissions.MovementRequests.Receive,
+            L("Permission:MovementRequests.Receive")
+        );
+
         // İş Akışları (Workflows)
         var workflowsPermission = myGroup.AddPermission(
             InventoryTrackingAutomationPermissions.Workflows.Default,
@@ -98,6 +110,12 @@ public class InventoryTrackingAutomationPermissionDefinitionProvider : Permissio
         tasksPermission.AddChild(
             InventoryTrackingAutomationPermissions.Tasks.Manage,
             L("Permission:Tasks.Manage")
+        );
+
+        // Gorevleri tamamlamaya veya iptal etmeye alma
+        tasksPermission.AddChild(
+            InventoryTrackingAutomationPermissions.Tasks.Complete,
+            L("Permission:Tasks.Complete")
         );
 
         // Arac-gorev atamalari (VehicleTasks)

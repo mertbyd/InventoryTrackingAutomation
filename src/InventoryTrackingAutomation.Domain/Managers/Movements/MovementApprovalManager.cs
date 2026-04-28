@@ -74,9 +74,7 @@ public class MovementApprovalManager : DomainService
         _workflowManager = workflowManager;
     }
 
-    // Hareket talebini onaylar — yetki kontrolü yapar, approval kaydı oluşturur, sonraki adıma routing.
-//işlevi: Etki alanı kuralını veya validasyonunu işletir.
-//sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
+    /// Hareket talebini onaylamak için kullanılır.
     public async Task<MovementApproval> ApproveAsync(Guid movementRequestId, Guid approvingUserId, string comment)
     {
         // Hareket talebini doğrula (var, InReview durumunda)
@@ -98,9 +96,7 @@ public class MovementApprovalManager : DomainService
         return approval;
     }
 
-    // Hareket talebini reddeder — workflow anında sonlanır, talep Rejected olur.
-//işlevi: Etki alanı kuralını veya validasyonunu işletir.
-//sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
+    /// Hareket talebini reddetmek için kullanılır.
     public async Task<MovementApproval> RejectAsync(Guid movementRequestId, Guid approvingUserId, string reason)
     {
         // Hareket talebini doğrula
@@ -122,9 +118,8 @@ public class MovementApprovalManager : DomainService
         return approval;
     }
 
-    // Verilen kullanıcının onaylaması gereken bekleyen talepleri liste olarak döner.
-//işlevi: Etki alanı kuralını veya validasyonunu işletir.
-//sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
+    // Kullanıcının bekleyen onaylarını getirir.
+    /// Belirli bir kullanıcı için bekleyen onay listesini getirmek için kullanılır.
     public async Task<List<PendingApprovalModel>> GetPendingApprovalsForUserAsync(Guid userId)
     {
         // Kullanıcıya atanmış ve henüz karar verilmemiş step'leri bul
@@ -144,7 +139,7 @@ public class MovementApprovalManager : DomainService
         return result;
     }
 
-    // Bir bekleyen step için PendingApprovalModel oluşturur — MovementRequest ve Warehouse bilgilerini join'ler.
+    /// Bekleyen onay modelini oluşturmak için kullanılır.
     private async Task<PendingApprovalModel> BuildPendingApprovalModelAsync(WorkflowInstanceStep step)
     {
         // Step'e bağlı MovementRequest'i bul (workflow üzerinden)
@@ -178,7 +173,7 @@ public class MovementApprovalManager : DomainService
         };
     }
 
-    // Onay/red kaydı oluşturur ve veritabanına ekler.
+    /// Onay kayıt verisini oluşturmak için kullanılır.
     private async Task<MovementApproval> CreateApprovalRecordAsync(
         Guid movementRequestId,
         Guid approvingUserId,
@@ -206,7 +201,7 @@ public class MovementApprovalManager : DomainService
         return approval;
     }
 
-    // Step kararını generic workflow state machine'e delege eder.
+    /// Workflow sürecini bir sonraki adıma ilerletmek için kullanılır.
     private async Task AdvanceWorkflowAsync(WorkflowInstanceStep currentStep, Guid approvingUserId, bool isApproved, string? note)
     {
         var roles = await GetUserRolesAsync(approvingUserId);
@@ -221,14 +216,15 @@ public class MovementApprovalManager : DomainService
         });
     }
 
-    // WorkflowManager role bazlı yetki kontrolü için kullanıcı rollerini ister.
+    // Kullanıcı rollerini getirir.
+    /// Kullanıcının yetki rollerini getirmek için kullanılır.
     private async Task<List<string>> GetUserRolesAsync(Guid userId)
     {
         var user = await _identityUserManager.GetByIdAsync(userId);
         return (await _identityUserManager.GetRolesAsync(user)).ToList();
     }
 
-    // Onaylayan kullanıcının yetki kontrolü: assigned user, required role veya manager onayı.
+    /// Onaylama yetkisini doğrulamak için kullanılır.
     private async Task ValidateApprovalAuthorizationAsync(WorkflowInstanceStep step, Guid approvingUserId)
     {
         // Step'e atanmış kullanıcı varsa sadece o onaylayabilir
@@ -248,7 +244,7 @@ public class MovementApprovalManager : DomainService
         }
     }
 
-    // Hareket talebinin var ve InReview durumunda olduğunu doğrular.
+    /// Hareket talebinin geçerliliğini doğrulamak için kullanılır.
     private async Task<MovementRequest> ValidateMovementRequestAsync(Guid movementRequestId)
     {
         var movementRequest = await _movementRequestRepository.GetAsync(movementRequestId);
@@ -261,7 +257,7 @@ public class MovementApprovalManager : DomainService
         return movementRequest;
     }
 
-    // Workflow instance'ın var ve Active durumunda olduğunu doğrular.
+    /// Workflow instance geçerliliğini doğrulamak için kullanılır.
     private async Task<WorkflowInstance> ValidateWorkflowInstanceAsync(MovementRequest movementRequest)
     {
         if (!movementRequest.WorkflowInstanceId.HasValue)
@@ -274,7 +270,7 @@ public class MovementApprovalManager : DomainService
         return workflowInstance;
     }
 
-    // Bekleyen step'i bulur — sıraya göre ilkini döner, yoksa hata fırlatır.
+    /// Bekleyen bir onay adımının varlığını doğrulamak için kullanılır.
     private async Task<WorkflowInstanceStep> ValidatePendingStepExistsAsync(Guid workflowInstanceId)
     {
         var pendingSteps = await _workflowInstanceStepRepository.GetListAsync(

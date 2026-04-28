@@ -10,7 +10,7 @@ namespace InventoryTrackingAutomation.Entities.Movements;
 /// <summary>
 /// Hareket talebinin onay surecindeki karar izini temsil eden aggregate.
 /// </summary>
-public class MovementApproval : FullAuditedAggregateRoot<Guid>, IMultiTenant
+public class MovementApproval : FullAuditedEntity<Guid>
 {
     public Guid MovementRequestId { get; set; } // Kararin bagli oldugu talep baglamini tasir.
     public Guid ApproverWorkerId { get; set; } // Karari verecek veya veren onayci calisan baglamini tasir.
@@ -18,7 +18,6 @@ public class MovementApproval : FullAuditedAggregateRoot<Guid>, IMultiTenant
     public ApprovalStatusEnum Status { get; set; } // Onay adiminin karar durumunu belirler.
     public DateTime? DecidedAt { get; set; } // Kararin verildigi zamani tasir.
     public string? Note { get; set; } // Onaycinin operasyonel notunu veya red gerekcesini tasir.
-    public Guid? TenantId { get; set; } // Onay kaydini kiraci sinirinda tutar.
 
     protected MovementApproval() { }
     public MovementApproval(Guid id) : base(id) { }

@@ -5,6 +5,7 @@ public static class WorkflowDefinitionNames
 {
     // MovementRequest entity'si için tanımlı iş akışı.
     public const string MovementRequest = "MovementRequest";
+    public const string TaskMovementRequest = "TaskMovementRequest";
 }
 
 // İş akışına bağlanabilen entity tip adları (WorkflowInstance.EntityType).
@@ -25,4 +26,7 @@ public static class WorkflowResolverKeys
 
     // İş akışına bağlı entity'nin hedef lokasyonu (Warehouse) yöneticisini onaycı olarak çözer.
     public const string TargetWarehouseManager = "TargetWarehouseManager";
+
+    // Lojistik biriminden yetkili birini onaycı olarak çözer (Sahaya çıkışlarda TargetWarehouse yerine kullanılır).
+    public const string LogisticsManager = "LogisticsManager";
 }

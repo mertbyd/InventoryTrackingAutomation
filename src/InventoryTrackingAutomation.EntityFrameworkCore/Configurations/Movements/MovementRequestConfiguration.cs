@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using InventoryTrackingAutomation.Entities.Masters;
 using InventoryTrackingAutomation.Entities.Movements;
+using InventoryTrackingAutomation.Enums;
 using Volo.Abp.EntityFrameworkCore.Modeling;
 
 namespace InventoryTrackingAutomation.EntityFrameworkCore.Configurations.Movements;
@@ -14,6 +15,9 @@ public class MovementRequestConfiguration : IEntityTypeConfiguration<MovementReq
         builder.ConfigureByConvention();
 
         builder.Property(x => x.RequestNumber).IsRequired().HasMaxLength(50);
+        builder.Property(x => x.Type)
+            .IsRequired()
+            .HasDefaultValue(MovementRequestTypeEnum.WarehouseToWarehouse);
         builder.Property(x => x.RequestNote).IsRequired().HasMaxLength(2000);
         builder.Property(x => x.CancellationNote).HasMaxLength(1000);
 

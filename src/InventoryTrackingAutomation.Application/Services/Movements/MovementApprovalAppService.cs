@@ -36,10 +36,8 @@ public class MovementApprovalAppService : InventoryTrackingAutomationAppService,
         _repository = repository;
     }
 
-    // Hareket talebini işler — IsApproved değerine göre manager metodunu çağırır.
+    /// Onay işlemini gerçekleştirmek için kullanılır.
     [UnitOfWork]
-//işlevi: İlgili iş senaryosunu (use-case) yürütür.
-//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<MovementApprovalDto> ProcessApprovalAsync(Guid movementRequestId, ProcessMovementApprovalDto input)
     {
         MovementApproval approval;
@@ -61,29 +59,25 @@ public class MovementApprovalAppService : InventoryTrackingAutomationAppService,
         return MapToDto(approval);
     }
 
-    // Bir hareket talebinin tüm onay geçmişini StepOrder'a göre sıralı döner.
-//işlevi: İlgili iş senaryosunu (use-case) yürütür.
-//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
+    /// Onay geçmişini getirmek için kullanılır.
     public async Task<List<MovementApprovalDto>> GetApprovalHistoryAsync(Guid movementRequestId)
     {
         var approvals = await _repository.GetListAsync(x => x.MovementRequestId == movementRequestId);
         return MapToDtoList(approvals.OrderBy(x => x.StepOrder).ToList());
     }
 
-    // Mevcut kullanıcının onaylaması bekleyen talepleri döner — manager pending sorgusunu yapar, profile mapping uygular.
-//işlevi: İlgili iş senaryosunu (use-case) yürütür.
-//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
+    /// Bekleyen onayları getirmek için kullanılır.
     public async Task<List<PendingApprovalDto>> GetPendingApprovalsAsync()
     {
         var pending = await _manager.GetPendingApprovalsForUserAsync(CurrentUser.GetId());
         return _mapper.Map<List<PendingApprovalModel>, List<PendingApprovalDto>>(pending);
     }
 
-    // Tek bir MovementApproval entity'sini DTO'ya map eden helper.
+    /// Veriyi DTO modeline dönüştürmek için kullanılır.
     private MovementApprovalDto MapToDto(MovementApproval approval)
         => _mapper.Map<MovementApproval, MovementApprovalDto>(approval);
 
-    // MovementApproval listesini DTO listesine map eden helper.
+    /// Veri listesini DTO listesine dönüştürmek için kullanılır.
     private List<MovementApprovalDto> MapToDtoList(List<MovementApproval> approvals)
         => _mapper.Map<List<MovementApproval>, List<MovementApprovalDto>>(approvals);
 }
