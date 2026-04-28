@@ -11,6 +11,7 @@ using InventoryTrackingAutomation.Managers.Stock;
 using InventoryTrackingAutomation.Models.Masters;
 using InventoryTrackingAutomation.Models.Stock;
 using InventoryTrackingAutomation.Services.Masters;
+using FluentValidation;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Uow;
 
@@ -25,6 +26,8 @@ public class VehicleAppService : InventoryTrackingAutomationAppService, IVehicle
     private readonly VehicleManager _manager;
     // PITON arac stok gorunurlugu okuma kurallari.
     private readonly InventoryQueryManager _inventoryQueryManager;
+    private readonly IValidator<CreateVehicleDto> _createValidator;
+    private readonly IValidator<UpdateVehicleDto> _updateValidator;
 
     // Tüm bağımlılıkları DI ile alır.
     private readonly IMapper _mapper;
@@ -32,12 +35,16 @@ public class VehicleAppService : InventoryTrackingAutomationAppService, IVehicle
         IVehicleRepository repository,
         VehicleManager manager,
         InventoryQueryManager inventoryQueryManager,
+        IValidator<CreateVehicleDto> createValidator,
+        IValidator<UpdateVehicleDto> updateValidator,
         IMapper mapper)
     {
         _mapper = mapper;
         _repository = repository;
         _manager = manager;
         _inventoryQueryManager = inventoryQueryManager;
+        _createValidator = createValidator;
+        _updateValidator = updateValidator;
     }
 
     // Id ile aracı getirir; yoksa EntityNotFoundException.
@@ -69,6 +76,7 @@ public class VehicleAppService : InventoryTrackingAutomationAppService, IVehicle
     [UnitOfWork]
     public async Task<VehicleDto> CreateAsync(CreateVehicleDto input)
     {
+        await _createValidator.ValidateAndThrowAsync(input);
         var model = _mapper.Map<CreateVehicleDto, CreateVehicleModel>(input);
         var entity = await _manager.CreateAsync(model);
         var inserted = await _repository.InsertAsync(entity, autoSave: true);
@@ -82,6 +90,7 @@ public class VehicleAppService : InventoryTrackingAutomationAppService, IVehicle
         var entities = new List<Vehicle>();
         foreach (var dto in inputs)
         {
+            await _createValidator.ValidateAndThrowAsync(dto);
             var model = _mapper.Map<CreateVehicleDto, CreateVehicleModel>(dto);
             entities.Add(await _manager.CreateAsync(model));
         }
@@ -94,6 +103,7 @@ public class VehicleAppService : InventoryTrackingAutomationAppService, IVehicle
     [UnitOfWork]
     public async Task<VehicleDto> UpdateAsync(Guid id, UpdateVehicleDto input)
     {
+        await _updateValidator.ValidateAndThrowAsync(input);
         var existing = await _manager.EnsureExistsAsync(id);
         var model = _mapper.Map<UpdateVehicleDto, UpdateVehicleModel>(input);
         var updated = await _manager.UpdateAsync(existing, model);

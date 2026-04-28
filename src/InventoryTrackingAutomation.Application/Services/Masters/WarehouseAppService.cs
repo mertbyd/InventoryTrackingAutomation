@@ -8,6 +8,7 @@ using InventoryTrackingAutomation.Interface.Masters;
 using InventoryTrackingAutomation.Managers.Masters;
 using InventoryTrackingAutomation.Models.Masters;
 using InventoryTrackingAutomation.Services.Masters;
+using FluentValidation;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Uow;
 
@@ -20,17 +21,23 @@ public class WarehouseAppService : InventoryTrackingAutomationAppService, IWareh
     private readonly IWarehouseRepository _repository;
     // Domain manager — Code uniqueness, LinkedVehicle/Worker FK ve WarehouseType enum validasyonu.
     private readonly WarehouseManager _manager;
+    private readonly IValidator<CreateWarehouseDto> _createValidator;
+    private readonly IValidator<UpdateWarehouseDto> _updateValidator;
 
     // Tüm bağımlılıkları DI ile alır.
     private readonly IMapper _mapper;
     public WarehouseAppService(
         IWarehouseRepository repository,
         WarehouseManager manager,
+        IValidator<CreateWarehouseDto> createValidator,
+        IValidator<UpdateWarehouseDto> updateValidator,
         IMapper mapper)
     {
         _mapper = mapper;
         _repository = repository;
         _manager = manager;
+        _createValidator = createValidator;
+        _updateValidator = updateValidator;
     }
 
     // Id ile lokasyonu getirir; yoksa EntityNotFoundException.
@@ -55,6 +62,7 @@ public class WarehouseAppService : InventoryTrackingAutomationAppService, IWareh
     [UnitOfWork]
     public async Task<WarehouseDto> CreateAsync(CreateWarehouseDto input)
     {
+        await _createValidator.ValidateAndThrowAsync(input);
         var model = _mapper.Map<CreateWarehouseDto, CreateWarehouseModel>(input);
         var entity = await _manager.CreateAsync(model);
         var inserted = await _repository.InsertAsync(entity, autoSave: true);
@@ -68,6 +76,7 @@ public class WarehouseAppService : InventoryTrackingAutomationAppService, IWareh
         var entities = new List<Warehouse>();
         foreach (var dto in inputs)
         {
+            await _createValidator.ValidateAndThrowAsync(dto);
             var model = _mapper.Map<CreateWarehouseDto, CreateWarehouseModel>(dto);
             entities.Add(await _manager.CreateAsync(model));
         }
@@ -80,6 +89,7 @@ public class WarehouseAppService : InventoryTrackingAutomationAppService, IWareh
     [UnitOfWork]
     public async Task<WarehouseDto> UpdateAsync(Guid id, UpdateWarehouseDto input)
     {
+        await _updateValidator.ValidateAndThrowAsync(input);
         var existing = await _manager.EnsureExistsAsync(id);
         var model = _mapper.Map<UpdateWarehouseDto, UpdateWarehouseModel>(input);
         var updated = await _manager.UpdateAsync(existing, model);
