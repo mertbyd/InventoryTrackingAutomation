@@ -1,5 +1,7 @@
 using System;
 using System.Threading.Tasks;
+using InventoryTrackingAutomation.Enums.Tasks;
+using InventoryTrackingAutomation.Enums.Inventory;
 using InventoryTrackingAutomation.Enums;
 using InventoryTrackingAutomation.Enums.Workflows;
 using InventoryTrackingAutomation.Interface.Movements;
@@ -11,6 +13,8 @@ namespace InventoryTrackingAutomation.Managers.Movements;
 /// <summary>
 /// Workflow sonucu MovementRequest aggregate'ine uygulanacak domain aksiyonlarini yoneten manager.
 /// </summary>
+//işlevi: Workflow (onay süreci) tamamlandığında veya reddedildiğinde MovementRequest üzerinde nihai durumu ve stok hareketlerini tetikler.
+//sistemdeki görevii: Onay zincirinin son halkasıdır; başarılı onay sonrası stok transferini başlatır ve talebi kapatır.
 public class MovementRequestWorkflowCompletionManager : DomainService
 {
     private readonly IMovementRequestRepository _movementRequestRepository;

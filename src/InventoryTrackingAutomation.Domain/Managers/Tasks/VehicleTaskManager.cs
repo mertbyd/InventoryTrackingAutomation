@@ -14,6 +14,8 @@ namespace InventoryTrackingAutomation.Managers.Tasks;
 /// <summary>
 /// VehicleTask domain manager'i - arac gorev atama kurallarini yonetir.
 /// </summary>
+//işlevi: Araçların saha görevlerine (InventoryTask) atanması ve bu atamaların geçerliliğini (çakışma kontrolü vb.) yönetir.
+//sistemdeki görevii: Araç-Görev eşleşmelerinin bütünlüğünü sağlar; bir aracın aynı anda birden fazla görevde aktif olmasını engeller.
 public class VehicleTaskManager : BaseManager<VehicleTask>
 {
     private readonly IVehicleRepository _vehicleRepository;

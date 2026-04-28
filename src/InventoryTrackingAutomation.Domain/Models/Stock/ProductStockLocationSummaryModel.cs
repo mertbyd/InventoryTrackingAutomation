@@ -1,4 +1,6 @@
 using System;
+using InventoryTrackingAutomation.Enums.Tasks;
+using InventoryTrackingAutomation.Enums.Inventory;
 using InventoryTrackingAutomation.Enums;
 
 namespace InventoryTrackingAutomation.Models.Stock;
@@ -8,7 +10,7 @@ namespace InventoryTrackingAutomation.Models.Stock;
 /// </summary>
 public class ProductStockLocationSummaryModel
 {
-    public InventoryLocationTypeEnum LocationType { get; set; } // Stokun bulundugu lokasyon tipi.
+    public StockLocationTypeEnum LocationType { get; set; } // Stokun bulundugu lokasyon tipi.
     public Guid? WarehouseId { get; set; }                  // Depo lokasyonu ise Warehouse Id'si.
     public Guid? VehicleId { get; set; }                        // Arac lokasyonu ise Vehicle Id'si.
     public Guid? VehicleTaskId { get; set; }                    // Arac aktif gorevdeyse VehicleTask Id'si.

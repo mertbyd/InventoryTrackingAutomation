@@ -10,6 +10,8 @@ namespace InventoryTrackingAutomation.Managers.Tasks;
 /// <summary>
 /// InventoryTask domain manager'i - gorev is kurallari ve validasyonlari.
 /// </summary>
+//işlevi: Saha görevlerinin (InventoryTask) yaşam döngüsünü, kod benzersizliğini ve tarih geçerliliğini yönetir.
+//sistemdeki görevii: Operasyonel görevlerin oluşturulması ve güncellenmesi aşamasındaki iş kurallarını denetler.
 public class InventoryTaskManager : BaseManager<InventoryTask>
 {
     private readonly IMapper _mapper;

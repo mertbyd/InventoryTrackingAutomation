@@ -1,3 +1,5 @@
+using InventoryTrackingAutomation.Enums.Tasks;
+using InventoryTrackingAutomation.Enums.Inventory;
 using InventoryTrackingAutomation.Enums;
 
 namespace InventoryTrackingAutomation.Models.Masters;

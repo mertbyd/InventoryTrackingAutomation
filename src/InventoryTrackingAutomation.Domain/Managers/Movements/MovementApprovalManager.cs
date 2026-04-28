@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using InventoryTrackingAutomation.Entities.Masters;
 using InventoryTrackingAutomation.Entities.Movements;
 using InventoryTrackingAutomation.Entities.Workflows;
+using InventoryTrackingAutomation.Enums.Tasks;
+using InventoryTrackingAutomation.Enums.Inventory;
 using InventoryTrackingAutomation.Enums;
 using InventoryTrackingAutomation.Enums.Workflows;
 using InventoryTrackingAutomation.Managers.Workflows;
@@ -148,7 +150,9 @@ public class MovementApprovalManager : DomainService
 
         // Kaynak ve hedef lokasyon adlarını çöz
         var sourceWarehouse = await _warehouseRepository.FindAsync(movementRequest.SourceWarehouseId);
-        var targetWarehouse = await _warehouseRepository.FindAsync(movementRequest.TargetWarehouseId);
+        var targetWarehouse = movementRequest.TargetWarehouseId.HasValue 
+            ? await _warehouseRepository.FindAsync(movementRequest.TargetWarehouseId.Value) 
+            : null;
 
         return new PendingApprovalModel
         {

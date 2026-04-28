@@ -1,5 +1,7 @@
 using System;
 using System.Linq;
+using InventoryTrackingAutomation.Enums.Tasks;
+using InventoryTrackingAutomation.Enums.Inventory;
 using InventoryTrackingAutomation.Enums;
 using InventoryTrackingAutomation.Enums.Workflows;
 using Volo.Abp.Settings;

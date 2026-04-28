@@ -8,6 +8,7 @@ using InventoryTrackingAutomation.Interface.Lookups;
 using InventoryTrackingAutomation.Managers.Lookups;
 using InventoryTrackingAutomation.Models.Lookups;
 using InventoryTrackingAutomation.Services.Lookups;
+using FluentValidation;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Uow;
 
@@ -20,17 +21,23 @@ public class DepartmentAppService : InventoryTrackingAutomationAppService, IDepa
     private readonly IDepartmentRepository _repository;
     // Domain manager — Code uniqueness ve diğer iş kuralları.
     private readonly DepartmentManager _manager;
+    private readonly IValidator<CreateDepartmentDto> _createValidator;
+    private readonly IValidator<UpdateDepartmentDto> _updateValidator;
 
     // Tüm bağımlılıkları DI ile alır.
     private readonly IMapper _mapper;
     public DepartmentAppService(
         IDepartmentRepository repository,
         DepartmentManager manager,
+        IValidator<CreateDepartmentDto> createValidator,
+        IValidator<UpdateDepartmentDto> updateValidator,
         IMapper mapper)
     {
         _mapper = mapper;
         _repository = repository;
         _manager = manager;
+        _createValidator = createValidator;
+        _updateValidator = updateValidator;
     }
 
     // Id ile departmanı getirir; yoksa EntityNotFoundException.
@@ -55,6 +62,7 @@ public class DepartmentAppService : InventoryTrackingAutomationAppService, IDepa
     [UnitOfWork]
     public async Task<DepartmentDto> CreateAsync(CreateDepartmentDto input)
     {
+        await _createValidator.ValidateAndThrowAsync(input);
         var model = _mapper.Map<CreateDepartmentDto, CreateDepartmentModel>(input);
         var entity = await _manager.CreateAsync(model);
         var inserted = await _repository.InsertAsync(entity, autoSave: true);
@@ -68,6 +76,7 @@ public class DepartmentAppService : InventoryTrackingAutomationAppService, IDepa
         var entities = new List<Department>();
         foreach (var dto in inputs)
         {
+            await _createValidator.ValidateAndThrowAsync(dto);
             var model = _mapper.Map<CreateDepartmentDto, CreateDepartmentModel>(dto);
             entities.Add(await _manager.CreateAsync(model));
         }
@@ -80,6 +89,7 @@ public class DepartmentAppService : InventoryTrackingAutomationAppService, IDepa
     [UnitOfWork]
     public async Task<DepartmentDto> UpdateAsync(Guid id, UpdateDepartmentDto input)
     {
+        await _updateValidator.ValidateAndThrowAsync(input);
         var existing = await _manager.EnsureExistsAsync(id);
         var model = _mapper.Map<UpdateDepartmentDto, UpdateDepartmentModel>(input);
         var updated = await _manager.UpdateAsync(existing, model);

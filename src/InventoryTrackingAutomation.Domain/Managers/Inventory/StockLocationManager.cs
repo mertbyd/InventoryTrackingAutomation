@@ -4,6 +4,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using InventoryTrackingAutomation.Entities.Masters;
 using InventoryTrackingAutomation.Entities.Stock;
+using InventoryTrackingAutomation.Enums.Tasks;
+using InventoryTrackingAutomation.Enums.Inventory;
 using InventoryTrackingAutomation.Enums;
 using InventoryTrackingAutomation.Interface.Masters;
 using InventoryTrackingAutomation.Interface.Stock;
@@ -15,6 +17,8 @@ namespace InventoryTrackingAutomation.Managers.Stock;
 /// <summary>
 /// StockLocation domain manager'i - depo/arac bazli stok kurallarini yonetir.
 /// </summary>
+//işlevi: Fiziksel lokasyonlardaki (depo/araç) ürün stok bakiyelerini yönetir, validasyonları yapar.
+//sistemdeki görevii: Stok kayıtlarının bütünlüğünü sağlar (negatif stok engelleme, lokasyon doğrulama vb.).
 public class StockLocationManager : BaseManager<StockLocation>
 {
     private readonly IProductRepository _productRepository;
@@ -59,12 +63,12 @@ public class StockLocationManager : BaseManager<StockLocation>
 
     private async Task ValidateReferencesAsync(
         Guid productId,
-        InventoryLocationTypeEnum locationType,
+        StockLocationTypeEnum locationType,
         Guid locationId)
     {
         // Urun ve lokasyon referanslari tek noktada dogrulanir.
         await EnsureExistsInAsync(_productRepository, productId);
-        if (locationType == InventoryLocationTypeEnum.Warehouse)
+        if (locationType == StockLocationTypeEnum.Warehouse)
         {
             await EnsureExistsInAsync<Warehouse>(_warehouseRepository, locationId);
             return;
@@ -75,7 +79,7 @@ public class StockLocationManager : BaseManager<StockLocation>
 
     private async Task ValidateUniqueLocationAsync(
         Guid productId,
-        InventoryLocationTypeEnum locationType,
+        StockLocationTypeEnum locationType,
         Guid locationId,
         Guid? excludeId)
     {

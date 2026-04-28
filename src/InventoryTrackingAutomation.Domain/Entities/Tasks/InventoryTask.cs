@@ -1,4 +1,6 @@
 using System;
+using InventoryTrackingAutomation.Enums.Tasks;
+using InventoryTrackingAutomation.Enums.Inventory;
 using InventoryTrackingAutomation.Enums;
 using Volo.Abp.Domain.Entities.Auditing;
 using Volo.Abp.MultiTenancy;
@@ -15,7 +17,7 @@ public class InventoryTask : FullAuditedAggregateRoot<Guid>, IMultiTenant
     public string Region { get; set; } = default!; // Gorevin saha bolgesi baglamini tasir.
     public DateTime StartDate { get; set; } // Gorevin planlanan baslangic zamanini tasir.
     public DateTime? EndDate { get; set; } // Gorevin planlanan veya gercek bitis zamanini tasir.
-    public InventoryTaskStatusEnum Status { get; set; } // Gorevin yasam dongusu durumunu belirler.
+    public TaskStatusEnum Status { get; set; } // Gorevin yasam dongusu durumunu belirler.
     public string? Description { get; set; } // Gorevin operasyonel aciklama baglamini tasir.
     public Guid? ReturnWarehouseId { get; set; } // Gorev bitince stoklarin donecegi depo baglamini tasir.
     public bool IsActive { get; set; } // Gorevin operasyonel olarak aktif kabul edilip edilmedigini belirler.

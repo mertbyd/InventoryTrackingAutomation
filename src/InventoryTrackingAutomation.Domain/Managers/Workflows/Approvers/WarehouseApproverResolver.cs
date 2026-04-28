@@ -28,12 +28,12 @@ internal static class WarehouseApproverResolver
         }
 
         var warehouseId = useSourceWarehouse ? request.SourceWarehouseId : request.TargetWarehouseId;
-        if (warehouseId == Guid.Empty)
+        if (!warehouseId.HasValue || warehouseId.Value == Guid.Empty)
         {
             return null;
         }
 
-        var warehouse = await warehouseRepository.FindAsync(warehouseId);
+        var warehouse = await warehouseRepository.FindAsync(warehouseId.Value);
         if (warehouse?.ManagerWorkerId == null)
         {
             return null;
