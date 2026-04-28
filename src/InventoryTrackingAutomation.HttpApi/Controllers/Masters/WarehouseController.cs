@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using InventoryTrackingAutomation.Permissions;
 using Microsoft.AspNetCore.Authorization;
 using System;
@@ -14,7 +15,8 @@ namespace InventoryTrackingAutomation.Controllers.Masters;
 /// <summary>
 /// Depo CRUD endpoint'leri.
 /// </summary>
-[Route("api/v1/warehouses")]
+[Route("api/v{version:apiVersion}/warehouses")]
+[ApiVersion("1.0")]
 [ApiExplorerSettings(GroupName = "Masters")]
 [Tags("Warehouses")]
 public class WarehouseController : InventoryTrackingAutomationController

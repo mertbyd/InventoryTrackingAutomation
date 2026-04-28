@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Asp.Versioning;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.DataProtection;
@@ -146,6 +147,13 @@ public class InventoryTrackingAutomationHttpApiHostModule : AbpModule
         // SystemStandards services are now registered via SystemStandardsAbpModule
 
         context.Services.AddSingleton<InventorySignalRDebugNotificationStore>();
+
+        context.Services.AddApiVersioning(options =>
+        {
+            options.DefaultApiVersion = new ApiVersion(1, 0);
+            options.AssumeDefaultVersionWhenUnspecified = true;
+            options.ReportApiVersions = true;
+        });
 
         // CRITICAL: API isteklerinde Bearer kullanıldığı için CSRF/Antiforgery filtresini kapatıyoruz
         Configure<AbpAntiForgeryOptions>(options =>

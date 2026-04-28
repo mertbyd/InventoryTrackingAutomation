@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using InventoryTrackingAutomation.Permissions;
 using Microsoft.AspNetCore.Authorization;
 using System;
@@ -15,7 +16,8 @@ namespace InventoryTrackingAutomation.Controllers.Stock;
 /// <summary>
 /// Envanter hareketleri CRUD endpoint'leri.
 /// </summary>
-[Route("api/v1/inventory-transactions")]
+[Route("api/v{version:apiVersion}/inventory-transactions")]
+[ApiVersion("1.0")]
 [ApiExplorerSettings(GroupName = "Stock")]
 [Tags("InventoryTransactions")]
 public class InventoryTransactionController : InventoryTrackingAutomationController

@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using InventoryTrackingAutomation.Permissions;
 using Microsoft.AspNetCore.Authorization;
 using System;
@@ -15,7 +16,8 @@ namespace InventoryTrackingAutomation.Controllers.Stock;
 /// <summary>
 /// Lokasyon bazli stok CRUD endpoint'leri.
 /// </summary>
-[Route("api/v1/stock-locations")]
+[Route("api/v{version:apiVersion}/stock-locations")]
+[ApiVersion("1.0")]
 [ApiExplorerSettings(GroupName = "Stock")]
 [Tags("StockLocations")]
 public class StockLocationController : InventoryTrackingAutomationController
