@@ -13,4 +13,5 @@ public static class InventoryTrackingAutomationRoleConstants
     public const string LogisticsSupervisor = "LogisticsSupervisor";
     public const string WorkflowApprover = "WorkflowApprover";
     public const string VehicleManager = "VehicleManager";
+    public const string Driver = "Driver";
 }
