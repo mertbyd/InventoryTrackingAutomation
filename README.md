@@ -172,28 +172,6 @@ HttpApi.Host        Startup, middleware pipeline, SignalR hub, Swagger
 
 ---
 
-## Kurulum
-
-```bash
-# PostgreSQL başlat
-docker-compose up -d
-
-# Uygulama ayağa kaldır
-dotnet run --project host/InventoryTrackingAutomation.HttpApi.Host
-
-# Auth server (ayrı terminal)
-dotnet run --project host/InventoryTrackingAutomation.AuthServer
-
-# Testler
-dotnet test
-```
-
-Bağlantı bilgileri `appsettings.secrets.json` dosyasına yazılır (git'e dahil değildir).
-
-**Seed kullanıcılar:** 11 test kullanıcısı, şifre `123456aA@`
-
----
-
 ## CI/CD
 
 | Workflow | Tetikleyici | Görev |
