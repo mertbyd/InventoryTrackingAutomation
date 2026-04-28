@@ -101,20 +101,54 @@ Onay ve stok transferi birbirinden tam anlamıyla ayrılmıştır. Onay iş akı
 
 ---
 
-## Hareket Tipleri ve Yaşam Döngüsü
+## Hareket Tipleri ve Tam Akış
+
+### 1. WarehouseToWarehouse — Depolar Arası Transfer
 
 ```
-WarehouseToWarehouse   : Depo → Araç → Depo
-WarehouseToTask        : Depo → Araç → Saha görevi
-TaskReturnToWarehouse  : Saha görevi (tamamlanınca otomatik) → Araç → Depo
+1. Talep oluşturulur (Pending)
+2. Workflow başlar → onaylayıcılar sırayla bildirim alır (InReview)
+3a. Reddedilirse → Rejected (stok hiç hareket etmez)
+3b. Onaylanırsa → Approved (stok hâlâ hareket etmez)
+4. Sevkiyat başlatılır [Dispatch] → stok kaynak depodan araca geçer (Shipped)
+5. Araç hedefe ulaşır, teslim alınır [Receive] → stok araçtan hedef depoya geçer (Completed)
 ```
 
+### 2. WarehouseToTask — Sahaya Malzeme Çıkışı
+
+```
+1. Saha görevi (InventoryTask) açılır, araca şoför atanır (VehicleTask)
+2. Depodan göreve malzeme talebi oluşturulur (Pending)
+3. Workflow onay süreci işler (InReview)
+3a. Reddedilirse → Rejected
+3b. Onaylanırsa → Approved
+4. [Dispatch] → stok depodan araca yüklenir (Shipped)
+5. [Receive] → görev lokasyonuna teslim edilir (Completed)
+```
+
+### 3. TaskReturnToWarehouse — Görev Sonu İade
+
+```
+1. Görev tamamlandı veya iptal edildi
+   → Sistem otomatik olarak TaskReturnToWarehouse talebi açar
+   → ReturnWarehouseId göreve önceden tanımlanmış olmalıdır
+2. Her kalem için iade miktarları girilir:
+   ├── ReceivedQuantity   → depoya geri dönen sağlam miktar
+   ├── DamagedQuantity    → hasarlı (stok düşümü yapılır)
+   ├── LostQuantity       → kayıp (stok düşümü yapılır)
+   └── ConsumedQuantity   → sahada kullanılan (stok düşümü yapılır)
+3. Workflow onay süreci işler
+4. [Dispatch] → araçtan iade yüklenir
+5. [Receive] → depo teslim alır, stok güncellenir (Completed)
+```
+
+**Genel durum makinesi:**
 ```
 Pending → InReview → Approved → Shipped → Completed
-                ↘ Rejected      ↘ Cancelled
+                 ↘ Rejected     ↘ Cancelled
 ```
 
-**TaskReturnToWarehouse** otomatik olarak açılır — saha görevini kapatan kişi `ReturnWarehouseId`'yi belirtmiş olmalıdır. Her kalem için dört miktar ayrı girilir: `ReceivedQuantity`, `DamagedQuantity`, `LostQuantity`, `ConsumedQuantity`.
+> Stok hiçbir zaman onay adımında hareket etmez. Fiziksel hareket yalnızca Dispatch ve Receive adımlarında gerçekleşir.
 
 ---
 
