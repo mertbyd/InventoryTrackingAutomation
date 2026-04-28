@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using InventoryTrackingAutomation.Permissions;
 using Microsoft.AspNetCore.Authorization;
 using System;
@@ -16,7 +17,8 @@ namespace InventoryTrackingAutomation.Controllers.Masters;
 /// AraÃ§ CRUD endpoint'leri.
 /// </summary>
 [Route("api/vehicles")]
-[Route("api/v1/vehicles")]
+[Route("api/v{version:apiVersion}/vehicles")]
+[ApiVersion("1.0")]
 [ApiExplorerSettings(GroupName = "Masters")]
 [Tags("Vehicles")]
 public class VehicleController : InventoryTrackingAutomationController

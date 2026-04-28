@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using InventoryTrackingAutomation.Permissions;
 using Microsoft.AspNetCore.Authorization;
 using System;
@@ -15,7 +16,8 @@ namespace InventoryTrackingAutomation.Controllers.Tasks;
 /// <summary>
 /// Arac-gorev atamasi CRUD endpoint'leri.
 /// </summary>
-[Route("api/v1/vehicle-tasks")]
+[Route("api/v{version:apiVersion}/vehicle-tasks")]
+[ApiVersion("1.0")]
 [ApiExplorerSettings(GroupName = "Tasks")]
 [Tags("VehicleTasks")]
 public class VehicleTaskController : InventoryTrackingAutomationController

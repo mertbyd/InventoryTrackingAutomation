@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -16,7 +17,8 @@ namespace InventoryTrackingAutomation.Controllers.Masters;
 /// Ürün CRUD endpoint'leri.
 /// </summary>
 [Route("api/products")]
-[Route("api/v1/products")]
+[Route("api/v{version:apiVersion}/products")]
+[ApiVersion("1.0")]
 [ApiExplorerSettings(GroupName = "Masters")]
 public class ProductController : InventoryTrackingAutomationController
 {

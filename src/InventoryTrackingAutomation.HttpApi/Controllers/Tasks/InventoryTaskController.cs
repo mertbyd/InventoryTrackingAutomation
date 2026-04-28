@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using InventoryTrackingAutomation.Permissions;
 using Microsoft.AspNetCore.Authorization;
 using System;
@@ -15,8 +16,9 @@ namespace InventoryTrackingAutomation.Controllers.Tasks;
 /// <summary>
 /// Envanter gorevi CRUD endpoint'leri.
 /// </summary>
-[Route("api/v1/tasks")]
-[Route("api/v1/inventory-tasks")]
+[Route("api/v{version:apiVersion}/tasks")]
+[Route("api/v{version:apiVersion}/inventory-tasks")]
+[ApiVersion("1.0")]
 [ApiExplorerSettings(GroupName = "Tasks")]
 [Tags("InventoryTasks")]
 public class InventoryTaskController : InventoryTrackingAutomationController
