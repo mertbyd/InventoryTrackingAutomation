@@ -18,21 +18,13 @@ public class StockLocationConfiguration : IEntityTypeConfiguration<StockLocation
         builder.Property(x => x.Quantity).IsRequired();
         builder.Property(x => x.ReservedQuantity).IsRequired();
 
-        builder.HasIndex(x => new { x.ProductId, x.LocationType, x.WarehouseSiteId, x.VehicleId }).IsUnique();
+        builder.Property(x => x.LocationId).IsRequired();
+        builder.HasIndex(x => new { x.TenantId, x.LocationType, x.LocationId, x.ProductId }).IsUnique();
 
         builder.HasOne<Product>()
             .WithMany()
             .HasForeignKey(x => x.ProductId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasOne<Site>()
-            .WithMany()
-            .HasForeignKey(x => x.WarehouseSiteId)
-            .OnDelete(DeleteBehavior.Restrict);
-
-        builder.HasOne<Vehicle>()
-            .WithMany()
-            .HasForeignKey(x => x.VehicleId)
-            .OnDelete(DeleteBehavior.Restrict);
     }
 }

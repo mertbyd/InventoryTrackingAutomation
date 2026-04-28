@@ -38,8 +38,8 @@ public class StockLocationManager : BaseManager<StockLocation>
 
     public async Task<StockLocation> CreateAsync(CreateStockLocationModel model)
     {
-        await ValidateReferencesAsync(model.ProductId, model.LocationType, model.WarehouseSiteId, model.VehicleId);
-        await ValidateUniqueLocationAsync(model.ProductId, model.LocationType, model.WarehouseSiteId, model.VehicleId, null);
+        await ValidateReferencesAsync(model.ProductId, model.LocationType, model.LocationId);
+        await ValidateUniqueLocationAsync(model.ProductId, model.LocationType, model.LocationId, null);
         ValidateQuantities(model.Quantity, model.ReservedQuantity);
 
         var entity = new StockLocation(GuidGenerator.Create());
@@ -49,8 +49,8 @@ public class StockLocationManager : BaseManager<StockLocation>
 
     public async Task<StockLocation> UpdateAsync(StockLocation existing, UpdateStockLocationModel model)
     {
-        await ValidateReferencesAsync(model.ProductId, model.LocationType, model.WarehouseSiteId, model.VehicleId);
-        await ValidateUniqueLocationAsync(model.ProductId, model.LocationType, model.WarehouseSiteId, model.VehicleId, existing.Id);
+        await ValidateReferencesAsync(model.ProductId, model.LocationType, model.LocationId);
+        await ValidateUniqueLocationAsync(model.ProductId, model.LocationType, model.LocationId, existing.Id);
         ValidateQuantities(model.Quantity, model.ReservedQuantity);
 
         _mapper.Map(model, existing);
@@ -60,43 +60,30 @@ public class StockLocationManager : BaseManager<StockLocation>
     private async Task ValidateReferencesAsync(
         Guid productId,
         InventoryLocationTypeEnum locationType,
-        Guid? warehouseSiteId,
-        Guid? vehicleId)
+        Guid locationId)
     {
         // Urun ve lokasyon referanslari tek noktada dogrulanir.
         await EnsureExistsInAsync(_productRepository, productId);
         if (locationType == InventoryLocationTypeEnum.Warehouse)
         {
-            if (!warehouseSiteId.HasValue || vehicleId.HasValue)
-            {
-                throw new BusinessException(InventoryTrackingAutomationErrorCodes.StockLocations.InvalidLocation);
-            }
-
-            await EnsureExistsInAsync<Site>(_siteRepository, warehouseSiteId.Value);
+            await EnsureExistsInAsync<Site>(_siteRepository, locationId);
             return;
         }
 
-        if (!vehicleId.HasValue || warehouseSiteId.HasValue)
-        {
-            throw new BusinessException(InventoryTrackingAutomationErrorCodes.StockLocations.InvalidLocation);
-        }
-
-        await EnsureExistsInAsync<Vehicle>(_vehicleRepository, vehicleId.Value);
+        await EnsureExistsInAsync<Vehicle>(_vehicleRepository, locationId);
     }
 
     private async Task ValidateUniqueLocationAsync(
         Guid productId,
         InventoryLocationTypeEnum locationType,
-        Guid? warehouseSiteId,
-        Guid? vehicleId,
+        Guid locationId,
         Guid? excludeId)
     {
         // Ayni urun ayni fiziksel lokasyonda tek stok satiri ile tutulur.
         var existingLocations = await Repository.GetListAsync(x =>
             x.ProductId == productId &&
             x.LocationType == locationType &&
-            x.WarehouseSiteId == warehouseSiteId &&
-            x.VehicleId == vehicleId);
+            x.LocationId == locationId);
 
         if (existingLocations.Any(x => !excludeId.HasValue || x.Id != excludeId.Value))
         {

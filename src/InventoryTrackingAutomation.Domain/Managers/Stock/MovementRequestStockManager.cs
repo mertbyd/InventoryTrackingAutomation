@@ -76,7 +76,7 @@ public class MovementRequestStockManager : DomainService
         var sourceLocation = await _stockLocationRepository.FindAsync(x =>
             x.ProductId == line.ProductId &&
             x.LocationType == InventoryLocationTypeEnum.Warehouse &&
-            x.WarehouseSiteId == request.SourceSiteId);
+            x.LocationId == request.SourceSiteId);
 
         if (sourceLocation == null)
         {
@@ -84,7 +84,7 @@ public class MovementRequestStockManager : DomainService
             {
                 ProductId = line.ProductId,
                 LocationType = InventoryLocationTypeEnum.Warehouse,
-                WarehouseSiteId = request.SourceSiteId,
+                LocationId = request.SourceSiteId,
                 Quantity = remainingSourceQuantity,
                 ReservedQuantity = 0
             };
@@ -123,13 +123,13 @@ public class MovementRequestStockManager : DomainService
             return await _stockLocationRepository.FindAsync(x =>
                 x.ProductId == line.ProductId &&
                 x.LocationType == InventoryLocationTypeEnum.Vehicle &&
-                x.VehicleId == request.RequestedVehicleId);
+                x.LocationId == request.RequestedVehicleId);
         }
 
         return await _stockLocationRepository.FindAsync(x =>
             x.ProductId == line.ProductId &&
             x.LocationType == InventoryLocationTypeEnum.Warehouse &&
-            x.WarehouseSiteId == request.TargetSiteId);
+            x.LocationId == request.TargetSiteId);
     }
 
     private StockLocation CreateTargetStockLocation(
@@ -142,8 +142,9 @@ public class MovementRequestStockManager : DomainService
         {
             ProductId = line.ProductId,
             LocationType = targetLocationType,
-            WarehouseSiteId = targetLocationType == InventoryLocationTypeEnum.Warehouse ? request.TargetSiteId : null,
-            VehicleId = targetLocationType == InventoryLocationTypeEnum.Vehicle ? request.RequestedVehicleId : null,
+            LocationId = targetLocationType == InventoryLocationTypeEnum.Warehouse
+                ? request.TargetSiteId
+                : request.RequestedVehicleId!.Value,
             Quantity = line.Quantity,
             ReservedQuantity = 0
         };
@@ -161,12 +162,13 @@ public class MovementRequestStockManager : DomainService
             TransactionType = ResolveTransactionType(targetLocationType),
             Quantity = line.Quantity,
             SourceLocationType = InventoryLocationTypeEnum.Warehouse,
-            SourceWarehouseSiteId = request.SourceSiteId,
+            SourceLocationId = request.SourceSiteId,
             TargetLocationType = targetLocationType,
-            TargetWarehouseSiteId = targetLocationType == InventoryLocationTypeEnum.Warehouse ? request.TargetSiteId : null,
-            TargetVehicleId = targetLocationType == InventoryLocationTypeEnum.Vehicle ? request.RequestedVehicleId : null,
-            MovementRequestId = request.Id,
-            VehicleTaskId = activeVehicleTaskId,
+            TargetLocationId = targetLocationType == InventoryLocationTypeEnum.Warehouse
+                ? request.TargetSiteId
+                : request.RequestedVehicleId,
+            RelatedMovementRequestId = request.Id,
+            RelatedTaskId = activeVehicleTaskId,
             OccurredAt = Clock.Now,
             Note = request.RequestNumber
         };
