@@ -82,6 +82,42 @@ public class InventoryTrackingAutomationPermissionDefinitionProvider : Permissio
             L("Permission:Inventory.Manage")
         );
 
+        // Gorevler (Tasks)
+        var tasksPermission = myGroup.AddPermission(
+            InventoryTrackingAutomationPermissions.Tasks.Default,
+            L("Permission:Tasks")
+        );
+
+        // Gorevleri goruntuleme
+        tasksPermission.AddChild(
+            InventoryTrackingAutomationPermissions.Tasks.View,
+            L("Permission:Tasks.View")
+        );
+
+        // Gorevleri yonetme
+        tasksPermission.AddChild(
+            InventoryTrackingAutomationPermissions.Tasks.Manage,
+            L("Permission:Tasks.Manage")
+        );
+
+        // Arac-gorev atamalari (VehicleTasks)
+        var vehicleTasksPermission = myGroup.AddPermission(
+            InventoryTrackingAutomationPermissions.VehicleTasks.Default,
+            L("Permission:VehicleTasks")
+        );
+
+        // Arac-gorev atamalarini goruntuleme
+        vehicleTasksPermission.AddChild(
+            InventoryTrackingAutomationPermissions.VehicleTasks.View,
+            L("Permission:VehicleTasks.View")
+        );
+
+        // Arac-gorev atamalarini yonetme
+        vehicleTasksPermission.AddChild(
+            InventoryTrackingAutomationPermissions.VehicleTasks.Manage,
+            L("Permission:VehicleTasks.Manage")
+        );
+
         // Masterler (Masters - Araç, Departman vb.)
         var mastersPermission = myGroup.AddPermission(
             InventoryTrackingAutomationPermissions.Masters.Default,

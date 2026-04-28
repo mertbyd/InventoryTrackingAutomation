@@ -3,7 +3,6 @@ using System.Threading.Tasks;
 using InventoryTrackingAutomation.Enums;
 using InventoryTrackingAutomation.Enums.Workflows;
 using InventoryTrackingAutomation.Interface.Movements;
-using InventoryTrackingAutomation.Managers.Shipments;
 using InventoryTrackingAutomation.Managers.Stock;
 using Volo.Abp.Domain.Services;
 
@@ -17,18 +16,15 @@ public class MovementRequestWorkflowCompletionManager : DomainService
     private readonly IMovementRequestRepository _movementRequestRepository;
     private readonly IMovementRequestLineRepository _movementRequestLineRepository;
     private readonly MovementRequestStockManager _stockManager;
-    private readonly MovementRequestShipmentManager _shipmentManager;
 
     public MovementRequestWorkflowCompletionManager(
         IMovementRequestRepository movementRequestRepository,
         IMovementRequestLineRepository movementRequestLineRepository,
-        MovementRequestStockManager stockManager,
-        MovementRequestShipmentManager shipmentManager)
+        MovementRequestStockManager stockManager)
     {
         _movementRequestRepository = movementRequestRepository;
         _movementRequestLineRepository = movementRequestLineRepository;
         _stockManager = stockManager;
-        _shipmentManager = shipmentManager;
     }
 
     public async Task ApplyWorkflowResultAsync(Guid movementRequestId, WorkflowState finalState)
@@ -41,12 +37,9 @@ public class MovementRequestWorkflowCompletionManager : DomainService
 
         if (finalState == WorkflowState.Completed)
         {
-            // Completed workflow talebi onaylar, stogu dusurur ve hazirlik sevkiyati olusturur.
+            // Completed workflow talebi onaylar ve PITON stok hareketini uygular.
             var lines = await _movementRequestLineRepository.GetListAsync(x => x.MovementRequestId == request.Id);
-            await _stockManager.DecreaseSourceStockAsync(request, lines);
-            var shipment = await _shipmentManager.CreatePreparingShipmentAsync(request, lines);
-
-            request.ShipmentId = shipment.Id;
+            await _stockManager.ApplyApprovedTransferAsync(request, lines);
             request.Status = MovementStatusEnum.Approved;
         }
         else if (finalState == WorkflowState.Rejected)

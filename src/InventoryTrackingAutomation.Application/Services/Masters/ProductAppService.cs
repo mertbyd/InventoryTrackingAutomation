@@ -3,10 +3,13 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using InventoryTrackingAutomation.Dtos.Masters;
+using InventoryTrackingAutomation.Dtos.Stock;
 using InventoryTrackingAutomation.Entities.Masters;
 using InventoryTrackingAutomation.Interface.Masters;
 using InventoryTrackingAutomation.Managers.Masters;
+using InventoryTrackingAutomation.Managers.Stock;
 using InventoryTrackingAutomation.Models.Masters;
+using InventoryTrackingAutomation.Models.Stock;
 using InventoryTrackingAutomation.Services.Masters;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Uow;
@@ -20,17 +23,21 @@ public class ProductAppService : InventoryTrackingAutomationAppService, IProduct
     private readonly IProductRepository _repository;
     // Domain manager — Code uniqueness, CategoryId FK ve BaseUnit enum validasyonu.
     private readonly ProductManager _manager;
+    // PITON stok gorunurlugu okuma kurallari.
+    private readonly InventoryQueryManager _inventoryQueryManager;
 
     // Tüm bağımlılıkları DI ile alır.
     private readonly IMapper _mapper;
     public ProductAppService(
         IProductRepository repository,
         ProductManager manager,
+        InventoryQueryManager inventoryQueryManager,
         IMapper mapper)
     {
         _mapper = mapper;
         _repository = repository;
         _manager = manager;
+        _inventoryQueryManager = inventoryQueryManager;
     }
 
     // Id ile ürünü getirir; yoksa EntityNotFoundException.
@@ -49,6 +56,13 @@ public class ProductAppService : InventoryTrackingAutomationAppService, IProduct
         return new PagedResultDto<ProductDto>(
             totalCount,
             _mapper.Map<List<Product>, List<ProductDto>>(entities));
+    }
+
+    // Urunun lokasyon bazli stok ozetini getirir; okuma kurallari manager tarafinda kalir.
+    public async Task<ProductStockSummaryDto> GetStockSummaryAsync(Guid id)
+    {
+        var summary = await _inventoryQueryManager.GetProductStockSummaryAsync(id);
+        return _mapper.Map<ProductStockSummaryModel, ProductStockSummaryDto>(summary);
     }
 
     // Yeni ürün oluşturur — manager iş kurallarını uygular, repository persist eder.

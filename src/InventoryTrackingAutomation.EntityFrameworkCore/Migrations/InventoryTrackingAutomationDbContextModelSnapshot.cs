@@ -545,9 +545,6 @@ namespace InventoryTrackingAutomation.Migrations
                     b.Property<Guid?>("RequestedVehicleId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid?>("ShipmentId")
-                        .HasColumnType("uuid");
-
                     b.Property<Guid>("SourceSiteId")
                         .HasColumnType("uuid");
 
@@ -568,8 +565,6 @@ namespace InventoryTrackingAutomation.Migrations
                     b.HasIndex("RequestedByWorkerId");
 
                     b.HasIndex("RequestedVehicleId");
-
-                    b.HasIndex("ShipmentId");
 
                     b.HasIndex("SourceSiteId");
 
@@ -631,135 +626,112 @@ namespace InventoryTrackingAutomation.Migrations
                     b.ToTable("MovementRequestLines", "movement");
                 });
 
-            modelBuilder.Entity("InventoryTrackingAutomation.Entities.Shipments.Shipment", b =>
+            modelBuilder.Entity("InventoryTrackingAutomation.Entities.Stock.InventoryTransaction", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
 
                     b.Property<DateTime>("CreationTime")
                         .HasColumnType("timestamp without time zone")
-                        .HasColumnName("CreationTime");
+                        .HasColumnName("creation_time");
 
                     b.Property<Guid?>("CreatorId")
                         .HasColumnType("uuid")
-                        .HasColumnName("CreatorId");
+                        .HasColumnName("creator_id");
 
                     b.Property<Guid?>("DeleterId")
                         .HasColumnType("uuid")
-                        .HasColumnName("DeleterId");
+                        .HasColumnName("deleter_id");
 
                     b.Property<DateTime?>("DeletionTime")
                         .HasColumnType("timestamp without time zone")
-                        .HasColumnName("DeletionTime");
-
-                    b.Property<DateTime?>("DeliveryTime")
-                        .HasColumnType("timestamp without time zone");
-
-                    b.Property<DateTime?>("DepartureTime")
-                        .HasColumnType("timestamp without time zone");
-
-                    b.Property<Guid>("DriverWorkerId")
-                        .HasColumnType("uuid");
+                        .HasColumnName("deletion_time");
 
                     b.Property<bool>("IsDeleted")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
                         .HasDefaultValue(false)
-                        .HasColumnName("IsDeleted");
+                        .HasColumnName("is_deleted");
 
                     b.Property<DateTime?>("LastModificationTime")
                         .HasColumnType("timestamp without time zone")
-                        .HasColumnName("LastModificationTime");
+                        .HasColumnName("last_modification_time");
 
                     b.Property<Guid?>("LastModifierId")
                         .HasColumnType("uuid")
-                        .HasColumnName("LastModifierId");
+                        .HasColumnName("last_modifier_id");
+
+                    b.Property<Guid?>("MovementRequestId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("movement_request_id");
 
                     b.Property<string>("Note")
-                        .HasColumnType("text");
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("note");
 
-                    b.Property<DateTime?>("PlannedDepartureTime")
-                        .HasColumnType("timestamp without time zone");
-
-                    b.Property<string>("ShipmentNumber")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("integer");
-
-                    b.Property<Guid>("VehicleId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("DriverWorkerId");
-
-                    b.HasIndex("ShipmentNumber")
-                        .IsUnique();
-
-                    b.HasIndex("VehicleId");
-
-                    b.ToTable("Shipments", "shipment");
-                });
-
-            modelBuilder.Entity("InventoryTrackingAutomation.Entities.Shipments.ShipmentLine", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreationTime")
+                    b.Property<DateTime>("OccurredAt")
                         .HasColumnType("timestamp without time zone")
-                        .HasColumnName("CreationTime");
-
-                    b.Property<Guid?>("CreatorId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("CreatorId");
-
-                    b.Property<Guid?>("DeleterId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("DeleterId");
-
-                    b.Property<DateTime?>("DeletionTime")
-                        .HasColumnType("timestamp without time zone")
-                        .HasColumnName("DeletionTime");
-
-                    b.Property<bool>("IsDeleted")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(false)
-                        .HasColumnName("IsDeleted");
-
-                    b.Property<DateTime?>("LastModificationTime")
-                        .HasColumnType("timestamp without time zone")
-                        .HasColumnName("LastModificationTime");
-
-                    b.Property<Guid?>("LastModifierId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("LastModifierId");
-
-                    b.Property<Guid>("MovementRequestLineId")
-                        .HasColumnType("uuid");
+                        .HasColumnName("occurred_at");
 
                     b.Property<Guid>("ProductId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("product_id");
 
                     b.Property<int>("Quantity")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("quantity");
 
-                    b.Property<Guid>("ShipmentId")
-                        .HasColumnType("uuid");
+                    b.Property<int?>("SourceLocationType")
+                        .HasColumnType("integer")
+                        .HasColumnName("source_location_type");
+
+                    b.Property<Guid?>("SourceVehicleId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("source_vehicle_id");
+
+                    b.Property<Guid?>("SourceWarehouseSiteId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("source_warehouse_site_id");
+
+                    b.Property<int?>("TargetLocationType")
+                        .HasColumnType("integer")
+                        .HasColumnName("target_location_type");
+
+                    b.Property<Guid?>("TargetVehicleId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("target_vehicle_id");
+
+                    b.Property<Guid?>("TargetWarehouseSiteId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("target_warehouse_site_id");
+
+                    b.Property<int>("TransactionType")
+                        .HasColumnType("integer")
+                        .HasColumnName("transaction_type");
+
+                    b.Property<Guid?>("VehicleTaskId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("vehicle_task_id");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("MovementRequestLineId");
+                    b.HasIndex("MovementRequestId");
 
                     b.HasIndex("ProductId");
 
-                    b.HasIndex("ShipmentId");
+                    b.HasIndex("SourceVehicleId");
 
-                    b.ToTable("ShipmentLines", "shipment");
+                    b.HasIndex("SourceWarehouseSiteId");
+
+                    b.HasIndex("TargetVehicleId");
+
+                    b.HasIndex("TargetWarehouseSiteId");
+
+                    b.HasIndex("VehicleTaskId");
+
+                    b.ToTable("inventory_transactions", "piton");
                 });
 
             modelBuilder.Entity("InventoryTrackingAutomation.Entities.Stock.ProductStock", b =>
@@ -817,6 +789,78 @@ namespace InventoryTrackingAutomation.Migrations
                         .IsUnique();
 
                     b.ToTable("ProductStocks", "stock");
+                });
+
+            modelBuilder.Entity("InventoryTrackingAutomation.Entities.Stock.StockLocation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreationTime")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("creation_time");
+
+                    b.Property<Guid?>("CreatorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("creator_id");
+
+                    b.Property<Guid?>("DeleterId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("deleter_id");
+
+                    b.Property<DateTime?>("DeletionTime")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("deletion_time");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("is_deleted");
+
+                    b.Property<DateTime?>("LastModificationTime")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("last_modification_time");
+
+                    b.Property<Guid?>("LastModifierId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("last_modifier_id");
+
+                    b.Property<int>("LocationType")
+                        .HasColumnType("integer")
+                        .HasColumnName("location_type");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("product_id");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("integer")
+                        .HasColumnName("quantity");
+
+                    b.Property<int>("ReservedQuantity")
+                        .HasColumnType("integer")
+                        .HasColumnName("reserved_quantity");
+
+                    b.Property<Guid?>("VehicleId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("vehicle_id");
+
+                    b.Property<Guid?>("WarehouseSiteId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("warehouse_site_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("VehicleId");
+
+                    b.HasIndex("WarehouseSiteId");
+
+                    b.HasIndex("ProductId", "LocationType", "WarehouseSiteId", "VehicleId")
+                        .IsUnique();
+
+                    b.ToTable("stock_locations", "piton");
                 });
 
             modelBuilder.Entity("InventoryTrackingAutomation.Entities.Stock.StockMovement", b =>
@@ -896,6 +940,166 @@ namespace InventoryTrackingAutomation.Migrations
                     b.ToTable("StockMovements", "stock");
                 });
 
+            modelBuilder.Entity("InventoryTrackingAutomation.Entities.Tasks.InventoryTask", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("code");
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)")
+                        .HasColumnName("concurrency_stamp");
+
+                    b.Property<DateTime>("CreationTime")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("creation_time");
+
+                    b.Property<Guid?>("CreatorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("creator_id");
+
+                    b.Property<Guid?>("DeleterId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("deleter_id");
+
+                    b.Property<DateTime?>("DeletionTime")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("deletion_time");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("description");
+
+                    b.Property<DateTime?>("EndDate")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("end_date");
+
+                    b.Property<string>("ExtraProperties")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("extra_properties");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("is_deleted");
+
+                    b.Property<DateTime?>("LastModificationTime")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("last_modification_time");
+
+                    b.Property<Guid?>("LastModifierId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("last_modifier_id");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("name");
+
+                    b.Property<string>("Region")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("region");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("start_date");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer")
+                        .HasColumnName("status");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.ToTable("inventory_tasks", "piton");
+                });
+
+            modelBuilder.Entity("InventoryTrackingAutomation.Entities.Tasks.VehicleTask", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("AssignedAt")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("assigned_at");
+
+                    b.Property<DateTime>("CreationTime")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("creation_time");
+
+                    b.Property<Guid?>("CreatorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("creator_id");
+
+                    b.Property<Guid?>("DeleterId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("deleter_id");
+
+                    b.Property<DateTime?>("DeletionTime")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("deletion_time");
+
+                    b.Property<Guid>("InventoryTaskId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("inventory_task_id");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("is_deleted");
+
+                    b.Property<DateTime?>("LastModificationTime")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("last_modification_time");
+
+                    b.Property<Guid?>("LastModifierId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("last_modifier_id");
+
+                    b.Property<DateTime?>("ReleasedAt")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("released_at");
+
+                    b.Property<Guid>("VehicleId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("vehicle_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("InventoryTaskId");
+
+                    b.HasIndex("VehicleId", "IsActive");
+
+                    b.ToTable("vehicle_tasks", "piton");
+                });
+
             modelBuilder.Entity("InventoryTrackingAutomation.Entities.Workflows.WorkflowDefinition", b =>
                 {
                     b.Property<Guid>("Id")
@@ -960,7 +1164,7 @@ namespace InventoryTrackingAutomation.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("WorkflowDefinitions", (string)null);
+                    b.ToTable("WorkflowDefinitions", "workflow");
                 });
 
             modelBuilder.Entity("InventoryTrackingAutomation.Entities.Workflows.WorkflowInstance", b =>
@@ -1031,7 +1235,7 @@ namespace InventoryTrackingAutomation.Migrations
 
                     b.HasIndex("WorkflowDefinitionId");
 
-                    b.ToTable("WorkflowInstances", (string)null);
+                    b.ToTable("WorkflowInstances", "workflow");
                 });
 
             modelBuilder.Entity("InventoryTrackingAutomation.Entities.Workflows.WorkflowInstanceStep", b =>
@@ -1080,7 +1284,7 @@ namespace InventoryTrackingAutomation.Migrations
 
                     b.HasIndex("WorkflowStepDefinitionId");
 
-                    b.ToTable("WorkflowInstanceSteps", (string)null);
+                    b.ToTable("WorkflowInstanceSteps", "workflow");
                 });
 
             modelBuilder.Entity("InventoryTrackingAutomation.Entities.Workflows.WorkflowStepDefinition", b =>
@@ -1095,9 +1299,6 @@ namespace InventoryTrackingAutomation.Migrations
                     b.Property<Guid?>("CreatorId")
                         .HasColumnType("uuid")
                         .HasColumnName("CreatorId");
-
-                    b.Property<bool>("IsManagerApprovalRequired")
-                        .HasColumnType("boolean");
 
                     b.Property<DateTime?>("LastModificationTime")
                         .HasColumnType("timestamp without time zone")
@@ -1125,7 +1326,7 @@ namespace InventoryTrackingAutomation.Migrations
 
                     b.HasIndex("WorkflowDefinitionId");
 
-                    b.ToTable("WorkflowStepDefinitions", (string)null);
+                    b.ToTable("WorkflowStepDefinitions", "workflow");
                 });
 
             modelBuilder.Entity("InventoryTrackingAutomation.Entities.Lookups.ProductCategory", b =>
@@ -1190,11 +1391,6 @@ namespace InventoryTrackingAutomation.Migrations
                         .HasForeignKey("RequestedVehicleId")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("InventoryTrackingAutomation.Entities.Shipments.Shipment", null)
-                        .WithMany()
-                        .HasForeignKey("ShipmentId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.HasOne("InventoryTrackingAutomation.Entities.Masters.Site", null)
                         .WithMany()
                         .HasForeignKey("SourceSiteId")
@@ -1223,28 +1419,12 @@ namespace InventoryTrackingAutomation.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("InventoryTrackingAutomation.Entities.Shipments.Shipment", b =>
+            modelBuilder.Entity("InventoryTrackingAutomation.Entities.Stock.InventoryTransaction", b =>
                 {
-                    b.HasOne("InventoryTrackingAutomation.Entities.Masters.Worker", null)
+                    b.HasOne("InventoryTrackingAutomation.Entities.Movements.MovementRequest", null)
                         .WithMany()
-                        .HasForeignKey("DriverWorkerId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("InventoryTrackingAutomation.Entities.Masters.Vehicle", null)
-                        .WithMany()
-                        .HasForeignKey("VehicleId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("InventoryTrackingAutomation.Entities.Shipments.ShipmentLine", b =>
-                {
-                    b.HasOne("InventoryTrackingAutomation.Entities.Movements.MovementRequestLine", null)
-                        .WithMany()
-                        .HasForeignKey("MovementRequestLineId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .HasForeignKey("MovementRequestId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("InventoryTrackingAutomation.Entities.Masters.Product", null)
                         .WithMany()
@@ -1252,11 +1432,30 @@ namespace InventoryTrackingAutomation.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("InventoryTrackingAutomation.Entities.Shipments.Shipment", null)
+                    b.HasOne("InventoryTrackingAutomation.Entities.Masters.Vehicle", null)
                         .WithMany()
-                        .HasForeignKey("ShipmentId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .HasForeignKey("SourceVehicleId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("InventoryTrackingAutomation.Entities.Masters.Site", null)
+                        .WithMany()
+                        .HasForeignKey("SourceWarehouseSiteId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("InventoryTrackingAutomation.Entities.Masters.Vehicle", null)
+                        .WithMany()
+                        .HasForeignKey("TargetVehicleId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("InventoryTrackingAutomation.Entities.Masters.Site", null)
+                        .WithMany()
+                        .HasForeignKey("TargetWarehouseSiteId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("InventoryTrackingAutomation.Entities.Tasks.VehicleTask", null)
+                        .WithMany()
+                        .HasForeignKey("VehicleTaskId")
+                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("InventoryTrackingAutomation.Entities.Stock.ProductStock", b =>
@@ -1274,6 +1473,25 @@ namespace InventoryTrackingAutomation.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("InventoryTrackingAutomation.Entities.Stock.StockLocation", b =>
+                {
+                    b.HasOne("InventoryTrackingAutomation.Entities.Masters.Product", null)
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("InventoryTrackingAutomation.Entities.Masters.Vehicle", null)
+                        .WithMany()
+                        .HasForeignKey("VehicleId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("InventoryTrackingAutomation.Entities.Masters.Site", null)
+                        .WithMany()
+                        .HasForeignKey("WarehouseSiteId")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
             modelBuilder.Entity("InventoryTrackingAutomation.Entities.Stock.StockMovement", b =>
                 {
                     b.HasOne("InventoryTrackingAutomation.Entities.Masters.Product", null)
@@ -1285,6 +1503,21 @@ namespace InventoryTrackingAutomation.Migrations
                     b.HasOne("InventoryTrackingAutomation.Entities.Masters.Site", null)
                         .WithMany()
                         .HasForeignKey("SiteId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("InventoryTrackingAutomation.Entities.Tasks.VehicleTask", b =>
+                {
+                    b.HasOne("InventoryTrackingAutomation.Entities.Tasks.InventoryTask", null)
+                        .WithMany()
+                        .HasForeignKey("InventoryTaskId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("InventoryTrackingAutomation.Entities.Masters.Vehicle", null)
+                        .WithMany()
+                        .HasForeignKey("VehicleId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });

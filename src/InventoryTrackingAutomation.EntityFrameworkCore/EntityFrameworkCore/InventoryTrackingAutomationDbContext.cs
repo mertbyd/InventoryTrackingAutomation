@@ -5,8 +5,8 @@ using Volo.Abp.EntityFrameworkCore;
 using InventoryTrackingAutomation.Entities.Lookups;
 using InventoryTrackingAutomation.Entities.Masters;
 using InventoryTrackingAutomation.Entities.Movements;
-using InventoryTrackingAutomation.Entities.Shipments;
 using InventoryTrackingAutomation.Entities.Stock;
+using InventoryTrackingAutomation.Entities.Tasks;
 using InventoryTrackingAutomation.Entities.Workflows;
 
 namespace InventoryTrackingAutomation.EntityFrameworkCore;
@@ -24,13 +24,15 @@ public class InventoryTrackingAutomationDbContext : AbpDbContext<InventoryTracki
 
     public DbSet<ProductStock> ProductStocks { get; set; }
     public DbSet<StockMovement> StockMovements { get; set; }
+    public DbSet<StockLocation> StockLocations { get; set; }
+    public DbSet<InventoryTransaction> InventoryTransactions { get; set; }
 
     public DbSet<MovementRequest> MovementRequests { get; set; }
     public DbSet<MovementRequestLine> MovementRequestLines { get; set; }
     public DbSet<MovementApproval> MovementApprovals { get; set; }
 
-    public DbSet<Shipment> Shipments { get; set; }
-    public DbSet<ShipmentLine> ShipmentLines { get; set; }
+    public DbSet<InventoryTask> InventoryTasks { get; set; }
+    public DbSet<VehicleTask> VehicleTasks { get; set; }
 
     public DbSet<WorkflowDefinition> WorkflowDefinitions { get; set; }
     public DbSet<WorkflowStepDefinition> WorkflowStepDefinitions { get; set; }

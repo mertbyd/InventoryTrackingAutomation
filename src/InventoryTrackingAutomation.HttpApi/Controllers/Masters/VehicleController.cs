@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using SystemStandards.Results;
 using InventoryTrackingAutomation.Dtos.Masters;
+using InventoryTrackingAutomation.Dtos.Stock;
 using InventoryTrackingAutomation.Services.Masters;
 
 namespace InventoryTrackingAutomation.Controllers.Masters;
@@ -15,6 +16,7 @@ namespace InventoryTrackingAutomation.Controllers.Masters;
 /// AraÃ§ CRUD endpoint'leri.
 /// </summary>
 [Route("api/vehicles")]
+[Route("api/v1/vehicles")]
 [ApiExplorerSettings(GroupName = "Masters")]
 [Tags("Vehicles")]
 public class VehicleController : InventoryTrackingAutomationController
@@ -32,6 +34,15 @@ public class VehicleController : InventoryTrackingAutomationController
     public async Task<Result<VehicleDto>> Get(Guid id)
     {
         var result = await _appService.GetAsync(id);
+        return result;
+    }
+
+    /// <summary> Aracin uzerindeki envanterleri getirir. </summary>
+    [HttpGet("{id}/inventories")]
+    [Authorize(InventoryTrackingAutomationPermissions.Inventory.View)]
+    public async Task<Result<List<VehicleInventoryDto>>> GetInventories(Guid id)
+    {
+        var result = await _appService.GetInventoriesAsync(id);
         return result;
     }
 

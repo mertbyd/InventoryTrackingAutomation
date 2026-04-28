@@ -3,10 +3,13 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using InventoryTrackingAutomation.Dtos.Masters;
+using InventoryTrackingAutomation.Dtos.Stock;
 using InventoryTrackingAutomation.Entities.Masters;
 using InventoryTrackingAutomation.Interface.Masters;
 using InventoryTrackingAutomation.Managers.Masters;
+using InventoryTrackingAutomation.Managers.Stock;
 using InventoryTrackingAutomation.Models.Masters;
+using InventoryTrackingAutomation.Models.Stock;
 using InventoryTrackingAutomation.Services.Masters;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Uow;
@@ -20,17 +23,21 @@ public class VehicleAppService : InventoryTrackingAutomationAppService, IVehicle
     private readonly IVehicleRepository _repository;
     // Domain manager — PlateNumber uniqueness ve VehicleType enum validasyonu.
     private readonly VehicleManager _manager;
+    // PITON arac stok gorunurlugu okuma kurallari.
+    private readonly InventoryQueryManager _inventoryQueryManager;
 
     // Tüm bağımlılıkları DI ile alır.
     private readonly IMapper _mapper;
     public VehicleAppService(
         IVehicleRepository repository,
         VehicleManager manager,
+        InventoryQueryManager inventoryQueryManager,
         IMapper mapper)
     {
         _mapper = mapper;
         _repository = repository;
         _manager = manager;
+        _inventoryQueryManager = inventoryQueryManager;
     }
 
     // Id ile aracı getirir; yoksa EntityNotFoundException.
@@ -49,6 +56,13 @@ public class VehicleAppService : InventoryTrackingAutomationAppService, IVehicle
         return new PagedResultDto<VehicleDto>(
             totalCount,
             _mapper.Map<List<Vehicle>, List<VehicleDto>>(entities));
+    }
+
+    // Arac uzerindeki envanterleri getirir; aktif gorev baglami manager tarafinda cozulur.
+    public async Task<List<VehicleInventoryDto>> GetInventoriesAsync(Guid id)
+    {
+        var inventories = await _inventoryQueryManager.GetVehicleInventoriesAsync(id);
+        return _mapper.Map<List<VehicleInventoryModel>, List<VehicleInventoryDto>>(inventories);
     }
 
     // Yeni araç oluşturur — manager iş kurallarını uygular, repository persist eder.

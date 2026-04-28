@@ -9,7 +9,8 @@ public static class InventoryTrackingAutomationDbProperties
     public static string LookupSchema { get; set; } = "lookup";
     public static string MasterSchema { get; set; } = "master";
     public static string StockSchema { get; set; } = "stock";
+    public static string InventorySchema { get; set; } = "inventory";
+    public static string OperationSchema { get; set; } = "operation";
     public static string MovementSchema { get; set; } = "movement";
-    public static string ShipmentSchema { get; set; } = "shipment";
     public static string WorkflowSchema { get; set; } = "workflow";
 }

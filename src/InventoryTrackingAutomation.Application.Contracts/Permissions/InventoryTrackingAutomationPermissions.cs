@@ -30,6 +30,20 @@ public class InventoryTrackingAutomationPermissions
         public const string Manage = Default + ".Manage";
     }
 
+    public static class Tasks
+    {
+        public const string Default = GroupName + ".Tasks";
+        public const string View = Default + ".View";
+        public const string Manage = Default + ".Manage";
+    }
+
+    public static class VehicleTasks
+    {
+        public const string Default = GroupName + ".VehicleTasks";
+        public const string View = Default + ".View";
+        public const string Manage = Default + ".Manage";
+    }
+
     public static class Masters
     {
         public const string Default = GroupName + ".Masters";

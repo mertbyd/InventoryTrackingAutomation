@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using SystemStandards.Results;
 using InventoryTrackingAutomation.Dtos.Masters;
+using InventoryTrackingAutomation.Dtos.Stock;
 using InventoryTrackingAutomation.Services.Masters;
 using InventoryTrackingAutomation.Permissions;
 
@@ -15,6 +16,7 @@ namespace InventoryTrackingAutomation.Controllers.Masters;
 /// Ürün CRUD endpoint'leri.
 /// </summary>
 [Route("api/products")]
+[Route("api/v1/products")]
 [ApiExplorerSettings(GroupName = "Masters")]
 public class ProductController : InventoryTrackingAutomationController
 {
@@ -31,6 +33,15 @@ public class ProductController : InventoryTrackingAutomationController
     public async Task<Result<ProductDto>> Get(Guid id)
     {
         var result = await _appService.GetAsync(id);
+        return result;
+    }
+
+    /// <summary> Urunun depo/arac/gorev bazli stok ozetini getirir. </summary>
+    [HttpGet("{id}/stock-summary")]
+    [Authorize(InventoryTrackingAutomationPermissions.Inventory.View)]
+    public async Task<Result<ProductStockSummaryDto>> GetStockSummary(Guid id)
+    {
+        var result = await _appService.GetStockSummaryAsync(id);
         return result;
     }
 
