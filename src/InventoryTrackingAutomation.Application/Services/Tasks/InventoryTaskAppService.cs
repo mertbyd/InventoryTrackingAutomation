@@ -9,6 +9,7 @@ using InventoryTrackingAutomation.Managers.Stock;
 using InventoryTrackingAutomation.Managers.Tasks;
 using InventoryTrackingAutomation.Models.Tasks;
 using InventoryTrackingAutomation.Services.Tasks;
+using FluentValidation;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Uow;
 
@@ -20,17 +21,23 @@ public class InventoryTaskAppService : InventoryTrackingAutomationAppService, II
     private readonly IInventoryTaskRepository _repository;
     private readonly InventoryTaskManager _manager;
     private readonly InventoryQueryManager _inventoryQueryManager;
+    private readonly IValidator<CreateInventoryTaskDto> _createValidator;
+    private readonly IValidator<UpdateInventoryTaskDto> _updateValidator;
     private readonly IMapper _mapper;
 
     public InventoryTaskAppService(
         IInventoryTaskRepository repository,
         InventoryTaskManager manager,
         InventoryQueryManager inventoryQueryManager,
+        IValidator<CreateInventoryTaskDto> createValidator,
+        IValidator<UpdateInventoryTaskDto> updateValidator,
         IMapper mapper)
     {
         _repository = repository;
         _manager = manager;
         _inventoryQueryManager = inventoryQueryManager;
+        _createValidator = createValidator;
+        _updateValidator = updateValidator;
         _mapper = mapper;
     }
 
@@ -62,6 +69,7 @@ public class InventoryTaskAppService : InventoryTrackingAutomationAppService, II
     [UnitOfWork]
     public async Task<InventoryTaskDto> CreateAsync(CreateInventoryTaskDto input)
     {
+        await _createValidator.ValidateAndThrowAsync(input);
         var model = _mapper.Map<CreateInventoryTaskDto, CreateInventoryTaskModel>(input);
         var entity = await _manager.CreateAsync(model);
         var inserted = await _repository.InsertAsync(entity, autoSave: true);
@@ -74,6 +82,7 @@ public class InventoryTaskAppService : InventoryTrackingAutomationAppService, II
         var entities = new List<InventoryTask>();
         foreach (var dto in inputs)
         {
+            await _createValidator.ValidateAndThrowAsync(dto);
             var model = _mapper.Map<CreateInventoryTaskDto, CreateInventoryTaskModel>(dto);
             entities.Add(await _manager.CreateAsync(model));
         }
@@ -85,6 +94,7 @@ public class InventoryTaskAppService : InventoryTrackingAutomationAppService, II
     [UnitOfWork]
     public async Task<InventoryTaskDto> UpdateAsync(Guid id, UpdateInventoryTaskDto input)
     {
+        await _updateValidator.ValidateAndThrowAsync(input);
         var existing = await _manager.EnsureExistsAsync(id);
         var model = _mapper.Map<UpdateInventoryTaskDto, UpdateInventoryTaskModel>(input);
         var updated = await _manager.UpdateAsync(existing, model);
