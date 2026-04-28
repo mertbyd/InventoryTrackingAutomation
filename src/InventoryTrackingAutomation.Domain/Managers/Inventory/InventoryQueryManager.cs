@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using InventoryTrackingAutomation.Enums.Tasks;
+using InventoryTrackingAutomation.Enums.Inventory;
 using InventoryTrackingAutomation.Enums;
 using InventoryTrackingAutomation.Interface.Stock;
 using InventoryTrackingAutomation.Interface.Tasks;
@@ -44,7 +46,7 @@ public class InventoryQueryManager : ITransientDependency
 
         var locations = await _stockLocationRepository.GetListAsync(x => x.ProductId == productId);
         var activeVehicleTasks = await GetActiveVehicleTasksAsync(locations
-            .Where(x => x.LocationType == InventoryLocationTypeEnum.Vehicle)
+            .Where(x => x.LocationType == StockLocationTypeEnum.Vehicle)
             .Select(x => (Guid?)x.LocationId));
 
         var locationSummaries = locations
@@ -56,10 +58,10 @@ public class InventoryQueryManager : ITransientDependency
             ProductId = productId,
             TotalQuantity = locations.Sum(x => x.Quantity),
             WarehouseQuantity = locations
-                .Where(x => x.LocationType == InventoryLocationTypeEnum.Warehouse)
+                .Where(x => x.LocationType == StockLocationTypeEnum.Warehouse)
                 .Sum(x => x.Quantity),
             VehicleQuantity = locations
-                .Where(x => x.LocationType == InventoryLocationTypeEnum.Vehicle)
+                .Where(x => x.LocationType == StockLocationTypeEnum.Vehicle)
                 .Sum(x => x.Quantity),
             ActiveTaskQuantity = locationSummaries
                 .Where(x => x.InventoryTaskId.HasValue)
@@ -73,7 +75,7 @@ public class InventoryQueryManager : ITransientDependency
         await _vehicleManager.EnsureExistsAsync(vehicleId);
 
         var locations = await _stockLocationRepository.GetListAsync(x =>
-            x.LocationType == InventoryLocationTypeEnum.Vehicle &&
+            x.LocationType == StockLocationTypeEnum.Vehicle &&
             x.LocationId == vehicleId);
         var activeVehicleTask = (await _vehicleTaskRepository.GetListAsync(x =>
                 x.VehicleId == vehicleId &&
@@ -120,7 +122,7 @@ public class InventoryQueryManager : ITransientDependency
             x.IsActive);
         var vehicleIds = vehicleTasks.Select(x => x.VehicleId).Distinct().ToList();
         var locations = await _stockLocationRepository.GetListAsync(x =>
-            x.LocationType == InventoryLocationTypeEnum.Vehicle &&
+            x.LocationType == StockLocationTypeEnum.Vehicle &&
             vehicleIds.Contains(x.LocationId));
 
         return locations
@@ -161,15 +163,15 @@ public class InventoryQueryManager : ITransientDependency
         IReadOnlyCollection<Entities.Tasks.VehicleTask> activeVehicleTasks)
     {
         // Arac lokasyonlarinda aktif gorev baglami gorunurluge eklenir.
-        var vehicleTask = location.LocationType == InventoryLocationTypeEnum.Vehicle
+        var vehicleTask = location.LocationType == StockLocationTypeEnum.Vehicle
             ? activeVehicleTasks.FirstOrDefault(x => x.VehicleId == location.LocationId)
             : null;
 
         return new ProductStockLocationSummaryModel
         {
             LocationType = location.LocationType,
-            WarehouseId = location.LocationType == InventoryLocationTypeEnum.Warehouse ? location.LocationId : null,
-            VehicleId = location.LocationType == InventoryLocationTypeEnum.Vehicle ? location.LocationId : null,
+            WarehouseId = location.LocationType == StockLocationTypeEnum.Warehouse ? location.LocationId : null,
+            VehicleId = location.LocationType == StockLocationTypeEnum.Vehicle ? location.LocationId : null,
             VehicleTaskId = vehicleTask?.Id,
             InventoryTaskId = vehicleTask?.InventoryTaskId,
             Quantity = location.Quantity,

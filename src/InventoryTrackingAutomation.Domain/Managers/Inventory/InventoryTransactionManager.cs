@@ -13,6 +13,8 @@ namespace InventoryTrackingAutomation.Managers.Stock;
 /// <summary>
 /// InventoryTransaction domain manager'i - stok hareketi denetim kaydi kurallarini yonetir.
 /// </summary>
+//işlevi: Stok hareketlerinin (ledger/defter) kayıt altına alınmasını yönetir.
+//sistemdeki görevii: Tüm stok değişimlerinin tarihçesini (audit trail) tutar ve geçmişe dönük izlenebilirlik sağlar.
 public class InventoryTransactionManager : BaseManager<InventoryTransaction>
 {
     private readonly IProductRepository _productRepository;

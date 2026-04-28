@@ -1,4 +1,6 @@
 using System;
+using InventoryTrackingAutomation.Enums.Tasks;
+using InventoryTrackingAutomation.Enums.Inventory;
 using InventoryTrackingAutomation.Enums;
 
 namespace InventoryTrackingAutomation.Dtos.Stock;
@@ -8,7 +10,7 @@ namespace InventoryTrackingAutomation.Dtos.Stock;
 /// </summary>
 public class ProductStockLocationSummaryDto
 {
-    public InventoryLocationTypeEnum LocationType { get; set; } // Lokasyon tipi.
+    public StockLocationTypeEnum LocationType { get; set; } // Lokasyon tipi.
     public Guid? WarehouseId { get; set; }                  // Depo Warehouse Id'si.
     public Guid? VehicleId { get; set; }                        // Arac Id'si.
     public Guid? VehicleTaskId { get; set; }                    // Aktif gorev-arac atama Id'si.

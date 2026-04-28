@@ -3,6 +3,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using InventoryTrackingAutomation.Entities.Movements;
 using InventoryTrackingAutomation.Entities.Stock;
+using InventoryTrackingAutomation.Enums.Tasks;
+using InventoryTrackingAutomation.Enums.Inventory;
 using InventoryTrackingAutomation.Enums;
 using InventoryTrackingAutomation.Interface.Stock;
 using InventoryTrackingAutomation.Interface.Tasks;
@@ -14,6 +16,8 @@ namespace InventoryTrackingAutomation.Managers.Stock;
 /// <summary>
 /// Hareket talebi stok kurallarini yoneten domain manager.
 /// </summary>
+//işlevi: Hareket talebi onaylandığında stok düşümü, artırımı ve ledger (transaction) kayıtlarını yönetir.
+//sistemdeki görevii: Onaylanmış transferlerin stok üzerindeki etkilerini uygular. PITON planı uyarınca StockTransferManager ile değiştirilecek ve silinecektir.
 public class MovementRequestStockManager : DomainService
 {
     private readonly IStockLocationRepository _stockLocationRepository;
@@ -47,7 +51,7 @@ public class MovementRequestStockManager : DomainService
         // Onaylanan hareket sadece yeni polymorphic stok lokasyonundan dusulur.
         var sourceLocation = await _stockLocationRepository.FindAsync(x =>
             x.ProductId == line.ProductId &&
-            x.LocationType == InventoryLocationTypeEnum.Warehouse &&
+            x.LocationType == StockLocationTypeEnum.Warehouse &&
             x.LocationId == request.SourceWarehouseId);
 
         if (sourceLocation == null || sourceLocation.Quantity < line.Quantity)
@@ -81,34 +85,34 @@ public class MovementRequestStockManager : DomainService
     private async Task<StockLocation?> FindTargetStockLocationAsync(
         MovementRequest request,
         MovementRequestLine line,
-        InventoryLocationTypeEnum targetLocationType)
+        StockLocationTypeEnum targetLocationType)
     {
-        if (targetLocationType == InventoryLocationTypeEnum.Vehicle)
+        if (targetLocationType == StockLocationTypeEnum.Vehicle)
         {
             return await _stockLocationRepository.FindAsync(x =>
                 x.ProductId == line.ProductId &&
-                x.LocationType == InventoryLocationTypeEnum.Vehicle &&
+                x.LocationType == StockLocationTypeEnum.Vehicle &&
                 x.LocationId == request.RequestedVehicleId);
         }
 
         return await _stockLocationRepository.FindAsync(x =>
             x.ProductId == line.ProductId &&
-            x.LocationType == InventoryLocationTypeEnum.Warehouse &&
+            x.LocationType == StockLocationTypeEnum.Warehouse &&
             x.LocationId == request.TargetWarehouseId);
     }
 
     private StockLocation CreateTargetStockLocation(
         MovementRequest request,
         MovementRequestLine line,
-        InventoryLocationTypeEnum targetLocationType)
+        StockLocationTypeEnum targetLocationType)
     {
         // Hedef lokasyon arac secimine gore arac veya depo olarak olusturulur.
         return new StockLocation(GuidGenerator.Create())
         {
             ProductId = line.ProductId,
             LocationType = targetLocationType,
-            LocationId = targetLocationType == InventoryLocationTypeEnum.Warehouse
-                ? request.TargetWarehouseId
+            LocationId = targetLocationType == StockLocationTypeEnum.Warehouse
+                ? request.TargetWarehouseId!.Value
                 : request.RequestedVehicleId!.Value,
             Quantity = line.Quantity,
             ReservedQuantity = 0
@@ -126,10 +130,10 @@ public class MovementRequestStockManager : DomainService
             ProductId = line.ProductId,
             TransactionType = ResolveTransactionType(targetLocationType),
             Quantity = line.Quantity,
-            SourceLocationType = InventoryLocationTypeEnum.Warehouse,
+            SourceLocationType = StockLocationTypeEnum.Warehouse,
             SourceLocationId = request.SourceWarehouseId,
             TargetLocationType = targetLocationType,
-            TargetLocationId = targetLocationType == InventoryLocationTypeEnum.Warehouse
+            TargetLocationId = targetLocationType == StockLocationTypeEnum.Warehouse
                 ? request.TargetWarehouseId
                 : request.RequestedVehicleId,
             RelatedMovementRequestId = request.Id,
@@ -162,17 +166,17 @@ public class MovementRequestStockManager : DomainService
         return activeVehicleTask.Id;
     }
 
-    private static InventoryLocationTypeEnum ResolveTargetLocationType(MovementRequest request)
+    private static StockLocationTypeEnum ResolveTargetLocationType(MovementRequest request)
     {
         // Arac secildiyse malzeme gorevdeki araca, aksi halde hedef depoya gider.
         return request.RequestedVehicleId.HasValue
-            ? InventoryLocationTypeEnum.Vehicle
-            : InventoryLocationTypeEnum.Warehouse;
+            ? StockLocationTypeEnum.Vehicle
+            : StockLocationTypeEnum.Warehouse;
     }
 
-    private static InventoryTransactionTypeEnum ResolveTransactionType(InventoryLocationTypeEnum targetLocationType)
+    private static InventoryTransactionTypeEnum ResolveTransactionType(StockLocationTypeEnum targetLocationType)
     {
-        return targetLocationType == InventoryLocationTypeEnum.Vehicle
+        return targetLocationType == StockLocationTypeEnum.Vehicle
             ? InventoryTransactionTypeEnum.WarehouseToVehicle
             : InventoryTransactionTypeEnum.WarehouseToWarehouse;
     }

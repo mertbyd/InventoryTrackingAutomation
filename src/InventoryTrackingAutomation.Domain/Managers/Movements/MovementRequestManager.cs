@@ -15,6 +15,8 @@ using Volo.Abp.EventBus.Local;
 namespace InventoryTrackingAutomation.Managers.Movements;
 
 // Hareket talebi domain manager'i - MovementRequest icin is kurallari, FK validasyonu ve workflow tetikleme.
+//işlevi: Hareket taleplerinin (MovementRequest) oluşturulması, güncellenmesi ve workflow süreçlerinin başlatılmasını yönetir.
+//sistemdeki görevii: Talep aşamasındaki iş kurallarını (validasyonlar, benzersizlik kontrolleri) uygular ve onay sürecini tetikler.
 public class MovementRequestManager : BaseManager<MovementRequest>
 {
     private readonly IWarehouseRepository _warehouseRepository;

@@ -1,4 +1,6 @@
 using System;
+using InventoryTrackingAutomation.Enums.Tasks;
+using InventoryTrackingAutomation.Enums.Inventory;
 using InventoryTrackingAutomation.Enums;
 using Volo.Abp.Domain.Entities.Auditing;
 using Volo.Abp.MultiTenancy;
@@ -13,9 +15,9 @@ public class InventoryTransaction : FullAuditedAggregateRoot<Guid>, IMultiTenant
     public Guid ProductId { get; set; } // Hareket eden urun baglamini tasir.
     public InventoryTransactionTypeEnum TransactionType { get; set; } // Hareketin yon ve sebep tipini belirler.
     public int Quantity { get; set; } // Transfer edilen miktari tasir.
-    public InventoryLocationTypeEnum? SourceLocationType { get; set; } // Kaynak lokasyonun depo mu arac mi oldugunu belirler.
+    public StockLocationTypeEnum? SourceLocationType { get; set; } // Kaynak lokasyonun depo mu arac mi oldugunu belirler.
     public Guid? SourceLocationId { get; set; } // Kaynak depo veya arac kimligini tasir.
-    public InventoryLocationTypeEnum? TargetLocationType { get; set; } // Hedef lokasyonun depo mu arac mi oldugunu belirler.
+    public StockLocationTypeEnum? TargetLocationType { get; set; } // Hedef lokasyonun depo mu arac mi oldugunu belirler.
     public Guid? TargetLocationId { get; set; } // Hedef depo veya arac kimligini tasir.
     public Guid? RelatedMovementRequestId { get; set; } // Hareketi doguran talep baglamini tasir.
     public Guid? RelatedTaskId { get; set; } // Hareketin bagli oldugu saha gorevi baglamini tasir.

@@ -1,4 +1,6 @@
 using System;
+using InventoryTrackingAutomation.Enums.Tasks;
+using InventoryTrackingAutomation.Enums.Inventory;
 using InventoryTrackingAutomation.Enums;
 
 namespace InventoryTrackingAutomation.Models.Tasks;
@@ -13,7 +15,7 @@ public class UpdateInventoryTaskModel
     public string Region { get; set; }               // Gorev bolgesi.
     public DateTime StartDate { get; set; }          // Baslangic tarihi.
     public DateTime? EndDate { get; set; }           // Bitis tarihi.
-    public InventoryTaskStatusEnum Status { get; set; } // Gorev durumu.
+    public TaskStatusEnum Status { get; set; } // Gorev durumu.
     public string? Description { get; set; }         // Gorev aciklamasi.
     public bool IsActive { get; set; }               // Aktiflik bilgisi.
 }

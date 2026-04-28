@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using InventoryTrackingAutomation.Entities.Masters;
+using InventoryTrackingAutomation.Enums.Tasks;
+using InventoryTrackingAutomation.Enums.Inventory;
 using InventoryTrackingAutomation.Enums;
 using InventoryTrackingAutomation.Roles;
 using Volo.Abp.Data;
@@ -305,7 +307,7 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
                     await _stockLocationRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Stock.StockLocation(_guidGenerator.Create())
                     {
                         ProductId = beton.Id,
-                        LocationType = InventoryLocationTypeEnum.Warehouse,
+                        LocationType = StockLocationTypeEnum.Warehouse,
                         LocationId = warehouse1.Id,
                         Quantity = 1000,
                         ReservedQuantity = 150
@@ -319,7 +321,7 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
                     await _stockLocationRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Stock.StockLocation(_guidGenerator.Create())
                     {
                         ProductId = demir.Id,
-                        LocationType = InventoryLocationTypeEnum.Warehouse,
+                        LocationType = StockLocationTypeEnum.Warehouse,
                         LocationId = warehouse1.Id,
                         Quantity = 50,
                         ReservedQuantity = 10
@@ -333,7 +335,7 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
                     await _stockLocationRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Stock.StockLocation(_guidGenerator.Create())
                     {
                         ProductId = kum.Id,
-                        LocationType = InventoryLocationTypeEnum.Warehouse,
+                        LocationType = StockLocationTypeEnum.Warehouse,
                         LocationId = warehouse1.Id,
                         Quantity = 500,
                         ReservedQuantity = 100
@@ -347,7 +349,7 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
                     await _stockLocationRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Stock.StockLocation(_guidGenerator.Create())
                     {
                         ProductId = cakil.Id,
-                        LocationType = InventoryLocationTypeEnum.Warehouse,
+                        LocationType = StockLocationTypeEnum.Warehouse,
                         LocationId = warehouse1.Id,
                         Quantity = 800,
                         ReservedQuantity = 200
@@ -361,7 +363,7 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
                     await _stockLocationRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Stock.StockLocation(_guidGenerator.Create())
                     {
                         ProductId = hilti.Id,
-                        LocationType = InventoryLocationTypeEnum.Warehouse,
+                        LocationType = StockLocationTypeEnum.Warehouse,
                         LocationId = warehouse1.Id,
                         Quantity = 10,
                         ReservedQuantity = 2
@@ -375,7 +377,7 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
                     await _stockLocationRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Stock.StockLocation(_guidGenerator.Create())
                     {
                         ProductId = bosch.Id,
-                        LocationType = InventoryLocationTypeEnum.Warehouse,
+                        LocationType = StockLocationTypeEnum.Warehouse,
                         LocationId = warehouse1.Id,
                         Quantity = 8,
                         ReservedQuantity = 1
@@ -389,7 +391,7 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
                     await _stockLocationRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Stock.StockLocation(_guidGenerator.Create())
                     {
                         ProductId = iskele.Id,
-                        LocationType = InventoryLocationTypeEnum.Warehouse,
+                        LocationType = StockLocationTypeEnum.Warehouse,
                         LocationId = warehouse1.Id,
                         Quantity = 50,
                         ReservedQuantity = 15
@@ -403,7 +405,7 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
                     await _stockLocationRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Stock.StockLocation(_guidGenerator.Create())
                     {
                         ProductId = kemeri.Id,
-                        LocationType = InventoryLocationTypeEnum.Warehouse,
+                        LocationType = StockLocationTypeEnum.Warehouse,
                         LocationId = warehouse1.Id,
                         Quantity = 100,
                         ReservedQuantity = 20
@@ -419,7 +421,7 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
                         await _stockLocationRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Stock.StockLocation(_guidGenerator.Create())
                         {
                             ProductId = beton.Id,
-                            LocationType = InventoryLocationTypeEnum.Warehouse,
+                            LocationType = StockLocationTypeEnum.Warehouse,
                             LocationId = warehouse2.Id,
                             Quantity = 600,
                             ReservedQuantity = 50
