@@ -32,6 +32,9 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
     private readonly IRepository<Worker, Guid> _workerRepository;
     private readonly IRepository<Vehicle, Guid> _vehicleRepository;
     private readonly IRepository<InventoryTrackingAutomation.Entities.Inventory.StockLocation, Guid> _stockLocationRepository;
+    private readonly IRepository<InventoryTrackingAutomation.Entities.Inventory.InventoryTransaction, Guid> _inventoryTransactionRepository;
+    private readonly IRepository<InventoryTrackingAutomation.Entities.Tasks.InventoryTask, Guid> _inventoryTaskRepository;
+    private readonly IRepository<InventoryTrackingAutomation.Entities.Tasks.VehicleTask, Guid> _vehicleTaskRepository;
     private readonly InventoryTrackingAutomation.Interface.Workflows.IWorkflowDefinitionRepository _workflowDefinitionRepository;
     private readonly IdentityRoleManager _identityRoleManager;
     private readonly IdentityUserManager _identityUserManager;
@@ -46,6 +49,9 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
         IRepository<Worker, Guid> workerRepository,
         IRepository<Vehicle, Guid> vehicleRepository,
         IRepository<InventoryTrackingAutomation.Entities.Inventory.StockLocation, Guid> stockLocationRepository,
+        IRepository<InventoryTrackingAutomation.Entities.Inventory.InventoryTransaction, Guid> inventoryTransactionRepository,
+        IRepository<InventoryTrackingAutomation.Entities.Tasks.InventoryTask, Guid> inventoryTaskRepository,
+        IRepository<InventoryTrackingAutomation.Entities.Tasks.VehicleTask, Guid> vehicleTaskRepository,
         InventoryTrackingAutomation.Interface.Workflows.IWorkflowDefinitionRepository workflowDefinitionRepository,
         IdentityRoleManager identityRoleManager,
         IdentityUserManager identityUserManager,
@@ -59,6 +65,9 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
         _workerRepository = workerRepository;
         _vehicleRepository = vehicleRepository;
         _stockLocationRepository = stockLocationRepository;
+        _inventoryTransactionRepository = inventoryTransactionRepository;
+        _inventoryTaskRepository = inventoryTaskRepository;
+        _vehicleTaskRepository = vehicleTaskRepository;
         _workflowDefinitionRepository = workflowDefinitionRepository;
         _identityRoleManager = identityRoleManager;
         _identityUserManager = identityUserManager;
@@ -471,6 +480,191 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
 
             await _workflowDefinitionRepository.InsertAsync(workflowDef, autoSave: true);
         }
+
+        // 9. InventoryTask + VehicleTask + Araç Stokları + InventoryTransaction seed verileri
+        // PDF senaryosu: "Telsiz 20 adet → 10 depoda, 5 araç-1'de, 5 araç-2'de"
+        await SeedTasksAndTransactionsAsync();
+    }
+
+    private async Task SeedTasksAndTransactionsAsync()
+    {
+        if (await _inventoryTaskRepository.GetCountAsync() > 0) return;
+
+        // Gerekli verileri çek
+        var allVehicles = await _vehicleRepository.GetListAsync();
+        var allProducts = await _productRepository.GetListAsync();
+        var allWarehouses = await _warehouseRepository.GetListAsync();
+        var allWorkers = await _workerRepository.GetListAsync();
+
+        var vehicle1 = allVehicles.FirstOrDefault(v => v.PlateNumber == "34 ABC 123");
+        var vehicle2 = allVehicles.FirstOrDefault(v => v.PlateNumber == "34 ABC 456");
+        var warehouse1 = allWarehouses.FirstOrDefault(w => w.Code == "WH-01");
+        var telsiz = allProducts.FirstOrDefault(p => p.Code == "EQP-01"); // Hilti Kırıcı → Telsiz olarak kullan
+        var matkap = allProducts.FirstOrDefault(p => p.Code == "EQP-02");
+        var driverAli = allWorkers.FirstOrDefault(w => w.RegistrationNumber == "DRV-001");
+        var driverVeli = allWorkers.FirstOrDefault(w => w.RegistrationNumber == "DRV-002");
+
+        if (vehicle1 == null || vehicle2 == null || warehouse1 == null || telsiz == null || matkap == null) return;
+        if (driverAli == null || driverVeli == null) return;
+
+        // --- InventoryTask 1: İzmir Saha Destek Görevi (InProgress) ---
+        var task1 = new InventoryTrackingAutomation.Entities.Tasks.InventoryTask(_guidGenerator.Create())
+        {
+            Code = "TSK-001",
+            Name = "İzmir Saha Destek Görevi",
+            Region = "İzmir / Bornova",
+            StartDate = DateTime.UtcNow.AddDays(-3),
+            EndDate = null,
+            Status = TaskStatusEnum.InProgress,
+            Description = "İzmir Bornova bölgesinde saha destek operasyonu.",
+            ReturnWarehouseId = warehouse1.Id,
+            IsActive = true
+        };
+        await _inventoryTaskRepository.InsertAsync(task1, autoSave: true);
+
+        // --- InventoryTask 2: Ankara Bakım Görevi (Draft) ---
+        var task2 = new InventoryTrackingAutomation.Entities.Tasks.InventoryTask(_guidGenerator.Create())
+        {
+            Code = "TSK-002",
+            Name = "Ankara Bakım Görevi",
+            Region = "Ankara / Çankaya",
+            StartDate = DateTime.UtcNow.AddDays(2),
+            EndDate = DateTime.UtcNow.AddDays(5),
+            Status = TaskStatusEnum.Draft,
+            Description = "Ankara Çankaya bölgesinde planlı bakım operasyonu.",
+            ReturnWarehouseId = warehouse1.Id,
+            IsActive = true
+        };
+        await _inventoryTaskRepository.InsertAsync(task2, autoSave: true);
+
+        // --- InventoryTask 3: Tamamlanmış Görev ---
+        var task3 = new InventoryTrackingAutomation.Entities.Tasks.InventoryTask(_guidGenerator.Create())
+        {
+            Code = "TSK-003",
+            Name = "Bursa Acil Müdahale",
+            Region = "Bursa / Nilüfer",
+            StartDate = DateTime.UtcNow.AddDays(-10),
+            EndDate = DateTime.UtcNow.AddDays(-7),
+            Status = TaskStatusEnum.Completed,
+            Description = "Bursa Nilüfer bölgesinde tamamlanmış acil müdahale.",
+            ReturnWarehouseId = warehouse1.Id,
+            IsActive = false
+        };
+        await _inventoryTaskRepository.InsertAsync(task3, autoSave: true);
+
+        // --- VehicleTask: 34 ABC 123 → İzmir Görevi, Şoför Ali ---
+        var vt1 = new InventoryTrackingAutomation.Entities.Tasks.VehicleTask(_guidGenerator.Create())
+        {
+            VehicleId = vehicle1.Id,
+            InventoryTaskId = task1.Id,
+            DriverWorkerId = driverAli.Id,
+            AssignedAt = DateTime.UtcNow.AddDays(-3),
+            IsActive = true
+        };
+        await _vehicleTaskRepository.InsertAsync(vt1, autoSave: true);
+
+        // --- VehicleTask: 34 ABC 456 → İzmir Görevi, Şoför Veli ---
+        var vt2 = new InventoryTrackingAutomation.Entities.Tasks.VehicleTask(_guidGenerator.Create())
+        {
+            VehicleId = vehicle2.Id,
+            InventoryTaskId = task1.Id,
+            DriverWorkerId = driverVeli.Id,
+            AssignedAt = DateTime.UtcNow.AddDays(-3),
+            IsActive = true
+        };
+        await _vehicleTaskRepository.InsertAsync(vt2, autoSave: true);
+
+        // --- Araç Üstü Stoklar (StockLocation) ---
+        // Araç 1'de 3 adet Hilti Kırıcı
+        await _stockLocationRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Inventory.StockLocation(_guidGenerator.Create())
+        {
+            ProductId = telsiz.Id,
+            LocationType = StockLocationTypeEnum.Vehicle,
+            LocationId = vehicle1.Id,
+            Quantity = 3,
+            ReservedQuantity = 0
+        }, autoSave: true);
+
+        // Araç 2'de 2 adet Hilti Kırıcı
+        await _stockLocationRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Inventory.StockLocation(_guidGenerator.Create())
+        {
+            ProductId = telsiz.Id,
+            LocationType = StockLocationTypeEnum.Vehicle,
+            LocationId = vehicle2.Id,
+            Quantity = 2,
+            ReservedQuantity = 0
+        }, autoSave: true);
+
+        // Araç 1'de 1 adet Bosch Matkap
+        await _stockLocationRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Inventory.StockLocation(_guidGenerator.Create())
+        {
+            ProductId = matkap.Id,
+            LocationType = StockLocationTypeEnum.Vehicle,
+            LocationId = vehicle1.Id,
+            Quantity = 1,
+            ReservedQuantity = 0
+        }, autoSave: true);
+
+        // --- InventoryTransaction Ledger Kayıtları ---
+        // Hilti Kırıcı: Depodan Araç 1'e 3 adet
+        await _inventoryTransactionRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Inventory.InventoryTransaction(_guidGenerator.Create())
+        {
+            ProductId = telsiz.Id,
+            TransactionType = InventoryTransactionTypeEnum.WarehouseToVehicle,
+            Quantity = 3,
+            SourceLocationType = StockLocationTypeEnum.Warehouse,
+            SourceLocationId = warehouse1.Id,
+            TargetLocationType = StockLocationTypeEnum.Vehicle,
+            TargetLocationId = vehicle1.Id,
+            RelatedTaskId = task1.Id,
+            OccurredAt = DateTime.UtcNow.AddDays(-3),
+            Note = "İzmir Saha Destek Görevi için Hilti Kırıcı yükleme"
+        }, autoSave: true);
+
+        // Hilti Kırıcı: Depodan Araç 2'ye 2 adet
+        await _inventoryTransactionRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Inventory.InventoryTransaction(_guidGenerator.Create())
+        {
+            ProductId = telsiz.Id,
+            TransactionType = InventoryTransactionTypeEnum.WarehouseToVehicle,
+            Quantity = 2,
+            SourceLocationType = StockLocationTypeEnum.Warehouse,
+            SourceLocationId = warehouse1.Id,
+            TargetLocationType = StockLocationTypeEnum.Vehicle,
+            TargetLocationId = vehicle2.Id,
+            RelatedTaskId = task1.Id,
+            OccurredAt = DateTime.UtcNow.AddDays(-3),
+            Note = "İzmir Saha Destek Görevi için Hilti Kırıcı yükleme"
+        }, autoSave: true);
+
+        // Bosch Matkap: Depodan Araç 1'e 1 adet
+        await _inventoryTransactionRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Inventory.InventoryTransaction(_guidGenerator.Create())
+        {
+            ProductId = matkap.Id,
+            TransactionType = InventoryTransactionTypeEnum.WarehouseToVehicle,
+            Quantity = 1,
+            SourceLocationType = StockLocationTypeEnum.Warehouse,
+            SourceLocationId = warehouse1.Id,
+            TargetLocationType = StockLocationTypeEnum.Vehicle,
+            TargetLocationId = vehicle1.Id,
+            RelatedTaskId = task1.Id,
+            OccurredAt = DateTime.UtcNow.AddDays(-3),
+            Note = "İzmir Saha Destek Görevi için Bosch Matkap yükleme"
+        }, autoSave: true);
+
+        // Tamamlanmış görev: iade transaction'ı (Araçtan depoya geri dönüş)
+        await _inventoryTransactionRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Inventory.InventoryTransaction(_guidGenerator.Create())
+        {
+            ProductId = telsiz.Id,
+            TransactionType = InventoryTransactionTypeEnum.VehicleToWarehouse,
+            Quantity = 2,
+            SourceLocationType = StockLocationTypeEnum.Vehicle,
+            SourceLocationId = vehicle1.Id,
+            TargetLocationType = StockLocationTypeEnum.Warehouse,
+            TargetLocationId = warehouse1.Id,
+            RelatedTaskId = task3.Id,
+            OccurredAt = DateTime.UtcNow.AddDays(-7),
+            Note = "Bursa Acil Müdahale tamamlandı - ekipman iadesi"
+        }, autoSave: true);
     }
 
     private async Task CleanupOrphanWorkersAsync()
@@ -639,6 +833,14 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
                 InventoryTrackingAutomationPermissions.Tasks.View,
                 InventoryTrackingAutomationPermissions.VehicleTasks.View,
                 InventoryTrackingAutomationPermissions.VehicleTasks.Manage
+            },
+
+            [InventoryTrackingAutomationRoleConstants.Driver] = new[]
+            {
+                InventoryTrackingAutomationPermissions.Inventory.View,
+                InventoryTrackingAutomationPermissions.Tasks.View,
+                InventoryTrackingAutomationPermissions.VehicleTasks.View,
+                InventoryTrackingAutomationPermissions.Masters.View
             }
         };
 
@@ -687,7 +889,9 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
             new { Username = "worker.warehouse02", Email = "worker.warehouse02@inventorysystem.local", Password = "123456aA@", FullName = "Depo Operatörü - Depo 2", Roles = new[] { InventoryTrackingAutomationRoleConstants.WarehouseWorker }, RegNo = "WRK-WH-002", WorkerType = WorkerTypeEnum.BlueCollar, ManagerUsername = "approver.warehouse" },
             new { Username = "worker.field01", Email = "worker.field01@inventorysystem.local", Password = "123456aA@", FullName = "Saha Teknikeri - Kadıköy", Roles = new[] { InventoryTrackingAutomationRoleConstants.FieldWorker }, RegNo = "WRK-FLD-001", WorkerType = WorkerTypeEnum.BlueCollar, ManagerUsername = "supervisor.logistics" },
             new { Username = "worker.field02", Email = "worker.field02@inventorysystem.local", Password = "123456aA@", FullName = "Saha Teknikeri - Taksim", Roles = new[] { InventoryTrackingAutomationRoleConstants.FieldWorker }, RegNo = "WRK-FLD-002", WorkerType = WorkerTypeEnum.BlueCollar, ManagerUsername = "supervisor.logistics" },
-            new { Username = "manager.vehicle", Email = "manager.vehicle@inventorysystem.local", Password = "123456aA@", FullName = "Araç Servis Müdürü", Roles = new[] { InventoryTrackingAutomationRoleConstants.VehicleManager }, RegNo = "MGR-VHC-001", WorkerType = WorkerTypeEnum.WhiteCollar, ManagerUsername = "manager.istanbul" }
+            new { Username = "manager.vehicle", Email = "manager.vehicle@inventorysystem.local", Password = "123456aA@", FullName = "Araç Servis Müdürü", Roles = new[] { InventoryTrackingAutomationRoleConstants.VehicleManager }, RegNo = "MGR-VHC-001", WorkerType = WorkerTypeEnum.WhiteCollar, ManagerUsername = "manager.istanbul" },
+            new { Username = "driver.ali", Email = "driver.ali@inventorysystem.local", Password = "123456aA@", FullName = "Ali Yılmaz (Şoför)", Roles = new[] { InventoryTrackingAutomationRoleConstants.Driver }, RegNo = "DRV-001", WorkerType = WorkerTypeEnum.BlueCollar, ManagerUsername = "manager.vehicle" },
+            new { Username = "driver.veli", Email = "driver.veli@inventorysystem.local", Password = "123456aA@", FullName = "Veli Demir (Şoför)", Roles = new[] { InventoryTrackingAutomationRoleConstants.Driver }, RegNo = "DRV-002", WorkerType = WorkerTypeEnum.BlueCollar, ManagerUsername = "manager.vehicle" }
         };
 
         // Departmanlar ve Warehouseler hazırla
