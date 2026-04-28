@@ -36,6 +36,5 @@ public class InventoryTrackingAutomationSettingDefinitionProvider : SettingDefin
 
         context.Add(new SettingDefinition(InventoryTrackingAutomationSettings.Stock.AllowedStockMovementTypes, GetEnumValues<StockMovementTypeEnum>()));
 
-        context.Add(new SettingDefinition(InventoryTrackingAutomationSettings.Shipments.AllowedShipmentStatuses, GetEnumValues<ShipmentStatusEnum>()));
     }
 }

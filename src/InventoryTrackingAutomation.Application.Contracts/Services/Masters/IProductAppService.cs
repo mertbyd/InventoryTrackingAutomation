@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using InventoryTrackingAutomation.Dtos.Masters;
+using InventoryTrackingAutomation.Dtos.Stock;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Application.Services;
 
@@ -17,6 +18,9 @@ public interface IProductAppService : IApplicationService
 
     /// <summary> Ürünleri sayfalı listeler. </summary>
     Task<PagedResultDto<ProductDto>> GetListAsync(PagedResultRequestDto input);
+
+    /// <summary> Urunun depo/arac/gorev bazli stok ozetini getirir. </summary>
+    Task<ProductStockSummaryDto> GetStockSummaryAsync(Guid id);
 
     /// <summary> Yeni ürün oluşturur. </summary>
     Task<ProductDto> CreateAsync(CreateProductDto input);

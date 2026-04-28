@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using InventoryTrackingAutomation.Dtos.Masters;
+using InventoryTrackingAutomation.Dtos.Stock;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Application.Services;
 
@@ -17,6 +18,9 @@ public interface IVehicleAppService : IApplicationService
 
     /// <summary> Araçları sayfalı listeler. </summary>
     Task<PagedResultDto<VehicleDto>> GetListAsync(PagedResultRequestDto input);
+
+    /// <summary> Aracin uzerindeki envanterleri getirir. </summary>
+    Task<List<VehicleInventoryDto>> GetInventoriesAsync(Guid id);
 
     /// <summary> Yeni araç oluşturur. </summary>
     Task<VehicleDto> CreateAsync(CreateVehicleDto input);

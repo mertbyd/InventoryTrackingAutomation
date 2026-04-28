@@ -1,0 +1,72 @@
+using AutoMapper;
+using System.Threading.Tasks;
+using InventoryTrackingAutomation.Entities.Stock;
+using InventoryTrackingAutomation.Interface.Stock;
+using InventoryTrackingAutomation.Interface.Masters;
+using InventoryTrackingAutomation.Interface.Movements;
+using InventoryTrackingAutomation.Interface.Tasks;
+using InventoryTrackingAutomation.Models.Stock;
+using Volo.Abp;
+
+namespace InventoryTrackingAutomation.Managers.Stock;
+
+/// <summary>
+/// InventoryTransaction domain manager'i - stok hareketi denetim kaydi kurallarini yonetir.
+/// </summary>
+public class InventoryTransactionManager : BaseManager<InventoryTransaction>
+{
+    private readonly IProductRepository _productRepository;
+    private readonly IMovementRequestRepository _movementRequestRepository;
+    private readonly IVehicleTaskRepository _vehicleTaskRepository;
+    private readonly IMapper _mapper;
+
+    public InventoryTransactionManager(
+        IInventoryTransactionRepository repository,
+        IProductRepository productRepository,
+        IMovementRequestRepository movementRequestRepository,
+        IVehicleTaskRepository vehicleTaskRepository,
+        IMapper mapper)
+        : base(repository)
+    {
+        _productRepository = productRepository;
+        _movementRequestRepository = movementRequestRepository;
+        _vehicleTaskRepository = vehicleTaskRepository;
+        _mapper = mapper;
+    }
+
+    public async Task<InventoryTransaction> CreateAsync(CreateInventoryTransactionModel model)
+    {
+        await ValidateReferencesAsync(model.ProductId, model.MovementRequestId, model.VehicleTaskId);
+        ValidateQuantity(model.Quantity);
+
+        var entity = new InventoryTransaction(GuidGenerator.Create());
+        _mapper.Map(model, entity);
+        return entity;
+    }
+
+    public async Task<InventoryTransaction> UpdateAsync(InventoryTransaction existing, UpdateInventoryTransactionModel model)
+    {
+        await ValidateReferencesAsync(model.ProductId, model.MovementRequestId, model.VehicleTaskId);
+        ValidateQuantity(model.Quantity);
+
+        _mapper.Map(model, existing);
+        return existing;
+    }
+
+    private async Task ValidateReferencesAsync(System.Guid productId, System.Guid? movementRequestId, System.Guid? vehicleTaskId)
+    {
+        // Transaction kaynak referanslari domain katmaninda dogrulanir.
+        await EnsureExistsInAsync(_productRepository, productId);
+        await EnsureExistsInAsync(_movementRequestRepository, movementRequestId);
+        await EnsureExistsInAsync(_vehicleTaskRepository, vehicleTaskId);
+    }
+
+    private static void ValidateQuantity(int quantity)
+    {
+        // Sifir veya negatif transfer miktari kaydedilmez.
+        if (quantity <= 0)
+        {
+            throw new BusinessException(InventoryTrackingAutomationErrorCodes.InventoryTransactions.InvalidTransfer);
+        }
+    }
+}

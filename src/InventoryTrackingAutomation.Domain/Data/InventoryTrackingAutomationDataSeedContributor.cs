@@ -586,6 +586,10 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
             InventoryTrackingAutomationPermissions.Workflows.Reject,
             InventoryTrackingAutomationPermissions.Inventory.View,
             InventoryTrackingAutomationPermissions.Inventory.Manage,
+            InventoryTrackingAutomationPermissions.Tasks.View,
+            InventoryTrackingAutomationPermissions.Tasks.Manage,
+            InventoryTrackingAutomationPermissions.VehicleTasks.View,
+            InventoryTrackingAutomationPermissions.VehicleTasks.Manage,
             InventoryTrackingAutomationPermissions.Masters.View,
             InventoryTrackingAutomationPermissions.Masters.Manage
         };
@@ -602,7 +606,11 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
                 InventoryTrackingAutomationPermissions.Masters.View,
                 InventoryTrackingAutomationPermissions.Workflows.Approve,
                 InventoryTrackingAutomationPermissions.Workflows.Reject,
-                InventoryTrackingAutomationPermissions.Inventory.Manage
+                InventoryTrackingAutomationPermissions.Inventory.Manage,
+                InventoryTrackingAutomationPermissions.Tasks.View,
+                InventoryTrackingAutomationPermissions.Tasks.Manage,
+                InventoryTrackingAutomationPermissions.VehicleTasks.View,
+                InventoryTrackingAutomationPermissions.VehicleTasks.Manage
             },
 
             [InventoryTrackingAutomationRoleConstants.WorkflowApprover] = new[]
@@ -612,7 +620,9 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
                 InventoryTrackingAutomationPermissions.Inventory.View,
                 InventoryTrackingAutomationPermissions.Masters.View,
                 InventoryTrackingAutomationPermissions.Workflows.Approve,
-                InventoryTrackingAutomationPermissions.Workflows.Reject
+                InventoryTrackingAutomationPermissions.Workflows.Reject,
+                InventoryTrackingAutomationPermissions.Tasks.View,
+                InventoryTrackingAutomationPermissions.VehicleTasks.View
             },
 
             [InventoryTrackingAutomationRoleConstants.WarehouseWorker] = new[]
@@ -621,7 +631,9 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
                 InventoryTrackingAutomationPermissions.Workflows.View,
                 InventoryTrackingAutomationPermissions.Inventory.View,
                 InventoryTrackingAutomationPermissions.Masters.View,
-                InventoryTrackingAutomationPermissions.Workflows.Approve
+                InventoryTrackingAutomationPermissions.Workflows.Approve,
+                InventoryTrackingAutomationPermissions.Tasks.View,
+                InventoryTrackingAutomationPermissions.VehicleTasks.View
             },
 
             [InventoryTrackingAutomationRoleConstants.FieldWorker] = new[]
@@ -630,7 +642,9 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
                 InventoryTrackingAutomationPermissions.Workflows.View,
                 InventoryTrackingAutomationPermissions.Inventory.View,
                 InventoryTrackingAutomationPermissions.Masters.View,
-                InventoryTrackingAutomationPermissions.MovementRequests.Create
+                InventoryTrackingAutomationPermissions.MovementRequests.Create,
+                InventoryTrackingAutomationPermissions.Tasks.View,
+                InventoryTrackingAutomationPermissions.VehicleTasks.View
             },
 
             [InventoryTrackingAutomationRoleConstants.LogisticsSupervisor] = new[]
@@ -641,7 +655,11 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
                 InventoryTrackingAutomationPermissions.Masters.View,
                 InventoryTrackingAutomationPermissions.Workflows.Approve,
                 InventoryTrackingAutomationPermissions.Workflows.Reject,
-                InventoryTrackingAutomationPermissions.Inventory.Manage
+                InventoryTrackingAutomationPermissions.Inventory.Manage,
+                InventoryTrackingAutomationPermissions.Tasks.View,
+                InventoryTrackingAutomationPermissions.Tasks.Manage,
+                InventoryTrackingAutomationPermissions.VehicleTasks.View,
+                InventoryTrackingAutomationPermissions.VehicleTasks.Manage
             },
 
             [InventoryTrackingAutomationRoleConstants.VehicleManager] = new[]
@@ -650,7 +668,10 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
                 InventoryTrackingAutomationPermissions.Workflows.View,
                 InventoryTrackingAutomationPermissions.Inventory.View,
                 InventoryTrackingAutomationPermissions.Masters.View,
-                InventoryTrackingAutomationPermissions.Masters.Manage
+                InventoryTrackingAutomationPermissions.Masters.Manage,
+                InventoryTrackingAutomationPermissions.Tasks.View,
+                InventoryTrackingAutomationPermissions.VehicleTasks.View,
+                InventoryTrackingAutomationPermissions.VehicleTasks.Manage
             }
         };
 

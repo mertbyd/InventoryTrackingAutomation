@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.EntityFrameworkCore;
 using Volo.Abp.EntityFrameworkCore;
 using Volo.Abp.Modularity;
 using Volo.Abp.AuditLogging.EntityFrameworkCore;
@@ -12,14 +13,14 @@ using Volo.Abp.TenantManagement.EntityFrameworkCore;
 using InventoryTrackingAutomation.Entities.Lookups;
 using InventoryTrackingAutomation.Entities.Masters;
 using InventoryTrackingAutomation.Entities.Movements;
-using InventoryTrackingAutomation.Entities.Shipments;
 using InventoryTrackingAutomation.Entities.Stock;
+using InventoryTrackingAutomation.Entities.Tasks;
 using InventoryTrackingAutomation.Entities.Workflows;
 using InventoryTrackingAutomation.Repository.Lookups;
 using InventoryTrackingAutomation.Repository.Masters;
 using InventoryTrackingAutomation.Repository.Movements;
-using InventoryTrackingAutomation.Repository.Shipments;
 using InventoryTrackingAutomation.Repository.Stock;
+using InventoryTrackingAutomation.Repository.Tasks;
 using InventoryTrackingAutomation.Repository.Workflows;
 
 namespace InventoryTrackingAutomation.EntityFrameworkCore;
@@ -109,13 +110,17 @@ public class InventoryTrackingAutomationEntityFrameworkCoreModule : AbpModule
         if (!string.IsNullOrEmpty(stockSchema))
             InventoryTrackingAutomationDbProperties.StockSchema = stockSchema;
 
+        var inventorySchema = schemas["Inventory.Inventory"];
+        if (!string.IsNullOrEmpty(inventorySchema))
+            InventoryTrackingAutomationDbProperties.InventorySchema = inventorySchema;
+
+        var operationSchema = schemas["Inventory.Operation"];
+        if (!string.IsNullOrEmpty(operationSchema))
+            InventoryTrackingAutomationDbProperties.OperationSchema = operationSchema;
+
         var movementSchema = schemas["Inventory.Movement"];
         if (!string.IsNullOrEmpty(movementSchema))
             InventoryTrackingAutomationDbProperties.MovementSchema = movementSchema;
-
-        var shipmentSchema = schemas["Inventory.Shipment"];
-        if (!string.IsNullOrEmpty(shipmentSchema))
-            InventoryTrackingAutomationDbProperties.ShipmentSchema = shipmentSchema;
 
         var workflowSchema = schemas["Inventory.Workflow"];
         if (!string.IsNullOrEmpty(workflowSchema))
@@ -127,6 +132,10 @@ public class InventoryTrackingAutomationEntityFrameworkCoreModule : AbpModule
         Configure<AbpDbContextOptions>(options =>
         {
             options.UseNpgsql();
+            options.Configure(ctx =>
+            {
+                ctx.DbContextOptions.UseSnakeCaseNamingConvention();
+            });
         });
 
         context.Services.AddAbpDbContext<InventoryTrackingAutomationDbContext>(options =>
@@ -143,13 +152,15 @@ public class InventoryTrackingAutomationEntityFrameworkCoreModule : AbpModule
 
             options.AddRepository<ProductStock, ProductStockRepository>();
             options.AddRepository<StockMovement, StockMovementRepository>();
+            options.AddRepository<StockLocation, StockLocationRepository>();
+            options.AddRepository<InventoryTransaction, InventoryTransactionRepository>();
 
             options.AddRepository<MovementRequest, MovementRequestRepository>();
             options.AddRepository<MovementRequestLine, MovementRequestLineRepository>();
             options.AddRepository<MovementApproval, MovementApprovalRepository>();
 
-            options.AddRepository<Shipment, ShipmentRepository>();
-            options.AddRepository<ShipmentLine, ShipmentLineRepository>();
+            options.AddRepository<InventoryTask, InventoryTaskRepository>();
+            options.AddRepository<VehicleTask, VehicleTaskRepository>();
 
             options.AddRepository<WorkflowDefinition, WorkflowDefinitionRepository>();
             options.AddRepository<WorkflowInstance, WorkflowInstanceRepository>();

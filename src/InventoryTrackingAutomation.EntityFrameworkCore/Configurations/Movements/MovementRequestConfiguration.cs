@@ -2,7 +2,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using InventoryTrackingAutomation.Entities.Masters;
 using InventoryTrackingAutomation.Entities.Movements;
-using InventoryTrackingAutomation.Entities.Shipments;
 using Volo.Abp.EntityFrameworkCore.Modeling;
 
 namespace InventoryTrackingAutomation.EntityFrameworkCore.Configurations.Movements;
@@ -38,11 +37,6 @@ public class MovementRequestConfiguration : IEntityTypeConfiguration<MovementReq
         builder.HasOne<Vehicle>()
             .WithMany()
             .HasForeignKey(x => x.RequestedVehicleId)
-            .OnDelete(DeleteBehavior.Restrict);
-
-        builder.HasOne<Shipment>()
-            .WithMany()
-            .HasForeignKey(x => x.ShipmentId)
             .OnDelete(DeleteBehavior.Restrict);
     }
 }

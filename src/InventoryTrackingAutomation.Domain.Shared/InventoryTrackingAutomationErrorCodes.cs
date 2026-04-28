@@ -1,7 +1,7 @@
-﻿namespace InventoryTrackingAutomation;
+namespace InventoryTrackingAutomation;
 
 /// <summary>
-/// Projedeki tüm domain error code'larını merkezi olarak tutan sabit sınıf.
+/// Projedeki tum domain error code'larini merkezi olarak tutan sabit sinif.
 /// </summary>
 public static class InventoryTrackingAutomationErrorCodes
 {
@@ -83,19 +83,29 @@ public static class InventoryTrackingAutomationErrorCodes
         public const string NoPendingApprovalStep = Prefix + ":MovementApproval.NoPendingApprovalStep";
     }
 
-    public static class Shipments
+    public static class InventoryTasks
     {
-        public const string NotFound = Prefix + ":Shipment.NotFound";
-        public const string InvalidStatus = Prefix + ":Shipment.InvalidStatus";
-        public const string ShipmentNumberNotUnique = Prefix + ":Shipment.ShipmentNumberNotUnique";
-        public const string RequestedVehicleRequired = Prefix + ":Shipment.RequestedVehicleRequired";
-        public const string RequestedVehicleUnavailable = Prefix + ":Shipment.RequestedVehicleUnavailable";
-        public const string DriverNotFound = Prefix + ":Shipment.DriverNotFound";
+        public const string NotFound = Prefix + ":InventoryTask.NotFound";
+        public const string CodeNotUnique = Prefix + ":InventoryTask.CodeNotUnique";
     }
 
-    public static class ShipmentLines
+    public static class VehicleTasks
     {
-        public const string NotFound = Prefix + ":ShipmentLine.NotFound";
+        public const string NotFound = Prefix + ":VehicleTask.NotFound";
+        public const string VehicleAlreadyAssigned = Prefix + ":VehicleTask.VehicleAlreadyAssigned";
+    }
+
+    public static class StockLocations
+    {
+        public const string NotFound = Prefix + ":StockLocation.NotFound";
+        public const string InvalidLocation = Prefix + ":StockLocation.InvalidLocation";
+        public const string InsufficientStock = Prefix + ":StockLocation.InsufficientStock";
+    }
+
+    public static class InventoryTransactions
+    {
+        public const string NotFound = Prefix + ":InventoryTransaction.NotFound";
+        public const string InvalidTransfer = Prefix + ":InventoryTransaction.InvalidTransfer";
     }
 
     public static class Workflows
