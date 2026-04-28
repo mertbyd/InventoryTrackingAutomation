@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using SystemStandards.Results;
 using InventoryTrackingAutomation.Dtos.Masters;
-using InventoryTrackingAutomation.Dtos.Stock;
+using InventoryTrackingAutomation.Dtos.Inventory;
 using InventoryTrackingAutomation.Services.Masters;
 
 namespace InventoryTrackingAutomation.Controllers.Masters;

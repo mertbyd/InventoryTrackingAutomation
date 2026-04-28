@@ -5,7 +5,7 @@ using Volo.Abp.EntityFrameworkCore;
 using InventoryTrackingAutomation.Entities.Lookups;
 using InventoryTrackingAutomation.Entities.Masters;
 using InventoryTrackingAutomation.Entities.Movements;
-using InventoryTrackingAutomation.Entities.Stock;
+using InventoryTrackingAutomation.Entities.Inventory;
 using InventoryTrackingAutomation.Entities.Tasks;
 using InventoryTrackingAutomation.Entities.Workflows;
 

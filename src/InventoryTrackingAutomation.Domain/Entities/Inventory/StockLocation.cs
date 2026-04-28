@@ -5,7 +5,7 @@ using InventoryTrackingAutomation.Enums;
 using Volo.Abp.Domain.Entities.Auditing;
 using Volo.Abp.MultiTenancy;
 
-namespace InventoryTrackingAutomation.Entities.Stock;
+namespace InventoryTrackingAutomation.Entities.Inventory;
 
 /// <summary>
 /// Bir urunun depo veya arac uzerindeki stok bakiyesini temsil eden aggregate.

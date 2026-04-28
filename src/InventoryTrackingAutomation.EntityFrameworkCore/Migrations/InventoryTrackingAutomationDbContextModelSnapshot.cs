@@ -626,7 +626,7 @@ namespace InventoryTrackingAutomation.Migrations
                     b.ToTable("MovementRequestLines", "movement");
                 });
 
-            modelBuilder.Entity("InventoryTrackingAutomation.Entities.Stock.InventoryTransaction", b =>
+            modelBuilder.Entity("InventoryTrackingAutomation.Entities.Inventory.InventoryTransaction", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid")
@@ -734,7 +734,7 @@ namespace InventoryTrackingAutomation.Migrations
                     b.ToTable("inventory_transactions", "piton");
                 });
 
-            modelBuilder.Entity("InventoryTrackingAutomation.Entities.Stock.ProductStock", b =>
+            modelBuilder.Entity("InventoryTrackingAutomation.Entities.Inventory.ProductStock", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid");
@@ -791,7 +791,7 @@ namespace InventoryTrackingAutomation.Migrations
                     b.ToTable("ProductStocks", "stock");
                 });
 
-            modelBuilder.Entity("InventoryTrackingAutomation.Entities.Stock.StockLocation", b =>
+            modelBuilder.Entity("InventoryTrackingAutomation.Entities.Inventory.StockLocation", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid")
@@ -863,7 +863,7 @@ namespace InventoryTrackingAutomation.Migrations
                     b.ToTable("stock_locations", "piton");
                 });
 
-            modelBuilder.Entity("InventoryTrackingAutomation.Entities.Stock.StockMovement", b =>
+            modelBuilder.Entity("InventoryTrackingAutomation.Entities.Inventory.StockMovement", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid");
@@ -1419,7 +1419,7 @@ namespace InventoryTrackingAutomation.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("InventoryTrackingAutomation.Entities.Stock.InventoryTransaction", b =>
+            modelBuilder.Entity("InventoryTrackingAutomation.Entities.Inventory.InventoryTransaction", b =>
                 {
                     b.HasOne("InventoryTrackingAutomation.Entities.Movements.MovementRequest", null)
                         .WithMany()
@@ -1458,7 +1458,7 @@ namespace InventoryTrackingAutomation.Migrations
                         .OnDelete(DeleteBehavior.Restrict);
                 });
 
-            modelBuilder.Entity("InventoryTrackingAutomation.Entities.Stock.ProductStock", b =>
+            modelBuilder.Entity("InventoryTrackingAutomation.Entities.Inventory.ProductStock", b =>
                 {
                     b.HasOne("InventoryTrackingAutomation.Entities.Masters.Product", null)
                         .WithMany()
@@ -1473,7 +1473,7 @@ namespace InventoryTrackingAutomation.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("InventoryTrackingAutomation.Entities.Stock.StockLocation", b =>
+            modelBuilder.Entity("InventoryTrackingAutomation.Entities.Inventory.StockLocation", b =>
                 {
                     b.HasOne("InventoryTrackingAutomation.Entities.Masters.Product", null)
                         .WithMany()
@@ -1492,7 +1492,7 @@ namespace InventoryTrackingAutomation.Migrations
                         .OnDelete(DeleteBehavior.Restrict);
                 });
 
-            modelBuilder.Entity("InventoryTrackingAutomation.Entities.Stock.StockMovement", b =>
+            modelBuilder.Entity("InventoryTrackingAutomation.Entities.Inventory.StockMovement", b =>
                 {
                     b.HasOne("InventoryTrackingAutomation.Entities.Masters.Product", null)
                         .WithMany()

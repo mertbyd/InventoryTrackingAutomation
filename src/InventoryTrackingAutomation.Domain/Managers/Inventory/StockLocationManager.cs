@@ -3,16 +3,16 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using InventoryTrackingAutomation.Entities.Masters;
-using InventoryTrackingAutomation.Entities.Stock;
+using InventoryTrackingAutomation.Entities.Inventory;
 using InventoryTrackingAutomation.Enums.Tasks;
 using InventoryTrackingAutomation.Enums.Inventory;
 using InventoryTrackingAutomation.Enums;
 using InventoryTrackingAutomation.Interface.Masters;
-using InventoryTrackingAutomation.Interface.Stock;
-using InventoryTrackingAutomation.Models.Stock;
+using InventoryTrackingAutomation.Interface.Inventory;
+using InventoryTrackingAutomation.Models.Inventory;
 using Volo.Abp;
 
-namespace InventoryTrackingAutomation.Managers.Stock;
+namespace InventoryTrackingAutomation.Managers.Inventory;
 
 /// <summary>
 /// StockLocation domain manager'i - depo/arac bazli stok kurallarini yonetir.
@@ -101,6 +101,63 @@ public class StockLocationManager : BaseManager<StockLocation>
         if (quantity < 0 || reservedQuantity < 0 || reservedQuantity > quantity)
         {
             throw new BusinessException(InventoryTrackingAutomationErrorCodes.General.InvalidOperation);
+        }
+    }
+
+    //işlevi: Belirtilen lokasyondaki stok bakiyesini düşürür.
+    //sistemdeki görevi: Stok çıkış işlemlerinde bakiyeyi güvenli şekilde azaltır, yetersiz bakiye durumunda hata fırlatır.
+    public async Task DecreaseAsync(StockLocationTypeEnum type, Guid locationId, Guid productId, int qty)
+    {
+        var stock = await ((IStockLocationRepository)Repository)
+            .FindAsync(x => x.LocationType == type && x.LocationId == locationId && x.ProductId == productId);
+
+        if (stock == null || stock.Quantity < qty)
+            throw new BusinessException(InventoryTrackingAutomationErrorCodes.StockLocations.InsufficientStock)
+                .WithData("LocationType", type).WithData("LocationId", locationId)
+                .WithData("ProductId", productId).WithData("Requested", qty)
+                .WithData("Available", stock?.Quantity ?? 0);
+                
+        stock.Quantity -= qty;
+        await Repository.UpdateAsync(stock, autoSave: true);
+    }
+
+    //işlevi: Belirtilen lokasyondaki stok bakiyesini artırır.
+    //sistemdeki görevi: Stok giriş işlemlerinde bakiyeyi artırır, eğer o lokasyonda daha önce ürün yoksa yeni kayıt oluşturur.
+    public async Task IncreaseAsync(StockLocationTypeEnum type, Guid locationId, Guid productId, int qty)
+    {
+        var stock = await ((IStockLocationRepository)Repository)
+            .FindAsync(x => x.LocationType == type && x.LocationId == locationId && x.ProductId == productId);
+
+        if (stock == null)
+        {
+            await EnsureLocationExistsAsync(type, locationId);
+            stock = new StockLocation(GuidGenerator.Create())
+            {
+                LocationType = type, 
+                LocationId = locationId,
+                ProductId = productId, 
+                Quantity = qty, 
+                ReservedQuantity = 0
+            };
+            await Repository.InsertAsync(stock, autoSave: true);
+            return;
+        }
+        stock.Quantity += qty;
+        await Repository.UpdateAsync(stock, autoSave: true);
+    }
+
+    private async Task EnsureLocationExistsAsync(StockLocationTypeEnum type, Guid locationId)
+    {
+        switch (type)
+        {
+            case StockLocationTypeEnum.Warehouse:
+                await EnsureExistsInAsync(_warehouseRepository, locationId); 
+                break;
+            case StockLocationTypeEnum.Vehicle:
+                await EnsureExistsInAsync(_vehicleRepository, locationId); 
+                break;
+            default:
+                throw new BusinessException(InventoryTrackingAutomationErrorCodes.General.InvalidOperation);
         }
     }
 }

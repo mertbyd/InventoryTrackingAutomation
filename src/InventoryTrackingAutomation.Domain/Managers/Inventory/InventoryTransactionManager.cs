@@ -1,14 +1,14 @@
 using AutoMapper;
 using System.Threading.Tasks;
-using InventoryTrackingAutomation.Entities.Stock;
-using InventoryTrackingAutomation.Interface.Stock;
+using InventoryTrackingAutomation.Entities.Inventory;
+using InventoryTrackingAutomation.Interface.Inventory;
 using InventoryTrackingAutomation.Interface.Masters;
 using InventoryTrackingAutomation.Interface.Movements;
 using InventoryTrackingAutomation.Interface.Tasks;
-using InventoryTrackingAutomation.Models.Stock;
+using InventoryTrackingAutomation.Models.Inventory;
 using Volo.Abp;
 
-namespace InventoryTrackingAutomation.Managers.Stock;
+namespace InventoryTrackingAutomation.Managers.Inventory;
 
 /// <summary>
 /// InventoryTransaction domain manager'i - stok hareketi denetim kaydi kurallarini yonetir.
@@ -70,5 +70,27 @@ public class InventoryTransactionManager : BaseManager<InventoryTransaction>
         {
             throw new BusinessException(InventoryTrackingAutomationErrorCodes.InventoryTransactions.InvalidTransfer);
         }
+    }
+
+    //işlevi: Immutable (değiştirilemez) yeni bir stok hareket (ledger) kaydı oluşturur.
+    //sistemdeki görevi: Gerçekleşen transferlerin veritabanına kalıcı logunu yazar.
+    public async Task<InventoryTransaction> RecordAsync(InventoryTrackingAutomation.Models.Inventory.StockTransferModel model)
+    {
+        var entity = new InventoryTransaction(GuidGenerator.Create())
+        {
+            TransactionType = model.TransactionType,
+            SourceLocationType = model.SourceLocationType,
+            SourceLocationId = model.SourceLocationId,
+            TargetLocationType = model.DestinationLocationType,
+            TargetLocationId = model.DestinationLocationId,
+            ProductId = model.ProductId,
+            Quantity = model.Quantity,
+            OccurredAt = System.DateTime.UtcNow,
+            RelatedMovementRequestId = model.RelatedMovementRequestId,
+            RelatedTaskId = model.RelatedTaskId,
+            Note = model.Note
+        };
+        await Repository.InsertAsync(entity, autoSave: true);
+        return entity;
     }
 }

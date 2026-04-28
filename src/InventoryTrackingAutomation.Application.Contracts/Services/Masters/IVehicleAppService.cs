@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using InventoryTrackingAutomation.Dtos.Masters;
-using InventoryTrackingAutomation.Dtos.Stock;
+using InventoryTrackingAutomation.Dtos.Inventory;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Application.Services;
 

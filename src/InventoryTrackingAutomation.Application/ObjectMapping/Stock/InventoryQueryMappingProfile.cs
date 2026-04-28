@@ -1,7 +1,7 @@
 using AutoMapper;
-using InventoryTrackingAutomation.Dtos.Stock;
+using InventoryTrackingAutomation.Dtos.Inventory;
 using InventoryTrackingAutomation.Dtos.Tasks;
-using InventoryTrackingAutomation.Models.Stock;
+using InventoryTrackingAutomation.Models.Inventory;
 using InventoryTrackingAutomation.Models.Tasks;
 
 namespace InventoryTrackingAutomation.Application.ObjectMapping.Stock;

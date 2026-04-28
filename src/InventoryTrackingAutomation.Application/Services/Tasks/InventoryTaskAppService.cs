@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using InventoryTrackingAutomation.Dtos.Tasks;
 using InventoryTrackingAutomation.Entities.Tasks;
 using InventoryTrackingAutomation.Interface.Tasks;
-using InventoryTrackingAutomation.Managers.Stock;
+using InventoryTrackingAutomation.Managers.Inventory;
 using InventoryTrackingAutomation.Managers.Tasks;
 using InventoryTrackingAutomation.Models.Tasks;
 using InventoryTrackingAutomation.Services.Tasks;
