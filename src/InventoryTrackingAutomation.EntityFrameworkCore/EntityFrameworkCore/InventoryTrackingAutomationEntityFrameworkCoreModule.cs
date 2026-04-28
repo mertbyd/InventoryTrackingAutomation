@@ -150,8 +150,6 @@ public class InventoryTrackingAutomationEntityFrameworkCoreModule : AbpModule
             options.AddRepository<Vehicle, VehicleRepository>();
             options.AddRepository<Worker, WorkerRepository>();
 
-            options.AddRepository<ProductStock, ProductStockRepository>();
-            options.AddRepository<StockMovement, StockMovementRepository>();
             options.AddRepository<StockLocation, StockLocationRepository>();
             options.AddRepository<InventoryTransaction, InventoryTransactionRepository>();
 

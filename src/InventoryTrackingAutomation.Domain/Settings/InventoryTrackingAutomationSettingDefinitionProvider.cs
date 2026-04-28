@@ -34,7 +34,7 @@ public class InventoryTrackingAutomationSettingDefinitionProvider : SettingDefin
         context.Add(new SettingDefinition(InventoryTrackingAutomationSettings.Movements.AllowedMovementStatuses, GetEnumValues<MovementStatusEnum>()));
         context.Add(new SettingDefinition(InventoryTrackingAutomationSettings.Movements.AllowedApprovalStatuses, GetEnumValues<ApprovalStatusEnum>()));
 
-        context.Add(new SettingDefinition(InventoryTrackingAutomationSettings.Stock.AllowedStockMovementTypes, GetEnumValues<StockMovementTypeEnum>()));
+        context.Add(new SettingDefinition(InventoryTrackingAutomationSettings.Stock.AllowedInventoryTransactionTypes, GetEnumValues<InventoryTransactionTypeEnum>()));
 
     }
 }
