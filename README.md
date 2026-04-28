@@ -172,6 +172,76 @@ HttpApi.Host        Startup, middleware pipeline, SignalR hub, Swagger
 
 ---
 
+## Kurulum
+
+### Gereksinimler
+- .NET 10 SDK
+- Docker (PostgreSQL için)
+- Node.js 18+
+
+### Environment Variables
+
+`appsettings.secrets.json` dosyası oluşturulmalıdır (git'e dahil değildir):
+
+```json
+{
+  "ConnectionStrings": {
+    "Default": "Host=localhost;Port=5432;Database=InventoryTracking;Username=postgres;Password=postgres"
+  },
+  "AuthServer": {
+    "Authority": "https://localhost:44322"
+  }
+}
+```
+
+### Ayağa Kaldırma
+
+```bash
+# 1. PostgreSQL başlat
+docker-compose up -d
+
+# 2. Migration + seed data uygula (ilk çalıştırmada otomatik)
+dotnet run --project host/InventoryTrackingAutomation.HttpApi.Host
+
+# 3. Auth server (ayrı terminal)
+dotnet run --project host/InventoryTrackingAutomation.AuthServer
+```
+
+Swagger UI: `https://localhost:44300/swagger`
+
+**Hazır gelen seed kullanıcılar** (şifre: `123456aA@`):
+
+| Kullanıcı | Rol |
+|-----------|-----|
+| `admin` | Admin |
+| `warehouse.manager` | WarehouseManager |
+| `logistics` | LogisticsSupervisor |
+| `driver1` | Driver |
+
+---
+
+## Teknik Tercihler
+
+### ABP Framework
+Kimlik yönetimi, yetkilendirme, multi-tenancy, audit logging ve modüler yapı için tercih edildi. Sıfırdan yazmak yerine kanıtlanmış altyapı üzerine iş mantığına odaklanmayı sağlar.
+
+### Dinamik Workflow — Neden Custom?
+Piyasadaki workflow motorları (Elsa, Hangfire vb.) genel amaçlıdır. Bu projede onaylayıcının **iş rolüne ve organizasyon yapısına** göre çözülmesi gerekiyordu. Strategy Pattern ile `ResolverKey` tabanlı custom motor, bu ihtiyacı deploy gerektirmeden karşılar.
+
+### OpenIddict
+ASP.NET Core ile native entegrasyon, ayrı bir auth servisi çalıştırabilme ve OAuth2/OIDC standartlarına tam uyum için seçildi.
+
+### Navigation Property Yok
+Entity'ler arası navigation property kullanılmadı. Sadece `XxxId` FK referansları var. Bu sayede N+1 sorgu riski ortadan kalkar, aggregate boundary'ler net tutulur.
+
+### InventoryTransaction — Append-Only Ledger
+`StockLocation` hiçbir zaman doğrudan güncellenmez. Her hareket `InventoryTransaction`'a yeni satır ekler, bakiye bundan türetilir. Bu sayede tam stok geçmişi ve audit trail korunur.
+
+### SignalR
+Onay adımı atandığında ilgili kullanıcıya gerçek zamanlı bildirim gönderilir. Polling yerine push-based yapı tercih edildi.
+
+---
+
 ## CI/CD
 
 | Workflow | Tetikleyici | Görev |
