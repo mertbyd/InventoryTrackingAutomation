@@ -20,9 +20,9 @@ public static class WorkflowResolverKeys
     // İş akışını başlatan kullanıcının doğrudan yöneticisini onaycı olarak çözer.
     public const string InitiatorManager = "InitiatorManager";
 
-    // İş akışına bağlı entity'nin kaynak lokasyonu (Site) yöneticisini onaycı olarak çözer.
-    public const string SourceSiteManager = "SourceSiteManager";
+    // İş akışına bağlı entity'nin kaynak lokasyonu (Warehouse) yöneticisini onaycı olarak çözer.
+    public const string SourceWarehouseManager = "SourceWarehouseManager";
 
-    // İş akışına bağlı entity'nin hedef lokasyonu (Site) yöneticisini onaycı olarak çözer.
-    public const string TargetSiteManager = "TargetSiteManager";
+    // İş akışına bağlı entity'nin hedef lokasyonu (Warehouse) yöneticisini onaycı olarak çözer.
+    public const string TargetWarehouseManager = "TargetWarehouseManager";
 }

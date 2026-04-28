@@ -28,11 +28,11 @@ public static class InventoryTrackingAutomationErrorCodes
         public const string CodeNotUnique = Prefix + ":Department.CodeNotUnique";
     }
 
-    public static class Sites
+    public static class Warehouses
     {
-        public const string NotFound = Prefix + ":Site.NotFound";
-        public const string AlreadyExists = Prefix + ":Site.AlreadyExists";
-        public const string CodeNotUnique = Prefix + ":Site.CodeNotUnique";
+        public const string NotFound = Prefix + ":Warehouse.NotFound";
+        public const string AlreadyExists = Prefix + ":Warehouse.AlreadyExists";
+        public const string CodeNotUnique = Prefix + ":Warehouse.CodeNotUnique";
     }
 
     public static class Vehicles
@@ -47,18 +47,6 @@ public static class InventoryTrackingAutomationErrorCodes
         public const string NotFound = Prefix + ":Worker.NotFound";
         public const string AlreadyExists = Prefix + ":Worker.AlreadyExists";
         public const string SelfAssignmentNotAllowed = Prefix + ":Worker.SelfAssignmentNotAllowed";
-    }
-
-    public static class ProductStocks
-    {
-        public const string NotFound = Prefix + ":ProductStock.NotFound";
-        public const string InsufficientStock = Prefix + ":ProductStock.InsufficientStock";
-        public const string AlreadyExistsForProductAndSite = Prefix + ":ProductStock.AlreadyExistsForProductAndSite";
-    }
-
-    public static class StockMovements
-    {
-        public const string NotFound = Prefix + ":StockMovement.NotFound";
     }
 
     public static class MovementRequests

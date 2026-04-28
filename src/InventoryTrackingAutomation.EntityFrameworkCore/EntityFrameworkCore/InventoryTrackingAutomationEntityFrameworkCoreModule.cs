@@ -146,7 +146,7 @@ public class InventoryTrackingAutomationEntityFrameworkCoreModule : AbpModule
             options.AddRepository<Department, DepartmentRepository>();
 
             options.AddRepository<Product, ProductRepository>();
-            options.AddRepository<Site, SiteRepository>();
+            options.AddRepository<Warehouse, WarehouseRepository>();
             options.AddRepository<Vehicle, VehicleRepository>();
             options.AddRepository<Worker, WorkerRepository>();
 

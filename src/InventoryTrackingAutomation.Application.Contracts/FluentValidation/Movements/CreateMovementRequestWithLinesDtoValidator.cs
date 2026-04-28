@@ -14,10 +14,10 @@ public class CreateMovementRequestWithLinesDtoValidator : AbstractValidator<Crea
         RuleFor(x => x.RequestNote).NotEmpty().MaximumLength(2000);
         RuleFor(x => x.Priority).IsInEnum();
 
-        RuleFor(x => x.SourceSiteId).NotEmpty();
-        RuleFor(x => x.TargetSiteId)
+        RuleFor(x => x.SourceWarehouseId).NotEmpty();
+        RuleFor(x => x.TargetWarehouseId)
             .NotEmpty()
-            .NotEqual(x => x.SourceSiteId)
+            .NotEqual(x => x.SourceWarehouseId)
             .WithMessage("Hedef lokasyon kaynak lokasyondan farklı olmalıdır.");
         RuleFor(x => x.RequestedVehicleId).NotEmpty();
 

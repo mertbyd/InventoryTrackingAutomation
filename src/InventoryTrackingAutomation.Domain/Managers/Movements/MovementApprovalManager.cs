@@ -34,8 +34,8 @@ public class MovementApprovalManager : DomainService
     private readonly IRepository<WorkflowStepDefinition, Guid> _workflowStepDefinitionRepository;
     // Onaylayan kullanıcının Worker kaydını çözmek için.
     private readonly IRepository<Worker, Guid> _workerRepository;
-    // Pending listesinde site adlarını çözmek için.
-    private readonly IRepository<Site, Guid> _siteRepository;
+    // Pending listesinde Warehouse adlarını çözmek için.
+    private readonly IRepository<Warehouse, Guid> _warehouseRepository;
     // Rol bazlı yetki kontrolü için.
     private readonly IdentityUserManager _identityUserManager;
     // Yeni MovementApproval kayıtlarına Id atamak için.
@@ -51,7 +51,7 @@ public class MovementApprovalManager : DomainService
         IRepository<WorkflowInstance, Guid> workflowInstanceRepository,
         IRepository<WorkflowStepDefinition, Guid> workflowStepDefinitionRepository,
         IRepository<Worker, Guid> workerRepository,
-        IRepository<Site, Guid> siteRepository,
+        IRepository<Warehouse, Guid> warehouseRepository,
         IdentityUserManager identityUserManager,
         IGuidGenerator guidGenerator,
         WorkflowManager workflowManager,
@@ -64,7 +64,7 @@ public class MovementApprovalManager : DomainService
         _workflowInstanceRepository = workflowInstanceRepository;
         _workflowStepDefinitionRepository = workflowStepDefinitionRepository;
         _workerRepository = workerRepository;
-        _siteRepository = siteRepository;
+        _warehouseRepository = warehouseRepository;
         _identityUserManager = identityUserManager;
         _guidGenerator = guidGenerator;
         _workflowManager = workflowManager;
@@ -123,7 +123,7 @@ public class MovementApprovalManager : DomainService
 
         var result = new List<PendingApprovalModel>();
 
-        // Her bekleyen step için MovementRequest ve Site bilgilerini topla
+        // Her bekleyen step için MovementRequest ve Warehouse bilgilerini topla
         foreach (var step in pendingSteps)
         {
             var model = await BuildPendingApprovalModelAsync(step);
@@ -134,7 +134,7 @@ public class MovementApprovalManager : DomainService
         return result;
     }
 
-    // Bir bekleyen step için PendingApprovalModel oluşturur — MovementRequest ve Site bilgilerini join'ler.
+    // Bir bekleyen step için PendingApprovalModel oluşturur — MovementRequest ve Warehouse bilgilerini join'ler.
     private async Task<PendingApprovalModel> BuildPendingApprovalModelAsync(WorkflowInstanceStep step)
     {
         // Step'e bağlı MovementRequest'i bul (workflow üzerinden)
@@ -147,16 +147,16 @@ public class MovementApprovalManager : DomainService
         var stepDefinition = await _workflowStepDefinitionRepository.FindAsync(step.WorkflowStepDefinitionId);
 
         // Kaynak ve hedef lokasyon adlarını çöz
-        var sourceSite = await _siteRepository.FindAsync(movementRequest.SourceSiteId);
-        var targetSite = await _siteRepository.FindAsync(movementRequest.TargetSiteId);
+        var sourceWarehouse = await _warehouseRepository.FindAsync(movementRequest.SourceWarehouseId);
+        var targetWarehouse = await _warehouseRepository.FindAsync(movementRequest.TargetWarehouseId);
 
         return new PendingApprovalModel
         {
             MovementRequestId = movementRequest.Id,
             WorkflowInstanceStepId = step.Id,
             RequestNumber = movementRequest.RequestNumber,
-            SourceSiteName = sourceSite?.Name ?? string.Empty,
-            TargetSiteName = targetSite?.Name ?? string.Empty,
+            SourceWarehouseName = sourceWarehouse?.Name ?? string.Empty,
+            TargetWarehouseName = targetWarehouse?.Name ?? string.Empty,
             CurrentStepOrder = stepDefinition?.StepOrder ?? 0,
             CurrentStepName = stepDefinition?.RequiredRoleName ?? stepDefinition?.ResolverKey ?? string.Empty,
             CreatedAt = step.CreationTime,

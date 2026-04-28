@@ -26,12 +26,10 @@ public static class InventoryTrackingAutomationSettings
     }
 
     /// <summary>
-    /// Lokasyon modulune ait SiteTypeEnum setting anahtarlari.
+    /// Depo modulune ait setting anahtarlari.
     /// </summary>
-    public static class Sites
+    public static class Warehouses
     {
-        public const string DefaultSiteType = Prefix + ".Sites.DefaultSiteType";   // Varsayilan lokasyon tipi. Ornek: "1" (Warehouse)
-        public const string AllowedSiteTypes = Prefix + ".Sites.AllowedSiteTypes"; // Izin verilen lokasyon tipleri. Ornek: "1,2,3,4"
     }
 
     /// <summary>
@@ -79,7 +77,6 @@ public static class InventoryTrackingAutomationSettings
     {
         public const string AllowedUnitTypes = Products.AllowedUnitTypes;
         public const string AllowedWorkerTypes = Workers.AllowedWorkerTypes;
-        public const string AllowedSiteTypes = Sites.AllowedSiteTypes;
         public const string AllowedVehicleTypes = Vehicles.AllowedVehicleTypes;
     }
 

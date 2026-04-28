@@ -17,7 +17,7 @@ namespace InventoryTrackingAutomation.Managers.Movements;
 // Hareket talebi domain manager'i - MovementRequest icin is kurallari, FK validasyonu ve workflow tetikleme.
 public class MovementRequestManager : BaseManager<MovementRequest>
 {
-    private readonly ISiteRepository _siteRepository;
+    private readonly IWarehouseRepository _warehouseRepository;
     private readonly IWorkerRepository _workerRepository;
     private readonly IVehicleRepository _vehicleRepository;
     private readonly Managers.Workflows.WorkflowManager _workflowManager;
@@ -30,7 +30,7 @@ public class MovementRequestManager : BaseManager<MovementRequest>
 
     public MovementRequestManager(
         IMovementRequestRepository repository,
-        ISiteRepository siteRepository,
+        IWarehouseRepository warehouseRepository,
         IWorkerRepository workerRepository,
         IVehicleRepository vehicleRepository,
         Managers.Workflows.WorkflowManager workflowManager,
@@ -43,7 +43,7 @@ public class MovementRequestManager : BaseManager<MovementRequest>
         : base(repository)
     {
         _mapper = mapper;
-        _siteRepository = siteRepository;
+        _warehouseRepository = warehouseRepository;
         _workerRepository = workerRepository;
         _vehicleRepository = vehicleRepository;
         _workflowManager = workflowManager;
@@ -58,7 +58,7 @@ public class MovementRequestManager : BaseManager<MovementRequest>
     public async Task<MovementRequest> CreateAsync(CreateMovementRequestModel model)
     {
         await ValidateRequestNumberForCreateAsync(model.RequestNumber);
-        await ValidateHeaderReferencesAsync(model.RequestedByWorkerId, model.SourceSiteId, model.TargetSiteId, model.RequestedVehicleId);
+        await ValidateHeaderReferencesAsync(model.RequestedByWorkerId, model.SourceWarehouseId, model.TargetWarehouseId, model.RequestedVehicleId);
         await ValidatePriorityAsync(model.Priority);
 
         var entity = new MovementRequest(GuidGenerator.Create());
@@ -123,7 +123,7 @@ public class MovementRequestManager : BaseManager<MovementRequest>
         Guid currentUserId)
     {
         await ValidateRequestNumberForCreateAsync(model.RequestNumber);
-        await ValidateHeaderReferencesAsync(model.RequestedByWorkerId, model.SourceSiteId, model.TargetSiteId, model.RequestedVehicleId);
+        await ValidateHeaderReferencesAsync(model.RequestedByWorkerId, model.SourceWarehouseId, model.TargetWarehouseId, model.RequestedVehicleId);
         await ValidatePriorityAsync(model.Priority);
         await ValidateLineProductsAsync(model);
 
@@ -167,14 +167,14 @@ public class MovementRequestManager : BaseManager<MovementRequest>
 
     private async Task ValidateHeaderReferencesAsync(
         Guid requestedByWorkerId,
-        Guid sourceSiteId,
-        Guid targetSiteId,
+        Guid SourceWarehouseId,
+        Guid TargetWarehouseId,
         Guid requestedVehicleId)
     {
         // Header FK'lari tek noktada dogrulanir; AppService is kurali tasimaz.
         await EnsureExistsInAsync(_workerRepository, requestedByWorkerId);
-        await EnsureExistsInAsync(_siteRepository, sourceSiteId);
-        await EnsureExistsInAsync(_siteRepository, targetSiteId);
+        await EnsureExistsInAsync(_warehouseRepository, SourceWarehouseId);
+        await EnsureExistsInAsync(_warehouseRepository, TargetWarehouseId);
         await ValidateRequestedVehicleAvailableAsync(requestedVehicleId);
     }
 
@@ -186,14 +186,14 @@ public class MovementRequestManager : BaseManager<MovementRequest>
             await EnsureExistsInAsync(_workerRepository, model.RequestedByWorkerId);
         }
 
-        if (existing.SourceSiteId != model.SourceSiteId)
+        if (existing.SourceWarehouseId != model.SourceWarehouseId)
         {
-            await EnsureExistsInAsync(_siteRepository, model.SourceSiteId);
+            await EnsureExistsInAsync(_warehouseRepository, model.SourceWarehouseId);
         }
 
-        if (existing.TargetSiteId != model.TargetSiteId)
+        if (existing.TargetWarehouseId != model.TargetWarehouseId)
         {
-            await EnsureExistsInAsync(_siteRepository, model.TargetSiteId);
+            await EnsureExistsInAsync(_warehouseRepository, model.TargetWarehouseId);
         }
 
         if (existing.RequestedVehicleId != model.RequestedVehicleId)

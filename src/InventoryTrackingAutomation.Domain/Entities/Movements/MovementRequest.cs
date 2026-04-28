@@ -11,8 +11,8 @@ public class MovementRequest : FullAuditedAggregateRoot<Guid>
 {
     public string RequestNumber { get; set; }               // Talebin benzersiz numarasi. Ornek: "MR-2024-00123"
     public Guid RequestedByWorkerId { get; set; }           // Talebi is surecinde olusturan calisanin kimligi.
-    public Guid SourceSiteId { get; set; }                  // Malzemenin cikacagi kaynak lokasyon. Ornek: depo Site Id'si
-    public Guid TargetSiteId { get; set; }                  // Malzemenin gidecegi hedef lokasyon. Ornek: hedef Site Id'si
+    public Guid SourceWarehouseId { get; set; }                  // Malzemenin cikacagi kaynak lokasyon. Ornek: depo Warehouse Id'si
+    public Guid TargetWarehouseId { get; set; }                  // Malzemenin gidecegi hedef lokasyon. Ornek: hedef Warehouse Id'si
     public Guid? RequestedVehicleId { get; set; }            // Talep edilen arac. Ornek: Vehicle Id'si
     public MovementStatusEnum Status { get; set; }          // Talebin anlik durumu. Ornek: MovementStatusEnum.Pending
     public MovementPriorityEnum Priority { get; set; }      // Talebin oncelik seviyesi. Ornek: MovementPriorityEnum.Normal

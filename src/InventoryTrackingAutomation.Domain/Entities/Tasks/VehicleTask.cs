@@ -7,7 +7,7 @@ namespace InventoryTrackingAutomation.Entities.Tasks;
 /// <summary>
 /// Bir aracin belirli bir envanter gorevine atanmasini temsil eder.
 /// </summary>
-public class VehicleTask : FullAuditedAggregateRoot<Guid>, IMultiTenant
+public class VehicleTask : FullAuditedEntity<Guid>, IMultiTenant
 {
     public Guid VehicleId { get; set; }       // Goreve atanan arac Id'si.
     public Guid InventoryTaskId { get; set; } // Aracin bagli oldugu gorev Id'si.

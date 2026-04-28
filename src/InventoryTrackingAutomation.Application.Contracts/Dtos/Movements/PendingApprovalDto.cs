@@ -9,8 +9,8 @@ public class PendingApprovalDto
     public Guid MovementRequestId { get; set; }
     public Guid WorkflowInstanceStepId { get; set; }
     public string RequestNumber { get; set; }
-    public string SourceSiteName { get; set; }
-    public string TargetSiteName { get; set; }
+    public string SourceWarehouseName { get; set; }
+    public string TargetWarehouseName { get; set; }
     public int CurrentStepOrder { get; set; }
     public string CurrentStepName { get; set; }
     public DateTime CreatedAt { get; set; }

@@ -12,16 +12,16 @@ using InventoryTrackingAutomation.Services.Masters;
 namespace InventoryTrackingAutomation.Controllers.Masters;
 
 /// <summary>
-/// Lokasyon CRUD endpoint'leri.
+/// Depo CRUD endpoint'leri.
 /// </summary>
-[Route("api/sites")]
+[Route("api/v1/warehouses")]
 [ApiExplorerSettings(GroupName = "Masters")]
-[Tags("Sites")]
-public class SiteController : InventoryTrackingAutomationController
+[Tags("Warehouses")]
+public class WarehouseController : InventoryTrackingAutomationController
 {
-    private readonly ISiteAppService _appService;
+    private readonly IWarehouseAppService _appService;
 
-    public SiteController(ISiteAppService appService)
+    public WarehouseController(IWarehouseAppService appService)
     {
         _appService = appService;
     }
@@ -29,7 +29,7 @@ public class SiteController : InventoryTrackingAutomationController
     /// <summary> Id'ye gÃ¶re tek lokasyon getirir. </summary>
     [HttpGet("{id}")]
     [Authorize(InventoryTrackingAutomationPermissions.Masters.View)]
-    public async Task<Result<SiteDto>> Get(Guid id)
+    public async Task<Result<WarehouseDto>> Get(Guid id)
     {
         var result = await _appService.GetAsync(id);
         return result;
@@ -38,7 +38,7 @@ public class SiteController : InventoryTrackingAutomationController
     /// <summary> TÃ¼m lokasyonlarÄ± listeler. </summary>
     [HttpGet]
     [Authorize(InventoryTrackingAutomationPermissions.Masters.View)]
-    public async Task<Result<Volo.Abp.Application.Dtos.PagedResultDto<SiteDto>>> GetList([FromQuery] Volo.Abp.Application.Dtos.PagedResultRequestDto input)
+    public async Task<Result<Volo.Abp.Application.Dtos.PagedResultDto<WarehouseDto>>> GetList([FromQuery] Volo.Abp.Application.Dtos.PagedResultRequestDto input)
     {
         var result = await _appService.GetListAsync(input);
         return result;
@@ -47,7 +47,7 @@ public class SiteController : InventoryTrackingAutomationController
     /// <summary> Yeni lokasyon oluÅŸturur. </summary>
     [HttpPost]
     [Authorize(InventoryTrackingAutomationPermissions.Masters.Manage)]
-    public async Task<Result<SiteDto>> Create([FromBody] CreateSiteDto input)
+    public async Task<Result<WarehouseDto>> Create([FromBody] CreateWarehouseDto input)
     {
         var result = await _appService.CreateAsync(input);
         return result;
@@ -56,7 +56,7 @@ public class SiteController : InventoryTrackingAutomationController
     /// <summary> Birden fazla lokasyonu toplu oluÅŸturur. </summary>
     [HttpPost("bulk")]
     [Authorize(InventoryTrackingAutomationPermissions.Masters.Manage)]
-    public async Task<Result<List<SiteDto>>> CreateMany([FromBody] List<CreateSiteDto> inputs)
+    public async Task<Result<List<WarehouseDto>>> CreateMany([FromBody] List<CreateWarehouseDto> inputs)
     {
         var result = await _appService.CreateManyAsync(inputs);
         return result;
@@ -65,7 +65,7 @@ public class SiteController : InventoryTrackingAutomationController
     /// <summary> Lokasyonu gÃ¼nceller. </summary>
     [HttpPut("{id}")]
     [Authorize(InventoryTrackingAutomationPermissions.Masters.Manage)]
-    public async Task<Result<SiteDto>> Update(Guid id, [FromBody] UpdateSiteDto input)
+    public async Task<Result<WarehouseDto>> Update(Guid id, [FromBody] UpdateWarehouseDto input)
     {
         var result = await _appService.UpdateAsync(id, input);
         return result;

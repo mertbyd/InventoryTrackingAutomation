@@ -9,26 +9,26 @@ namespace InventoryTrackingAutomation.Managers.Workflows.Approvers;
 
 // Hareket talebinin hedef (Target) lokasyonunun yöneticisini onaycı olarak çözer.
 // Şu an sadece MovementRequest tipinde aktif; başka entity tipleri için ayrı bir strategy eklenmeli.
-public class TargetSiteManagerApproverStrategy : IApproverStrategy, ITransientDependency
+public class TargetWarehouseManagerApproverStrategy : IApproverStrategy, ITransientDependency
 {
     private readonly IMovementRequestRepository _movementRequestRepository;
-    private readonly ISiteRepository _siteRepository;
+    private readonly IWarehouseRepository _WarehouseRepository;
     private readonly IWorkerRepository _workerRepository;
 
-    public TargetSiteManagerApproverStrategy(
+    public TargetWarehouseManagerApproverStrategy(
         IMovementRequestRepository movementRequestRepository,
-        ISiteRepository siteRepository,
+        IWarehouseRepository WarehouseRepository,
         IWorkerRepository workerRepository)
     {
         _movementRequestRepository = movementRequestRepository;
-        _siteRepository = siteRepository;
+        _WarehouseRepository = WarehouseRepository;
         _workerRepository = workerRepository;
     }
 
-    public string Key => WorkflowResolverKeys.TargetSiteManager;
+    public string Key => WorkflowResolverKeys.TargetWarehouseManager;
 
     public Task<Guid?> ResolveAsync(ApproverContext context)
-        => SiteApproverResolver.ResolveAsync(
-            context, useSourceSite: false,
-            _movementRequestRepository, _siteRepository, _workerRepository);
+        => WarehouseApproverResolver.ResolveAsync(
+            context, useSourceWarehouse: false,
+            _movementRequestRepository, _WarehouseRepository, _workerRepository);
 }

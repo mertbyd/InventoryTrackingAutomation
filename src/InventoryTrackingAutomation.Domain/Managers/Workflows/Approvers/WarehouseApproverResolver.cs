@@ -6,14 +6,14 @@ using InventoryTrackingAutomation.Workflows;
 
 namespace InventoryTrackingAutomation.Managers.Workflows.Approvers;
 
-// Source/Target site manager strategy'leri için ortak çözümleme: MovementRequest → Site → ManagerWorker → User.
-internal static class SiteApproverResolver
+// Source/Target Warehouse manager strategy'leri için ortak çözümleme: MovementRequest → Warehouse → ManagerWorker → User.
+internal static class WarehouseApproverResolver
 {
     public static async Task<Guid?> ResolveAsync(
         ApproverContext context,
-        bool useSourceSite,
+        bool useSourceWarehouse,
         IMovementRequestRepository movementRequestRepository,
-        ISiteRepository siteRepository,
+        IWarehouseRepository warehouseRepository,
         IWorkerRepository workerRepository)
     {
         if (context.EntityType != WorkflowEntityTypes.MovementRequest)
@@ -27,19 +27,19 @@ internal static class SiteApproverResolver
             return null;
         }
 
-        var siteId = useSourceSite ? request.SourceSiteId : request.TargetSiteId;
-        if (siteId == Guid.Empty)
+        var warehouseId = useSourceWarehouse ? request.SourceWarehouseId : request.TargetWarehouseId;
+        if (warehouseId == Guid.Empty)
         {
             return null;
         }
 
-        var site = await siteRepository.FindAsync(siteId);
-        if (site?.ManagerWorkerId == null)
+        var warehouse = await warehouseRepository.FindAsync(warehouseId);
+        if (warehouse?.ManagerWorkerId == null)
         {
             return null;
         }
 
-        var manager = await workerRepository.FindAsync(site.ManagerWorkerId.Value);
+        var manager = await workerRepository.FindAsync(warehouse.ManagerWorkerId.Value);
         return manager?.UserId;
     }
 }

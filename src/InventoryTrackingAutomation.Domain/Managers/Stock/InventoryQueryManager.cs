@@ -168,7 +168,7 @@ public class InventoryQueryManager : ITransientDependency
         return new ProductStockLocationSummaryModel
         {
             LocationType = location.LocationType,
-            WarehouseSiteId = location.LocationType == InventoryLocationTypeEnum.Warehouse ? location.LocationId : null,
+            WarehouseId = location.LocationType == InventoryLocationTypeEnum.Warehouse ? location.LocationId : null,
             VehicleId = location.LocationType == InventoryLocationTypeEnum.Vehicle ? location.LocationId : null,
             VehicleTaskId = vehicleTask?.Id,
             InventoryTaskId = vehicleTask?.InventoryTaskId,

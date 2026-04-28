@@ -18,7 +18,7 @@ public class WorkerAppService : InventoryTrackingAutomationAppService, IWorkerAp
 {
     // Read/list/persist için ana repository.
     private readonly IWorkerRepository _repository;
-    // Domain manager — Department/Site/Manager FK kontrolleri ve self-assignment kuralları.
+    // Domain manager — Department/Warehouse/Manager FK kontrolleri ve self-assignment kuralları.
     private readonly WorkerManager _manager;
 
     // Tüm bağımlılıkları DI ile alır.

@@ -27,7 +27,7 @@ public class WorkflowStepDefinition : AuditedEntity<Guid>
 
     /// <summary>
     /// Onaycı çözümleme mantığının anahtarı.
-    /// Örnekler: "InitiatorManager", "SourceSiteManager", "TargetSiteManager".
+    /// Örnekler: "InitiatorManager", "SourceWarehouseManager", "TargetWarehouseManager".
     /// DefaultWorkflowApproverResolver bu anahtara bakarak dinamik onaycıyı bulur.
     /// Null/boş ise sadece RequiredRoleName ve rol bazlı yetki kontrol edilir.
     /// </summary>

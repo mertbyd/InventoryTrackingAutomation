@@ -5,11 +5,11 @@ using InventoryTrackingAutomation.Interface.Masters;
 namespace InventoryTrackingAutomation.Repository.Masters;
 
 /// <summary>
-/// Site entity'si için EF Core repository implementasyonu.
+/// Warehouse entity'si için EF Core repository implementasyonu.
 /// </summary>
-public class SiteRepository : BaseRepository<Site>, ISiteRepository
+public class WarehouseRepository : BaseRepository<Warehouse>, IWarehouseRepository
 {
-    public SiteRepository(IDbContextProvider<InventoryTrackingAutomationDbContext> dbContextProvider)
+    public WarehouseRepository(IDbContextProvider<InventoryTrackingAutomationDbContext> dbContextProvider)
         : base(dbContextProvider)
     {
     }
