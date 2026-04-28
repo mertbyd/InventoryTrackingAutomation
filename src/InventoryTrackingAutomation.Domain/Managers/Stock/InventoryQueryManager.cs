@@ -43,7 +43,9 @@ public class InventoryQueryManager : ITransientDependency
         await _productManager.EnsureExistsAsync(productId);
 
         var locations = await _stockLocationRepository.GetListAsync(x => x.ProductId == productId);
-        var activeVehicleTasks = await GetActiveVehicleTasksAsync(locations.Select(x => x.VehicleId));
+        var activeVehicleTasks = await GetActiveVehicleTasksAsync(locations
+            .Where(x => x.LocationType == InventoryLocationTypeEnum.Vehicle)
+            .Select(x => (Guid?)x.LocationId));
 
         var locationSummaries = locations
             .Select(location => CreateLocationSummary(location, activeVehicleTasks))
@@ -72,7 +74,7 @@ public class InventoryQueryManager : ITransientDependency
 
         var locations = await _stockLocationRepository.GetListAsync(x =>
             x.LocationType == InventoryLocationTypeEnum.Vehicle &&
-            x.VehicleId == vehicleId);
+            x.LocationId == vehicleId);
         var activeVehicleTask = (await _vehicleTaskRepository.GetListAsync(x =>
                 x.VehicleId == vehicleId &&
                 x.IsActive))
@@ -119,13 +121,12 @@ public class InventoryQueryManager : ITransientDependency
         var vehicleIds = vehicleTasks.Select(x => x.VehicleId).Distinct().ToList();
         var locations = await _stockLocationRepository.GetListAsync(x =>
             x.LocationType == InventoryLocationTypeEnum.Vehicle &&
-            x.VehicleId.HasValue &&
-            vehicleIds.Contains(x.VehicleId.Value));
+            vehicleIds.Contains(x.LocationId));
 
         return locations
             .Select(location =>
             {
-                var vehicleTask = vehicleTasks.First(x => x.VehicleId == location.VehicleId);
+                var vehicleTask = vehicleTasks.First(x => x.VehicleId == location.LocationId);
                 return new TaskInventoryModel
                 {
                     InventoryTaskId = inventoryTaskId,
@@ -160,15 +161,15 @@ public class InventoryQueryManager : ITransientDependency
         IReadOnlyCollection<Entities.Tasks.VehicleTask> activeVehicleTasks)
     {
         // Arac lokasyonlarinda aktif gorev baglami gorunurluge eklenir.
-        var vehicleTask = location.VehicleId.HasValue
-            ? activeVehicleTasks.FirstOrDefault(x => x.VehicleId == location.VehicleId.Value)
+        var vehicleTask = location.LocationType == InventoryLocationTypeEnum.Vehicle
+            ? activeVehicleTasks.FirstOrDefault(x => x.VehicleId == location.LocationId)
             : null;
 
         return new ProductStockLocationSummaryModel
         {
             LocationType = location.LocationType,
-            WarehouseSiteId = location.WarehouseSiteId,
-            VehicleId = location.VehicleId,
+            WarehouseSiteId = location.LocationType == InventoryLocationTypeEnum.Warehouse ? location.LocationId : null,
+            VehicleId = location.LocationType == InventoryLocationTypeEnum.Vehicle ? location.LocationId : null,
             VehicleTaskId = vehicleTask?.Id,
             InventoryTaskId = vehicleTask?.InventoryTaskId,
             Quantity = location.Quantity,

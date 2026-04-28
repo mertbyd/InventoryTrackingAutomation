@@ -26,34 +26,14 @@ public class InventoryTransactionConfiguration : IEntityTypeConfiguration<Invent
             .HasForeignKey(x => x.ProductId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasOne<Site>()
-            .WithMany()
-            .HasForeignKey(x => x.SourceWarehouseSiteId)
-            .OnDelete(DeleteBehavior.Restrict);
-
-        builder.HasOne<Site>()
-            .WithMany()
-            .HasForeignKey(x => x.TargetWarehouseSiteId)
-            .OnDelete(DeleteBehavior.Restrict);
-
-        builder.HasOne<Vehicle>()
-            .WithMany()
-            .HasForeignKey(x => x.SourceVehicleId)
-            .OnDelete(DeleteBehavior.Restrict);
-
-        builder.HasOne<Vehicle>()
-            .WithMany()
-            .HasForeignKey(x => x.TargetVehicleId)
-            .OnDelete(DeleteBehavior.Restrict);
-
         builder.HasOne<MovementRequest>()
             .WithMany()
-            .HasForeignKey(x => x.MovementRequestId)
+            .HasForeignKey(x => x.RelatedMovementRequestId)
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne<VehicleTask>()
             .WithMany()
-            .HasForeignKey(x => x.VehicleTaskId)
+            .HasForeignKey(x => x.RelatedTaskId)
             .OnDelete(DeleteBehavior.Restrict);
     }
 }

@@ -36,7 +36,7 @@ public class InventoryTransactionManager : BaseManager<InventoryTransaction>
 
     public async Task<InventoryTransaction> CreateAsync(CreateInventoryTransactionModel model)
     {
-        await ValidateReferencesAsync(model.ProductId, model.MovementRequestId, model.VehicleTaskId);
+        await ValidateReferencesAsync(model.ProductId, model.RelatedMovementRequestId, model.RelatedTaskId);
         ValidateQuantity(model.Quantity);
 
         var entity = new InventoryTransaction(GuidGenerator.Create());
@@ -46,7 +46,7 @@ public class InventoryTransactionManager : BaseManager<InventoryTransaction>
 
     public async Task<InventoryTransaction> UpdateAsync(InventoryTransaction existing, UpdateInventoryTransactionModel model)
     {
-        await ValidateReferencesAsync(model.ProductId, model.MovementRequestId, model.VehicleTaskId);
+        await ValidateReferencesAsync(model.ProductId, model.RelatedMovementRequestId, model.RelatedTaskId);
         ValidateQuantity(model.Quantity);
 
         _mapper.Map(model, existing);
