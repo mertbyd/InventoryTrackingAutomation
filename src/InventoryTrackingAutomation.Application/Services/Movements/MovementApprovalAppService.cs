@@ -8,6 +8,7 @@ using InventoryTrackingAutomation.Entities.Movements;
 using InventoryTrackingAutomation.Managers.Movements;
 using InventoryTrackingAutomation.Models.Movements;
 using InventoryTrackingAutomation.Services.Movements;
+using Volo.Abp;
 using Volo.Abp.Domain.Repositories;
 using Volo.Abp.Uow;
 using Volo.Abp.Users;
@@ -51,7 +52,7 @@ public class MovementApprovalAppService : InventoryTrackingAutomationAppService,
             // Red durumunda note zorunlu
             if (string.IsNullOrWhiteSpace(input.Note))
             {
-                throw new Volo.Abp.UserFriendlyException("Reddetme nedeni (Note) gereklidir.");
+                throw new BusinessException(InventoryTrackingAutomationErrorCodes.MovementApprovals.RejectionNoteRequired);
             }
             approval = await _manager.RejectAsync(movementRequestId, CurrentUser.GetId(), input.Note);
         }

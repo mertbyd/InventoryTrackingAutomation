@@ -199,7 +199,7 @@ public class MovementRequestManager : BaseManager<MovementRequest>
 
         EnsureStatus(request, MovementStatusEnum.Approved, InventoryTrackingAutomationErrorCodes.MovementRequests.DispatchNotAllowed);
 
-        if (!request.RequestedVehicleId.HasValue || request.RequestedVehicleId == Guid.Empty)
+        if (MissingId(request.RequestedVehicleId))
         {
             throw new BusinessException(InventoryTrackingAutomationErrorCodes.MovementRequests.VehicleRequired)
                 .WithData("MovementRequestId", request.Id);
@@ -254,7 +254,7 @@ public class MovementRequestManager : BaseManager<MovementRequest>
             return await ReceiveTaskReturnAsync(request, model, currentUserId);
         }
 
-        if (!request.RequestedVehicleId.HasValue || request.RequestedVehicleId == Guid.Empty)
+        if (MissingId(request.RequestedVehicleId))
         {
             throw new BusinessException(InventoryTrackingAutomationErrorCodes.MovementRequests.VehicleRequired)
                 .WithData("MovementRequestId", request.Id);
@@ -266,7 +266,7 @@ public class MovementRequestManager : BaseManager<MovementRequest>
             return await Repository.UpdateAsync(request, autoSave: true);
         }
 
-        if (!request.TargetWarehouseId.HasValue || request.TargetWarehouseId == Guid.Empty)
+        if (MissingId(request.TargetWarehouseId))
         {
             throw new BusinessException(InventoryTrackingAutomationErrorCodes.MovementRequests.TargetRequired)
                 .WithData("MovementRequestId", request.Id);
@@ -301,19 +301,19 @@ public class MovementRequestManager : BaseManager<MovementRequest>
         ReceiveMovementRequestModel model,
         Guid currentUserId)
     {
-        if (!request.RequestedVehicleId.HasValue || request.RequestedVehicleId == Guid.Empty)
+        if (MissingId(request.RequestedVehicleId))
         {
             throw new BusinessException(InventoryTrackingAutomationErrorCodes.MovementRequests.VehicleRequired)
                 .WithData("MovementRequestId", request.Id);
         }
 
-        if (!request.TargetWarehouseId.HasValue || request.TargetWarehouseId == Guid.Empty)
+        if (MissingId(request.TargetWarehouseId))
         {
             throw new BusinessException(InventoryTrackingAutomationErrorCodes.MovementRequests.TargetRequired)
                 .WithData("MovementRequestId", request.Id);
         }
 
-        if (!request.AssignedTaskId.HasValue || request.AssignedTaskId == Guid.Empty)
+        if (MissingId(request.AssignedTaskId))
         {
             throw new BusinessException(InventoryTrackingAutomationErrorCodes.InventoryTasks.NotFound)
                 .WithData("MovementRequestId", request.Id);
@@ -413,7 +413,7 @@ public class MovementRequestManager : BaseManager<MovementRequest>
     /// Görev atamasına göre talep türünü belirlemek için kullanılır.
     private static MovementRequestTypeEnum ResolveRequestType(Guid? assignedTaskId)
     {
-        return assignedTaskId.HasValue && assignedTaskId.Value != Guid.Empty
+        return HasValidId(assignedTaskId)
             ? MovementRequestTypeEnum.WarehouseToTask
             : MovementRequestTypeEnum.WarehouseToWarehouse;
     }
@@ -539,12 +539,12 @@ public class MovementRequestManager : BaseManager<MovementRequest>
         await EnsureExistsInAsync(_warehouseRepository, SourceWarehouseId);
         ValidateMovementRoute(SourceWarehouseId, TargetWarehouseId, requestedVehicleId, assignedTaskId);
         
-        if (TargetWarehouseId.HasValue && TargetWarehouseId != Guid.Empty)
+        if (HasValidId(TargetWarehouseId))
         {
             await EnsureExistsInAsync(_warehouseRepository, TargetWarehouseId.Value);
         }
         
-        if (requestedVehicleId.HasValue && requestedVehicleId != Guid.Empty)
+        if (HasValidId(requestedVehicleId))
         {
             await ValidateRequestedVehicleAvailableAsync(requestedVehicleId.Value);
         }
@@ -613,7 +613,7 @@ public class MovementRequestManager : BaseManager<MovementRequest>
     {
         EnsureVehicleRequested(requestedVehicleId);
 
-        var hasTaskContext = assignedTaskId.HasValue && assignedTaskId.Value != Guid.Empty;
+        var hasTaskContext = HasValidId(assignedTaskId);
         if (!hasTaskContext)
         {
             EnsureTargetWarehouseRequested(targetWarehouseId);
@@ -630,7 +630,7 @@ public class MovementRequestManager : BaseManager<MovementRequest>
     /// Araç seçiminin yapıldığını doğrulamak için kullanılır.
     private static void EnsureVehicleRequested(Guid? requestedVehicleId)
     {
-        if (!requestedVehicleId.HasValue || requestedVehicleId.Value == Guid.Empty)
+        if (MissingId(requestedVehicleId))
         {
             throw new BusinessException(InventoryTrackingAutomationErrorCodes.MovementRequests.VehicleRequired);
         }
@@ -639,7 +639,7 @@ public class MovementRequestManager : BaseManager<MovementRequest>
     /// Hedef depo seçiminin yapıldığını doğrulamak için kullanılır.
     private static void EnsureTargetWarehouseRequested(Guid? targetWarehouseId)
     {
-        if (!targetWarehouseId.HasValue || targetWarehouseId.Value == Guid.Empty)
+        if (MissingId(targetWarehouseId))
         {
             throw new BusinessException(InventoryTrackingAutomationErrorCodes.MovementRequests.TargetRequired);
         }
@@ -648,7 +648,7 @@ public class MovementRequestManager : BaseManager<MovementRequest>
     /// Sevkiyat anında görev durumunun uygunluğunu doğrulamak için kullanılır.
     private async Task ValidateDispatchTaskStatusAsync(MovementRequest request)
     {
-        if (!request.AssignedTaskId.HasValue || request.AssignedTaskId.Value == Guid.Empty)
+        if (MissingId(request.AssignedTaskId))
         {
             return;
         }
@@ -686,7 +686,7 @@ public class MovementRequestManager : BaseManager<MovementRequest>
     {
         // Eğer talep bir Göreve (Task) bağlıysa, daha yalın olan TaskMovementRequest akışını kullan.
         // Aksi halde (Depodan Depoya ise) standart MovementRequest akışını kullan.
-        var workflowName = entity.AssignedTaskId.HasValue && entity.AssignedTaskId != Guid.Empty
+        var workflowName = HasValidId(entity.AssignedTaskId)
             ? WorkflowDefinitionNames.TaskMovementRequest
             : WorkflowDefinitionNames.MovementRequest;
 
@@ -712,6 +712,9 @@ public class MovementRequestManager : BaseManager<MovementRequest>
         entity.Status = InventoryTrackingAutomation.Enums.MovementStatusEnum.InReview;
         return workflowInstance;
     }
+
+    private static bool HasValidId(Guid? id) => id.HasValue && id.Value != Guid.Empty;
+    private static bool MissingId(Guid? id) => !id.HasValue || id.Value == Guid.Empty;
 
     /// İlk workflow adımı için bildirim yayınlamak için kullanılır.
     private Task PublishInitialWorkflowStepAssignedAsync(InventoryTrackingAutomation.Entities.Workflows.WorkflowInstance? workflowInstance)

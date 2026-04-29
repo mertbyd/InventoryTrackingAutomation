@@ -5,14 +5,12 @@ using System.Threading.Tasks;
 using InventoryTrackingAutomation.Dtos.Tasks;
 using InventoryTrackingAutomation.Entities.Tasks;
 using InventoryTrackingAutomation.Enums.Tasks;
-using InventoryTrackingAutomation.Interface.Masters;
 using InventoryTrackingAutomation.Interface.Tasks;
 using InventoryTrackingAutomation.Managers.Inventory;
 using InventoryTrackingAutomation.Managers.Tasks;
 using InventoryTrackingAutomation.Models.Tasks;
 using InventoryTrackingAutomation.Services.Tasks;
 using FluentValidation;
-using Volo.Abp;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.EventBus.Local;
 using Volo.Abp.Uow;
@@ -26,7 +24,6 @@ namespace InventoryTrackingAutomation.Application.Services.Tasks;
 public class InventoryTaskAppService : InventoryTrackingAutomationAppService, IInventoryTaskAppService
 {
     private readonly IInventoryTaskRepository _repository;
-    private readonly IWorkerRepository _workerRepository;
     private readonly InventoryTaskManager _manager;
     private readonly InventoryQueryManager _inventoryQueryManager;
     private readonly ILocalEventBus _localEventBus;
@@ -36,7 +33,6 @@ public class InventoryTaskAppService : InventoryTrackingAutomationAppService, II
 
     public InventoryTaskAppService(
         IInventoryTaskRepository repository,
-        IWorkerRepository workerRepository,
         InventoryTaskManager manager,
         InventoryQueryManager inventoryQueryManager,
         ILocalEventBus localEventBus,
@@ -45,7 +41,6 @@ public class InventoryTaskAppService : InventoryTrackingAutomationAppService, II
         IMapper mapper)
     {
         _repository = repository;
-        _workerRepository = workerRepository;
         _manager = manager;
         _inventoryQueryManager = inventoryQueryManager;
         _localEventBus = localEventBus;
@@ -180,16 +175,4 @@ public class InventoryTaskAppService : InventoryTrackingAutomationAppService, II
         await _repository.SoftDeleteAsync(id);
     }
 
-    private async Task<Guid> ResolveCurrentWorkerIdAsync()
-    {
-        var userId = CurrentUser.GetId();
-        var worker = await _workerRepository.FindAsync(w => w.UserId == userId);
-        if (worker == null)
-        {
-            throw new BusinessException(InventoryTrackingAutomationErrorCodes.Workers.NotFound)
-                .WithData("UserId", userId);
-        }
-
-        return worker.Id;
-    }
 }

@@ -97,7 +97,7 @@ public class StockLocationManager : BaseManager<StockLocation>
 
         if (existingLocations.Any(x => !excludeId.HasValue || x.Id != excludeId.Value))
         {
-            throw new BusinessException(InventoryTrackingAutomationErrorCodes.General.InvalidOperation);
+            throw new BusinessException(InventoryTrackingAutomationErrorCodes.StockLocations.DuplicateLocation);
         }
     }
 
@@ -107,7 +107,7 @@ public class StockLocationManager : BaseManager<StockLocation>
         // Rezerve miktar toplam stoktan buyuk olamaz.
         if (quantity < 0 || reservedQuantity < 0 || reservedQuantity > quantity)
         {
-            throw new BusinessException(InventoryTrackingAutomationErrorCodes.General.InvalidOperation);
+            throw new BusinessException(InventoryTrackingAutomationErrorCodes.StockLocations.InvalidQuantity);
         }
     }
 
@@ -163,7 +163,7 @@ public class StockLocationManager : BaseManager<StockLocation>
                 await EnsureExistsInAsync(_vehicleRepository, locationId); 
                 break;
             default:
-                throw new BusinessException(InventoryTrackingAutomationErrorCodes.General.InvalidOperation);
+                throw new BusinessException(InventoryTrackingAutomationErrorCodes.StockLocations.UnsupportedLocationType);
         }
     }
 }
