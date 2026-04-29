@@ -109,18 +109,17 @@ public class AuthAppService : InventoryTrackingAutomationAppService, IAuthAppSer
     /// </summary>
     private async Task<TokenResponse> GetTokenFromOpenIddictAsync(string username, string password)
     {
-        // Configuration'dan base URL al
         var baseUrl = _configuration["App:SelfUrl"] ?? "https://localhost:5000";
-        // HTTP client oluştur
+        var clientId = _configuration["OpenIddict:ClientId"] ?? "InventoryTrackingAutomation_App";
+        var scope = _configuration["OpenIddict:Scope"] ?? "openid profile email roles InventoryTrackingAutomation";
         var httpClient = _httpClientFactory.CreateClient();
-        // Token istek parametreleri
         var tokenRequest = new FormUrlEncodedContent(new[]
         {
             new KeyValuePair<string, string>("grant_type", "password"),
             new KeyValuePair<string, string>("username", username),
             new KeyValuePair<string, string>("password", password),
-            new KeyValuePair<string, string>("client_id", "InventoryTrackingAutomation_App"),
-            new KeyValuePair<string, string>("scope", "openid profile email roles InventoryTrackingAutomation")
+            new KeyValuePair<string, string>("client_id", clientId),
+            new KeyValuePair<string, string>("scope", scope)
         });
 
         try
@@ -132,12 +131,10 @@ public class AuthAppService : InventoryTrackingAutomationAppService, IAuthAppSer
                 _logger.LogError($"Token request başarısız: {response.StatusCode}");
                 return null;
             }
-
             // Response JSON'ı parse et
             var tokenResponseJson = await response.Content.ReadAsStringAsync();
             var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
             var tokenData = JsonSerializer.Deserialize<JsonElement>(tokenResponseJson, options);
-
             // TokenResponse nesnesi oluştur
             return new TokenResponse
             {

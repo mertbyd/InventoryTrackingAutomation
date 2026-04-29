@@ -27,21 +27,16 @@ public class MovementRequestAppService : InventoryTrackingAutomationAppService, 
     private readonly IMovementRequestRepository _repository;
     // Domain manager — iş kuralları, validasyon, workflow tetikleme.
     private readonly MovementRequestManager _manager;
-    // Current user → Worker eşlemesi için.
-    private readonly IWorkerRepository _workerRepository;
-
     // Tüm bağımlılıkları DI ile alır.
     private readonly IMapper _mapper;
     public MovementRequestAppService(
         IMovementRequestRepository repository,
         MovementRequestManager manager,
-        IWorkerRepository workerRepository,
         IMapper mapper)
     {
         _mapper = mapper;
         _repository = repository;
         _manager = manager;
-        _workerRepository = workerRepository;
     }
 
     /// Hareket talebi verisini getirmek için kullanılır.
@@ -66,7 +61,7 @@ public class MovementRequestAppService : InventoryTrackingAutomationAppService, 
     [UnitOfWork]
     public async Task<MovementRequestDto> CreateAsync(CreateMovementRequestDto input)
     {
-        var currentUserId = CurrentUserId;
+        var currentUserId = CurrentUser.GetId();
         var model = _mapper.Map<CreateMovementRequestDto, CreateMovementRequestModel>(input);
         model.RequestedByWorkerId = await ResolveCurrentWorkerIdAsync();
 
@@ -79,7 +74,7 @@ public class MovementRequestAppService : InventoryTrackingAutomationAppService, 
     [UnitOfWork]
     public async Task<List<MovementRequestDto>> CreateManyAsync(List<CreateMovementRequestDto> inputs)
     {
-        var currentUserId = CurrentUserId;
+        var currentUserId = CurrentUser.GetId();
         var currentWorkerId = await ResolveCurrentWorkerIdAsync();
 
         // DTO listesini Model listesine map'le ve current worker bilgisini set et.
@@ -117,7 +112,7 @@ public class MovementRequestAppService : InventoryTrackingAutomationAppService, 
         var dispatched = await _manager.DispatchAsync(
             id,
             input.DispatchNote,
-            CurrentUserId,
+            CurrentUser.GetId(),
             await ResolveCurrentWorkerIdAsync());
 
         return _mapper.Map<MovementRequest, MovementRequestDto>(dispatched);
@@ -131,7 +126,7 @@ public class MovementRequestAppService : InventoryTrackingAutomationAppService, 
         var received = await _manager.ReceiveAsync(
             id,
             model,
-            CurrentUserId);
+            CurrentUser.GetId());
 
         return _mapper.Map<MovementRequest, MovementRequestDto>(received);
     }
@@ -140,7 +135,7 @@ public class MovementRequestAppService : InventoryTrackingAutomationAppService, 
     [UnitOfWork]
     public async Task<MovementRequestDto> CreateWithLinesAsync(CreateMovementRequestWithLinesDto input)
     {
-        var currentUserId = CurrentUserId;
+        var currentUserId = CurrentUser.GetId();
 
         var model = _mapper.Map<CreateMovementRequestWithLinesDto, CreateMovementRequestWithLinesModel>(input);
         model.RequestedByWorkerId = await ResolveCurrentWorkerIdAsync();
@@ -166,19 +161,4 @@ public class MovementRequestAppService : InventoryTrackingAutomationAppService, 
         await _repository.SoftDeleteAsync(id);
     }
 
-    /// Mevcut çalışanın ID verisini getirir.
-    private async Task<Guid> ResolveCurrentWorkerIdAsync()
-    {
-        var userId = CurrentUserId;
-        var worker = await _workerRepository.FindAsync(w => w.UserId == userId);
-        if (worker == null)
-        {
-            throw new BusinessException(InventoryTrackingAutomationErrorCodes.Workers.NotFound)
-                .WithData("UserId", userId);
-        }
-        return worker.Id;
     }
-
-    /// Mevcut kullanıcının ID verisini getirir.
-    private Guid CurrentUserId => CurrentUser.GetId();
-}
