@@ -17,7 +17,9 @@ public class TaskLineConfiguration : IEntityTypeConfiguration<TaskLine>
         builder.Property(x => x.ProductId).IsRequired();
         builder.Property(x => x.Quantity).IsRequired();
 
-        builder.HasIndex(x => new { x.TaskId, x.ProductId }).IsUnique();
+        builder.HasIndex(x => new { x.TaskId, x.ProductId })
+            .IsUnique()
+            .HasFilter("\"IsDeleted\" = FALSE");
 
         builder.HasOne<InventoryTask>()
             .WithMany()

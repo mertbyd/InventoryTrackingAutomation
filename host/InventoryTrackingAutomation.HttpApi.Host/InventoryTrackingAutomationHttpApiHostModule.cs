@@ -291,8 +291,16 @@ public class InventoryTrackingAutomationHttpApiHostModule : AbpModule
         var redisConfiguration = configuration["Redis:Configuration"];
         if (!string.IsNullOrWhiteSpace(redisConfiguration))
         {
-            var redis = ConnectionMultiplexer.Connect(redisConfiguration);
-            dataProtectionBuilder.PersistKeysToStackExchangeRedis(redis, "InventoryTrackingAutomation-Protection-Keys");
+            try
+            {
+                var redis = ConnectionMultiplexer.Connect(redisConfiguration + ",abortConnect=false");
+                dataProtectionBuilder.PersistKeysToStackExchangeRedis(redis, "InventoryTrackingAutomation-Protection-Keys");
+            }
+            catch (Exception ex)
+            {
+                Serilog.Log.Warning(ex, "Redis connection failed, falling back to in-memory data protection and cache.");
+                context.Services.AddDistributedMemoryCache();
+            }
         }
         
         context.Services.AddCors(options =>

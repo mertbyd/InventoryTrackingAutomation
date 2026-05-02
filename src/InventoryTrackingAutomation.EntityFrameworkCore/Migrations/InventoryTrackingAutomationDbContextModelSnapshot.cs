@@ -813,7 +813,8 @@ namespace InventoryTrackingAutomation.Migrations
                     b.HasIndex("ProductId");
 
                     b.HasIndex("TaskId", "ProductId")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("\"IsDeleted\" = FALSE");
 
                     b.ToTable("task_lines", "operation");
                 });
@@ -944,7 +945,8 @@ namespace InventoryTrackingAutomation.Migrations
                     b.HasIndex("TaskLineId");
 
                     b.HasIndex("VehicleTaskId", "TaskLineId")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("\"IsDeleted\" = FALSE");
 
                     b.ToTable("vehicle_task_lines", "operation");
                 });
