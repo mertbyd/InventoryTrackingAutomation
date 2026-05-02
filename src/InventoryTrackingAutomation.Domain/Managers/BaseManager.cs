@@ -5,8 +5,8 @@ using System.Linq.Expressions;
 using System.Threading.Tasks;
 using InventoryTrackingAutomation.Interface;
 using Volo.Abp;
+using Volo.Abp.DependencyInjection;
 using Volo.Abp.Domain.Entities;
-using Volo.Abp.Domain.Services;
 
 namespace InventoryTrackingAutomation.Managers;
 
@@ -14,7 +14,7 @@ namespace InventoryTrackingAutomation.Managers;
 // Türetilmiş manager'lar tekrarlı kontrolleri buradan kullanır, sadece kendine özgü iş kurallarını ekler.
 //işlevi: Base etki alanı (domain) kurallarını ve karmaşık veri bütünlüğünü sağlar.
 //sistemdeki görevi: Domain katmanındaki iş kurallarının merkezi yönetimini ve validasyonunu sağlar.
-public abstract class BaseManager<TEntity> : DomainService
+public abstract class BaseManager<TEntity> : InventoryTrackingAutomationDomainService
     where TEntity : class, IEntity<Guid>
 {
     // Yönetilen entity tipinin temel repository'si (alt sınıflara açık).
@@ -22,6 +22,14 @@ public abstract class BaseManager<TEntity> : DomainService
 
     // Yönetilen entity'nin repository'sini DI ile alır.
     protected BaseManager(IBaseRepository<TEntity> repository)
+    {
+        Repository = repository;
+    }
+
+    protected BaseManager(
+        IBaseRepository<TEntity> repository,
+        IAbpLazyServiceProvider abpLazyServiceProvider)
+        : base(abpLazyServiceProvider)
     {
         Repository = repository;
     }
@@ -131,7 +139,7 @@ public abstract class BaseManager<TEntity> : DomainService
     /// Enum değerinin geçerliliğini doğrulamak için kullanılır.
     protected async Task EnsureValidEnumAsync<TEnum>(TEnum value, string settingName) where TEnum : struct, Enum
     {
-        var enumValidationManager = LazyServiceProvider.LazyGetRequiredService<InventoryTrackingAutomation.Managers.Shared.EnumValidationManager>();
+        var enumValidationManager = LazyGetRequiredService<InventoryTrackingAutomation.Managers.Shared.EnumValidationManager>();
         await enumValidationManager.ValidateAllowedEnumAsync(value, settingName);
     }
 }

@@ -12,6 +12,7 @@ using Volo.Abp;
 using Volo.Abp.Domain.Repositories;
 using Volo.Abp.Uow;
 using Volo.Abp.Users;
+using Volo.Abp.DependencyInjection;
 
 namespace InventoryTrackingAutomation.Application.Services.Movements;
 
@@ -20,22 +21,19 @@ namespace InventoryTrackingAutomation.Application.Services.Movements;
 //sistemdeki görevi: Uygulama katmanındaki kullanım senaryolarını (use-case) gerçekleştiren ana servis birimidir.
 public class MovementApprovalAppService : InventoryTrackingAutomationAppService, IMovementApprovalAppService
 {
+    public MovementApprovalAppService(IAbpLazyServiceProvider abpLazyServiceProvider)
+        : base(abpLazyServiceProvider)
+    {
+    }
+
     // Domain manager — onay/red iş kuralları ve workflow state machine.
-    private readonly MovementApprovalManager _manager;
+    private MovementApprovalManager _manager => LazyGetRequiredService<MovementApprovalManager>();
     // Onay geçmişi listeleme için repository.
-    private readonly IRepository<MovementApproval, Guid> _repository;
+    private IRepository<MovementApproval, Guid> _repository => LazyGetRequiredService<IRepository<MovementApproval, Guid>>();
 
     // Tüm bağımlılıkları DI ile alır.
-    private readonly IMapper _mapper;
-    public MovementApprovalAppService(
-        MovementApprovalManager manager,
-        IRepository<MovementApproval, Guid> repository,
-        IMapper mapper)
-    {
-        _mapper = mapper;
-        _manager = manager;
-        _repository = repository;
-    }
+    private IMapper _mapper => LazyGetRequiredService<IMapper>();
+
 
     /// Onay işlemini gerçekleştirmek için kullanılır.
     [UnitOfWork]

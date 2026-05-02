@@ -24,16 +24,13 @@ public abstract class InventoryTrackingAutomationTestBase<TStartupModule> : AbpI
 
     protected virtual async Task WithUnitOfWorkAsync(AbpUnitOfWorkOptions options, Func<Task> action)
     {
-        using (var scope = ServiceProvider.CreateScope())
+        var uowManager = GetRequiredService<IUnitOfWorkManager>();
+
+        using (var uow = uowManager.Begin(options))
         {
-            var uowManager = scope.ServiceProvider.GetRequiredService<IUnitOfWorkManager>();
+            await action();
 
-            using (var uow = uowManager.Begin(options))
-            {
-                await action();
-
-                await uow.CompleteAsync();
-            }
+            await uow.CompleteAsync();
         }
     }
 
@@ -44,16 +41,13 @@ public abstract class InventoryTrackingAutomationTestBase<TStartupModule> : AbpI
 
     protected virtual async Task<TResult> WithUnitOfWorkAsync<TResult>(AbpUnitOfWorkOptions options, Func<Task<TResult>> func)
     {
-        using (var scope = ServiceProvider.CreateScope())
-        {
-            var uowManager = scope.ServiceProvider.GetRequiredService<IUnitOfWorkManager>();
+        var uowManager = GetRequiredService<IUnitOfWorkManager>();
 
-            using (var uow = uowManager.Begin(options))
-            {
-                var result = await func();
-                await uow.CompleteAsync();
-                return result;
-            }
+        using (var uow = uowManager.Begin(options))
+        {
+            var result = await func();
+            await uow.CompleteAsync();
+            return result;
         }
     }
 }

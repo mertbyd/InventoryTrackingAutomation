@@ -3,34 +3,40 @@ using InventoryTrackingAutomation.Enums.Workflows;
 
 namespace InventoryTrackingAutomation.Dtos.Workflows;
 
-/// <summary>
-/// Mevcut kullanıcının onaylaması bekleyen iş akışı adımını dönen entity-agnostic DTO.
-/// </summary>
 //işlevi: PendingWorkflowStep verisinin transferi sırasında taşınacak olan yapıyı tanımlar.
 //sistemdeki görevi: Katmanlar arası veri alışverişini standartlaştırır.
 public class PendingWorkflowStepDto
 {
-    /// <summary>İş akışı adım Id'si.</summary>
+    /// <summary>
+    /// WorkflowInstanceStepId alanı.
+    /// </summary>
     public Guid WorkflowInstanceStepId { get; set; }
-
-    /// <summary>Bağlı olduğu iş akışı süreci Id'si.</summary>
+    /// <summary>
+    /// WorkflowInstanceId alanı.
+    /// </summary>
     public Guid WorkflowInstanceId { get; set; }
-
-    /// <summary>İş akışına bağlı entity türü (Örn: "MovementRequest").</summary>
+    /// <summary>
+    /// EntityType alanı.
+    /// </summary>
     public string EntityType { get; set; }
-
-    /// <summary>İş akışına bağlı entity Id'si.</summary>
+    /// <summary>
+    /// EntityId alanı.
+    /// </summary>
     public Guid EntityId { get; set; }
-
-    /// <summary>Adım sırası (1, 2, 3...).</summary>
+    /// <summary>
+    /// StepOrder alanı.
+    /// </summary>
     public int StepOrder { get; set; }
-
-    /// <summary>Adım adı — RequiredRoleName veya ResolverKey.</summary>
+    /// <summary>
+    /// StepName alanı.
+    /// </summary>
     public string StepName { get; set; }
-
-    /// <summary>İş akışını başlatan kullanıcı Id'si.</summary>
+    /// <summary>
+    /// InitiatorUserId alanı.
+    /// </summary>
     public Guid InitiatorUserId { get; set; }
-
-    /// <summary>Step'in oluşturulma zamanı.</summary>
+    /// <summary>
+    /// CreatedAt alanı.
+    /// </summary>
     public DateTime CreatedAt { get; set; }
 }

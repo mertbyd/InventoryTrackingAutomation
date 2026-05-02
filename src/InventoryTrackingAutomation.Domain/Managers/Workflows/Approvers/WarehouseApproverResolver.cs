@@ -21,13 +21,13 @@ internal static class WarehouseApproverResolver
             return null;
         }
 
-        var request = await movementRequestRepository.FindAsync(context.EntityId);
-        if (request == null)
+        var movementContext = await movementRequestRepository.GetOperationalContextAsync(context.EntityId);
+        if (movementContext == null)
         {
             return null;
         }
 
-        var warehouseId = useSourceWarehouse ? request.SourceWarehouseId : request.TargetWarehouseId;
+        var warehouseId = useSourceWarehouse ? movementContext.SourceWarehouseId : movementContext.TargetWarehouseId;
         if (!warehouseId.HasValue || warehouseId.Value == Guid.Empty)
         {
             return null;

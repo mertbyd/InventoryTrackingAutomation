@@ -1,24 +1,30 @@
 using System;
-using InventoryTrackingAutomation.Enums.Tasks;
-using InventoryTrackingAutomation.Enums.Inventory;
 using InventoryTrackingAutomation.Enums;
 
 namespace InventoryTrackingAutomation.Dtos.Movements;
 
-/// <summary>
-/// Hareket talebi oluşturma request DTO'su.
-/// RequestedByWorkerId ve WorkflowInstanceId server-side çözümlenir, client'tan alınmaz.
-/// </summary>
 //işlevi: CreateMovementRequest verisinin transferi sırasında taşınacak olan yapıyı tanımlar.
 //sistemdeki görevi: Katmanlar arası veri alışverişini standartlaştırır.
 public class CreateMovementRequestDto
 {
+    /// <summary>
+    /// Talep numarası. Örnek: &quot;MR-2024-00123&quot;
+    /// </summary>
     public string RequestNumber { get; set; }             // Talep numarası. Örnek: "MR-2024-00123"
-    public Guid SourceWarehouseId { get; set; }           // Kaynak lokasyon Id.
-    public Guid? TargetWarehouseId { get; set; }          // Hedef lokasyon Id.
-    public Guid? RequestedVehicleId { get; set; }         // Talep edilen sevkiyat aracı Id.
-    public Guid? AssignedTaskId { get; set; }             // Bağlı olduğu saha görevi Id.
+    /// <summary>
+    /// Hareketin baglanacagi arac-gorev atamasi Id.
+    /// </summary>
+    public Guid VehicleTaskId { get; set; }               // Hareketin baglanacagi arac-gorev atamasi Id.
+    /// <summary>
+    /// Öncelik. Örnek: MovementPriorityEnum.Normal
+    /// </summary>
     public MovementPriorityEnum Priority { get; set; }    // Öncelik. Örnek: MovementPriorityEnum.Normal
+    /// <summary>
+    /// Talep gerekçesi.
+    /// </summary>
     public string RequestNote { get; set; }               // Talep gerekçesi.
+    /// <summary>
+    /// Planlanan teslim tarihi.
+    /// </summary>
     public DateTime PlannedDate { get; set; }             // Planlanan teslim tarihi.
 }

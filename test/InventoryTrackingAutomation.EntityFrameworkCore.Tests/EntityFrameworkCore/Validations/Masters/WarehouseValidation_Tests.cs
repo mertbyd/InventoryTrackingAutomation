@@ -1,0 +1,8 @@
+using InventoryTrackingAutomation.Validations.Masters;
+using InventoryTrackingAutomation.EntityFrameworkCore;
+
+namespace InventoryTrackingAutomation.EntityFrameworkCore.Validations.Masters;
+
+public class WarehouseValidation_Tests : InventoryTrackingAutomation.Validations.Masters.WarehouseValidation_Tests<InventoryTrackingAutomationEntityFrameworkCoreTestModule>
+{
+}

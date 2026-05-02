@@ -1,0 +1,8 @@
+using InventoryTrackingAutomation.Tasks;
+using InventoryTrackingAutomation.EntityFrameworkCore;
+
+namespace InventoryTrackingAutomation.EntityFrameworkCore.Tasks;
+
+public class VehicleTaskManager_Tests : InventoryTrackingAutomation.Tasks.VehicleTaskManager_Tests<InventoryTrackingAutomationEntityFrameworkCoreTestModule>
+{
+}

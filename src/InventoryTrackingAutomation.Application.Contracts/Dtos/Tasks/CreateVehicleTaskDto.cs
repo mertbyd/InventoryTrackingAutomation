@@ -1,17 +1,34 @@
 using System;
+using System.Collections.Generic;
 
 namespace InventoryTrackingAutomation.Dtos.Tasks;
 
-/// <summary>
-/// Arac-gorev atamasi olusturma request DTO'su.
-/// </summary>
 //işlevi: CreateVehicleTask verisinin transferi sırasında taşınacak olan yapıyı tanımlar.
 //sistemdeki görevi: Katmanlar arası veri alışverişini standartlaştırır.
 public class CreateVehicleTaskDto
 {
+    /// <summary>
+    /// Arac Id&apos;si.
+    /// </summary>
     public Guid VehicleId { get; set; }       // Arac Id'si.
-    public Guid InventoryTaskId { get; set; } // Gorev Id'si.
+    /// <summary>
+    /// Operasyon isi Id&apos;si.
+    /// </summary>
+    public Guid TaskId { get; set; } // Operasyon isi Id'si.
+    /// <summary>
+    /// Atamadan sorumlu calisan Id&apos;si.
+    /// </summary>
+    public Guid ResponsibleWorkerId { get; set; } // Atamadan sorumlu calisan Id'si.
+    /// <summary>
+    /// Atama zamani.
+    /// </summary>
     public DateTime AssignedAt { get; set; }  // Atama zamani.
+    /// <summary>
+    /// Birakma zamani.
+    /// </summary>
     public DateTime? ReleasedAt { get; set; } // Birakma zamani.
-    public bool IsActive { get; set; }        // Aktiflik bilgisi.
+    /// <summary>
+    /// Olusturma sirasinda arac-gorev kalemleri. Opsiyonel.
+    /// </summary>
+    public List<CreateVehicleTaskLineDto>? Lines { get; set; } // Olusturma sirasinda arac-gorev kalemleri.
 }

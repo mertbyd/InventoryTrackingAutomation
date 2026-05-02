@@ -1,4 +1,5 @@
 using System;
+using InventoryTrackingAutomation.Managers;
 using System.Threading.Tasks;
 using InventoryTrackingAutomation.Managers.Masters;
 using InventoryTrackingAutomation.Workflows;
@@ -10,14 +11,16 @@ namespace InventoryTrackingAutomation.Managers.Workflows.Approvers;
 // Worker zinciri çözümlemesini WorkerManager'a delege eder (DRY — diğer yerlerle tek doğruluk kaynağı).
 //işlevi: InitiatorManagerApproverStrategy.cs etki alanı (domain) kurallarını ve karmaşık veri bütünlüğünü sağlar.
 //sistemdeki görevi: Domain katmanındaki iş kurallarının merkezi yönetimini ve validasyonunu sağlar.
-public class InitiatorManagerApproverStrategy : IApproverStrategy, ITransientDependency
+public class InitiatorManagerApproverStrategy : InventoryTrackingAutomationLazyService, IApproverStrategy, ITransientDependency
 {
-    private readonly WorkerManager _workerManager;
-
-    public InitiatorManagerApproverStrategy(WorkerManager workerManager)
+    public InitiatorManagerApproverStrategy(IAbpLazyServiceProvider abpLazyServiceProvider)
+        : base(abpLazyServiceProvider)
     {
-        _workerManager = workerManager;
     }
+
+    private WorkerManager _workerManager => LazyGetRequiredService<WorkerManager>();
+
+
 
     public string Key => WorkflowResolverKeys.InitiatorManager;
 

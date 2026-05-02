@@ -7,7 +7,7 @@ namespace InventoryTrackingAutomation.Models.Tasks;
 /// </summary>
 public class TaskInventoryModel
 {
-    public Guid InventoryTaskId { get; set; } // Gorev Id'si.
+    public Guid TaskId { get; set; } // Operasyon isi Id'si.
     public Guid VehicleTaskId { get; set; }   // Gorev-arac atama Id'si.
     public Guid VehicleId { get; set; }       // Arac Id'si.
     public Guid ProductId { get; set; }       // Arac uzerindeki urun Id'si.

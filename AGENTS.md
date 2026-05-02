@@ -1,8 +1,8 @@
 # AGENTS.md
 
-This file provides guidance to Codex (Codex.ai/code) when working with code in this repository.
+This file provides guidance to Codex when working with this repository.
 
-## Build & Run
+## Build And Run
 
 ```bash
 # Build entire solution
@@ -26,111 +26,145 @@ ng build
 ng test
 ```
 
-## Database Migrations (EF Core)
+## Database Migrations
 
-Run these from `src/InventoryTrackingAutomation.EntityFrameworkCore/`:
+Run EF Core migrations from `src/InventoryTrackingAutomation.EntityFrameworkCore/`:
 
 ```bash
-dotnet ef migrations add "MigrationName" --startup-project ../../../host/InventoryTrackingAutomation.HttpApi.Host
-dotnet ef database update --startup-project ../../../host/InventoryTrackingAutomation.HttpApi.Host
+dotnet ef migrations add MigrationName --startup-project ../../../host/InventoryTrackingAutomation.HttpApi.Host --context InventoryTrackingAutomationDbContext
+dotnet ef database update --startup-project ../../../host/InventoryTrackingAutomation.HttpApi.Host --context InventoryTrackingAutomationDbContext
 ```
 
-Local PostgreSQL is available via Docker:
+Local PostgreSQL is available with:
 
 ```bash
 docker-compose up -d
 ```
 
-## Architecture Overview
+## Current System Shape
 
-**Framework:** ABP Framework 10.3.0, .NET 10, PostgreSQL (Npgsql)
+Framework: ABP Framework 10.3.0, .NET 10, PostgreSQL, OpenIddict, SignalR.
 
-### Layer Hierarchy
+The current movement system is entity-chain based:
 
+```text
+InventoryTask
+  -> TaskLine
+  -> VehicleTask
+      -> VehicleTaskLine
+      -> MovementRequest
+          -> InventoryTransaction
 ```
-Domain.Shared       → Enums, error codes, localization (netstandard2.1)
-Domain              → Entities, Manager classes, repository interfaces
-Application.Contracts → DTOs, IAppService interfaces
-Application         → AppService implementations, AutoMapper profiles
-EntityFrameworkCore → DbContext, FluentAPI configs, custom repositories
-HttpApi             → REST controller module configuration
-HttpApi.Host        → Entry point (Serilog, Autofac, Swagger, OpenIddict)
-```
 
-### Domain Layer Conventions
+Core rules:
 
-**Entity base classes:** `FullAuditedAggregateRoot<Guid>` for aggregate roots, `Entity<Guid>` for child entities. All implement `IMultiTenant` with `public Guid? TenantId { get; set; }`.
+- `InventoryTask.Type` is the process selector.
+- `InventoryTask.SourceWarehouseId` and `InventoryTask.TargetWarehouseId` own the route.
+- `TaskLine` owns the task product and requested quantity.
+- `VehicleTask` owns task/vehicle/responsible worker assignment.
+- `VehicleTaskLine` owns how much of a `TaskLine` is allocated to a vehicle assignment and stores return reconciliation.
+- `MovementRequest` stores `VehicleTaskId` and optional `ParentMovementRequestId`.
+- `MovementRequest` does not store direct task, route or product line fields.
+- Product is resolved through `VehicleTaskLine.TaskLineId -> TaskLine.ProductId`; do not duplicate `ProductId` on `VehicleTaskLine`.
+- `InventoryTransaction` links to the ledger source through `RelatedMovementRequestId`.
 
-**Constructor pattern** (required for every entity):
+Do not reintroduce:
+
+- `MovementRequest.Type`
+- `MovementRequest.RequestedVehicleId`
+- `MovementRequest.AssignedTaskId`
+- `MovementRequest.TaskId`
+- `MovementRequest.SourceWarehouseId`
+- `MovementRequest.TargetWarehouseId`
+- `InventoryTransaction.RelatedTaskId`
+- `MovementRequestTypeEnum`
+- production `MovementRequestLine` entity/DTO/service/controller/repository surface
+- `POST /api/movement-requests/with-lines`
+
+## Domain Conventions
+
+- Entity constructors use:
+
 ```csharp
 protected EntityName() { }
 public EntityName(Guid id) : base(id) { }
 ```
 
-**No navigation properties** — only `XxxId` FK references. Collections are not included.
+- No navigation properties in domain entities unless an existing workflow entity explicitly uses them.
+- Business logic lives in `src/InventoryTrackingAutomation.Domain/Managers/`.
+- AppServices are thin orchestration and mapping layers.
+- Repository interfaces live under `Domain/Interface/`; EF implementations live under `EntityFrameworkCore/Repository/`.
+- Use `IMovementRequestRepository.GetOperationalContextAsync` for movement decisions instead of rebuilding joins in managers or app services.
 
-**Business logic** lives in `Domain/Managers/` (e.g., `DepartmentManager`, `ProductManager`). AppServices delegate to managers; they do not contain domain logic themselves.
+## Layer Map
 
-**Repository interfaces** are declared in `Domain/Interface/` and implemented in `EntityFrameworkCore/Repository/`. Register custom repos in `InventoryTrackingAutomationEntityFrameworkCoreModule.ConfigureServices`.
-
-### Application Layer Conventions
-
-- AppServices inherit `InventoryTrackingAutomationAppService`
-- Standard CRUD methods: `GetAsync(id)`, `GetListAsync(PagedResultRequestDto)`, `CreateAsync(dto)`, `CreateManyAsync(List<dto>)`, `UpdateAsync(id, dto)`, `DeleteAsync(id)`
-- DTOs follow naming: `Create{Entity}Dto`, `Update{Entity}Dto`; responses use `{Entity}Dto`
-- AutoMapper profiles are auto-discovered from the module assembly (no manual registration needed)
-
-### Database Schemas
-
-The DbContext partitions tables by functional area:
-
-| Schema | Contains |
-|--------|----------|
-| `abp` | ABP framework tables (identity, permissions, audit, settings) |
-| `openiddict` | OAuth2/OIDC tables |
-| `lookup` | Department, ProductCategory |
-| `master` | Product, Site, Vehicle, Worker |
-| `stock` | ProductStock, StockMovement |
-| `movement` | MovementRequest, MovementRequestLine, MovementApproval |
-| `shipment` | Shipment, ShipmentLine |
-
-### Error Codes
-
-Centralized in `Domain.Shared/InventoryTrackingAutomationDomainErrorCodes.cs`. Pattern:
-
-```csharp
-public const string ProductNotFound = "InventoryTracking:Products.NotFound";
-public const string ProductCodeNotUnique = "InventoryTracking:Products.CodeNotUnique";
+```text
+Domain.Shared          Enums, constants, error codes, events, localization
+Domain                 Entities, managers, repository interfaces, event handlers
+Application.Contracts  DTOs, service interfaces, validators, permissions
+Application            AppServices and AutoMapper profiles
+EntityFrameworkCore    DbContext, configurations, repositories, migrations
+HttpApi                Controllers
+HttpApi.Host           Startup, middleware, Swagger, OpenIddict, SignalR
 ```
 
-Managers expose `EnsureExistsAsync(id, errorCode)` and `EnsureUniqueAsync(predicate, errorCode)` helpers.
+## Database Schemas
 
-### Module Registration
+| Schema | Contains |
+| --- | --- |
+| `abp` | ABP identity, permissions, audit, settings |
+| `openiddict` | OAuth2/OIDC tables |
+| `lookup` | Department, ProductCategory |
+| `master` | Product, Warehouse, Vehicle, Worker |
+| `stock` | StockLocation, InventoryTransaction |
+| `operation` | InventoryTask, TaskLine, VehicleTask, VehicleTaskLine |
+| `movement` | MovementRequest, MovementApproval |
 
-ABP modules use `[DependsOn(...)]` and `ConfigureServices`/`OnApplicationInitialization`. When adding a new feature:
-1. Define entity in Domain, add to DbContext
-2. Add DbSet and FluentAPI config in `InventoryTrackingAutomationDbContext`
-3. Register custom repository in `InventoryTrackingAutomationEntityFrameworkCoreModule`
-4. Create manager in Domain, DTO + interface in Application.Contracts, service in Application
-5. Add error codes to `InventoryTrackingAutomationDomainErrorCodes`
+## Movement Lifecycle
 
-## Key Conventions
+Create movement:
 
-- **Language version:** `latest`, **Nullable:** `enabled` — enforce non-nullable by default
-- **Comments:** XML `<summary>` on all classes/enums; `//` inline comments on properties with example values. Domain comments are written in Turkish.
-- **File-scoped namespaces:** `namespace InventoryTrackingAutomation.X.Y;`
-- **Shared build props:** All `.csproj` files import `common.props` — do not duplicate version or language settings per-project
-- **Secrets:** Connection strings go in `appsettings.secrets.json` (gitignored), not `appsettings.json`
+1. Client creates/updates `InventoryTask` and its `TaskLine` records.
+2. Client creates/updates `VehicleTask` and its `VehicleTaskLine` allocations.
+3. Client creates `MovementRequest` with `VehicleTaskId`.
+4. Manager validates worker, task route warehouses, active vehicle task and transfer lines.
+5. Workflow is selected from `InventoryTask.Type`.
 
----
+Dispatch:
 
-## Geçmiş Sürümler & Değişiklikler
+1. Movement must be `Approved`.
+2. Return movements cannot be dispatched.
+3. Operational context is loaded through the repository.
+4. Transfer lines are read from `VehicleTaskLine`, product is resolved through `TaskLine`.
+5. Stock moves `InventoryTask.SourceWarehouseId -> VehicleTask.VehicleId`.
+6. Movement becomes `Shipped`.
 
-### v1.1.0 (2026-04-25)
-- **Serialization Fix**: `System.Type` kaynaklı crash sorunu `SystemStandards` kütüphanesinde `[JsonIgnore]` ile çözüldü.
-- **Logging Middleware**: Tüm request/response döngüsünü loglayan `RequestResponseLoggingMiddleware` pipeline'a eklendi.
-- **Fluent API**: Result sınıflarına profesyonel zincirlenebilir metodlar (`WithCorrelationId`, `WithLocation`) eklendi.
-- **Dinamik Mapping**: `appsettings.json` üzerinden mapping kuralları ve DI kayıtları `SystemStandards` tarafında optimize edildi.
-- **Modern Altyapı**: Tüm projeler .NET 10 ve ABP 10.3.0 standartlarına yükseltildi.
-- **Sürüm Güncellemesi**: `common.props` ve ilgili paket referansları `v1.1.0` olarak güncellendi.
+Receive:
 
+- Warehouse transfer: stock moves `Vehicle -> InventoryTask.TargetWarehouseId`, movement and task complete, vehicle assignment is released.
+- Field operation main movement: movement completes, stock remains on vehicle.
+- Return movement: received stock moves back to warehouse; damaged/lost/consumed quantities become vehicle stock adjustments.
+
+## Testing Guidance
+
+- Integration tests must create real FK rows; do not use random GUID placeholders.
+- Repository/query logic should run inside an active UnitOfWork.
+- EFCore tests use SQLite shared in-memory database.
+- Keep movement regression coverage around removed fields and route ownership.
+- Critical movement tests live in `test/InventoryTrackingAutomation.EntityFrameworkCore.Tests/EntityFrameworkCore/Movements/MovementFlow_Integration_Tests.cs`.
+- Run `dotnet test test/InventoryTrackingAutomation.EntityFrameworkCore.Tests/InventoryTrackingAutomation.EntityFrameworkCore.Tests.csproj --no-restore --filter MovementFlow_Integration_Tests`.
+- Movement flow tests write step-by-step table logs under `test/InventoryTrackingAutomation.EntityFrameworkCore.Tests/TestResults/movement-flow-logs`.
+
+## External Wiki
+
+The external working wiki is:
+
+`C:\Users\mertb\OneDrive\Belgeler\InventoryWiki\wiki`
+
+Read first:
+
+1. `current-system-state-for-claude.md`
+2. `10-entity-first-system-map.md`
+3. `02-domain-model.md`
+4. `03-workflow-engine.md`
+5. `test-plan.md`

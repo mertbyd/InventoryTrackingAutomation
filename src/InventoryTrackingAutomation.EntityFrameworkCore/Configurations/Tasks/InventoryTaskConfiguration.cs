@@ -15,13 +15,24 @@ public class InventoryTaskConfiguration : IEntityTypeConfiguration<InventoryTask
 
         builder.Property(x => x.Code).IsRequired().HasMaxLength(50);
         builder.Property(x => x.Name).IsRequired().HasMaxLength(200);
-        builder.Property(x => x.Region).IsRequired().HasMaxLength(100);
+        builder.Property(x => x.Type).IsRequired();
+        builder.Property(x => x.Region).HasMaxLength(100);
         builder.Property(x => x.StartDate).IsRequired();
         builder.Property(x => x.Status).IsRequired();
         builder.Property(x => x.Description).HasMaxLength(1000);
-        builder.Property(x => x.IsActive).IsRequired();
+        builder.Property(x => x.SourceWarehouseId).IsRequired();
 
         builder.HasIndex(x => x.Code).IsUnique();
+
+        builder.HasOne<Warehouse>()
+            .WithMany()
+            .HasForeignKey(x => x.SourceWarehouseId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne<Warehouse>()
+            .WithMany()
+            .HasForeignKey(x => x.TargetWarehouseId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne<Warehouse>()
             .WithMany()

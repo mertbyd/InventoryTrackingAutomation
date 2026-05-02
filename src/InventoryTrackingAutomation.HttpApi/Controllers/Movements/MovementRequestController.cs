@@ -8,6 +8,7 @@ using SystemStandards.Results;
 using InventoryTrackingAutomation.Dtos.Movements;
 using InventoryTrackingAutomation.Services.Movements;
 using InventoryTrackingAutomation.Permissions;
+using Volo.Abp.DependencyInjection;
 
 namespace InventoryTrackingAutomation.Controllers.Movements;
 
@@ -17,18 +18,34 @@ namespace InventoryTrackingAutomation.Controllers.Movements;
 [Route("api/movement-requests")]
 [ApiExplorerSettings(GroupName = "Movements")]
 [Tags("MovementRequests")]
-//işlevi: MovementRequest modülü için HTTP isteklerini karşılar.
-//sistemdeki görevi: Dış dünya ile sistem arasındaki iletişimi sağlayan API uç noktasıdır.
 public class MovementRequestController : InventoryTrackingAutomationController
 {
-    private readonly IMovementRequestAppService _appService;
-
-    public MovementRequestController(IMovementRequestAppService appService)
+    public MovementRequestController(IAbpLazyServiceProvider abpLazyServiceProvider)
+        : base(abpLazyServiceProvider)
     {
-        _appService = appService;
     }
 
-    /// Hareket talebi verisini getirmek için kullanılır.
+    private IMovementRequestAppService _appService => LazyGetRequiredService<IMovementRequestAppService>();
+
+    /// <summary>
+    /// Hareket talebi kaydını Id ile getirir.
+    /// </summary>
+    /// <param name="id">Kaydın benzersiz Id'si.</param>
+    /// <remarks>
+    /// Response {
+    ///   RequestNumber             (string)                → Talep numarası
+    ///   RequestedByWorkerId       (Guid)                  → Talebi oluşturan çalışan Id'si
+    ///   TaskId                    (Guid)                  → Bağlı operasyon iş Id'si
+    ///   VehicleTaskId             (Guid)                  → Araç-operasyon atama Id'si
+    ///   ParentMovementRequestId   (Guid?)                 → İade hareketinde ana talep Id'si
+    ///   Status                    (MovementStatusEnum)    → Talep durumu
+    ///   Priority                  (MovementPriorityEnum)  → Öncelik
+    ///   RequestNote               (string)                → Talep gerekçesi
+    ///   PlannedDate               (DateTime)              → Planlanan teslim tarihi
+    ///   CancellationNote          (string?)               → İptal gerekçesi
+    ///   WorkflowInstanceId        (Guid?)                 → Bağlı iş akışı Id'si
+    /// }
+    /// </remarks>
     [HttpGet("{id}")]
     [Authorize(InventoryTrackingAutomationPermissions.MovementRequests.View)]
     public async Task<Result<MovementRequestDto>> Get(Guid id)
@@ -37,7 +54,25 @@ public class MovementRequestController : InventoryTrackingAutomationController
         return result;
     }
 
-    /// Hareket talebi listesini getirmek için kullanılır.
+    /// <summary>
+    /// Hareket talebi kayıtlarını sayfalı liste olarak getirir.
+    /// </summary>
+    /// <param name="input">Sayfalama parametreleri.</param>
+    /// <remarks>
+    /// Response {
+    ///   RequestNumber             (string)                → Talep numarası
+    ///   RequestedByWorkerId       (Guid)                  → Talebi oluşturan çalışan Id'si
+    ///   TaskId                    (Guid)                  → Bağlı operasyon iş Id'si
+    ///   VehicleTaskId             (Guid)                  → Araç-operasyon atama Id'si
+    ///   ParentMovementRequestId   (Guid?)                 → İade hareketinde ana talep Id'si
+    ///   Status                    (MovementStatusEnum)    → Talep durumu
+    ///   Priority                  (MovementPriorityEnum)  → Öncelik
+    ///   RequestNote               (string)                → Talep gerekçesi
+    ///   PlannedDate               (DateTime)              → Planlanan teslim tarihi
+    ///   CancellationNote          (string?)               → İptal gerekçesi
+    ///   WorkflowInstanceId        (Guid?)                 → Bağlı iş akışı Id'si
+    /// }
+    /// </remarks>
     [HttpGet]
     [Authorize(InventoryTrackingAutomationPermissions.MovementRequests.View)]
     public async Task<Result<Volo.Abp.Application.Dtos.PagedResultDto<MovementRequestDto>>> GetList([FromQuery] Volo.Abp.Application.Dtos.PagedResultRequestDto input)
@@ -46,7 +81,32 @@ public class MovementRequestController : InventoryTrackingAutomationController
         return result;
     }
 
-    /// Yeni bir hareket talebi oluşturmak için kullanılır.
+    /// <summary>
+    /// Yeni hareket talebi kaydı oluşturur.
+    /// </summary>
+    /// <param name="input">Talep bilgileri.</param>
+    /// <remarks>
+    /// Request {
+    ///   RequestNumber  (string)                → Talep numarası
+    ///   VehicleTaskId  (Guid)                  → Araç-görev atama Id'si; task, araç ve rota buradan çözülür
+    ///   Priority       (MovementPriorityEnum)  → Öncelik
+    ///   RequestNote    (string)                → Talep gerekçesi
+    ///   PlannedDate    (DateTime)              → Planlanan teslim tarihi
+    /// }
+    /// Response {
+    ///   RequestNumber             (string)                → Talep numarası
+    ///   RequestedByWorkerId       (Guid)                  → Talebi oluşturan çalışan Id'si
+    ///   TaskId                    (Guid)                  → Bağlı operasyon iş Id'si
+    ///   VehicleTaskId             (Guid)                  → Araç-operasyon atama Id'si
+    ///   ParentMovementRequestId   (Guid?)                 → İade hareketinde ana talep Id'si
+    ///   Status                    (MovementStatusEnum)    → Talep durumu
+    ///   Priority                  (MovementPriorityEnum)  → Öncelik
+    ///   RequestNote               (string)                → Talep gerekçesi
+    ///   PlannedDate               (DateTime)              → Planlanan teslim tarihi
+    ///   CancellationNote          (string?)               → İptal gerekçesi
+    ///   WorkflowInstanceId        (Guid?)                 → Bağlı iş akışı Id'si
+    /// }
+    /// </remarks>
     [HttpPost]
     [Authorize(InventoryTrackingAutomationPermissions.MovementRequests.Create)]
     public async Task<Result<MovementRequestDto>> Create([FromBody] CreateMovementRequestDto input)
@@ -55,16 +115,32 @@ public class MovementRequestController : InventoryTrackingAutomationController
         return result;
     }
 
-    /// Hareket talebini satırları ile birlikte oluşturmak için kullanılır.
-    [HttpPost("with-lines")]
-    [Authorize(InventoryTrackingAutomationPermissions.MovementRequests.Create)]
-    public async Task<Result<MovementRequestDto>> CreateWithLines([FromBody] CreateMovementRequestWithLinesDto input)
-    {
-        var result = await _appService.CreateWithLinesAsync(input);
-        return result;
-    }
-
-    /// Birden fazla hareket talebini toplu olarak oluşturmak için kullanılır.
+    /// <summary>
+    /// Birden fazla hareket talebi kaydını toplu oluşturur.
+    /// </summary>
+    /// <param name="inputs">Talep bilgileri listesi.</param>
+    /// <remarks>
+    /// Request {
+    ///   RequestNumber  (string)                → Talep numarası
+    ///   VehicleTaskId  (Guid)                  → Araç-görev atama Id'si; task, araç ve rota buradan çözülür
+    ///   Priority       (MovementPriorityEnum)  → Öncelik
+    ///   RequestNote    (string)                → Talep gerekçesi
+    ///   PlannedDate    (DateTime)              → Planlanan teslim tarihi
+    /// }
+    /// Response {
+    ///   RequestNumber             (string)                → Talep numarası
+    ///   RequestedByWorkerId       (Guid)                  → Talebi oluşturan çalışan Id'si
+    ///   TaskId                    (Guid)                  → Bağlı operasyon iş Id'si
+    ///   VehicleTaskId             (Guid)                  → Araç-operasyon atama Id'si
+    ///   ParentMovementRequestId   (Guid?)                 → İade hareketinde ana talep Id'si
+    ///   Status                    (MovementStatusEnum)    → Talep durumu
+    ///   Priority                  (MovementPriorityEnum)  → Öncelik
+    ///   RequestNote               (string)                → Talep gerekçesi
+    ///   PlannedDate               (DateTime)              → Planlanan teslim tarihi
+    ///   CancellationNote          (string?)               → İptal gerekçesi
+    ///   WorkflowInstanceId        (Guid?)                 → Bağlı iş akışı Id'si
+    /// }
+    /// </remarks>
     [HttpPost("bulk")]
     [Authorize(InventoryTrackingAutomationPermissions.MovementRequests.Create)]
     public async Task<Result<List<MovementRequestDto>>> CreateMany([FromBody] List<CreateMovementRequestDto> inputs)
@@ -73,7 +149,33 @@ public class MovementRequestController : InventoryTrackingAutomationController
         return result;
     }
 
-    /// Hareket talebini güncellemek için kullanılır.
+    /// <summary>
+    /// Hareket talebi kaydını günceller.
+    /// </summary>
+    /// <param name="id">Kaydın benzersiz Id'si.</param>
+    /// <param name="input">Güncel talep bilgileri.</param>
+    /// <remarks>
+    /// Request {
+    ///   RequestNumber  (string)                → Talep numarası
+    ///   VehicleTaskId  (Guid)                  → Araç-görev atama Id'si
+    ///   Priority       (MovementPriorityEnum)  → Öncelik
+    ///   RequestNote    (string)                → Talep gerekçesi
+    ///   PlannedDate    (DateTime)              → Planlanan teslim tarihi
+    /// }
+    /// Response {
+    ///   RequestNumber             (string)                → Talep numarası
+    ///   RequestedByWorkerId       (Guid)                  → Talebi oluşturan çalışan Id'si
+    ///   TaskId                    (Guid)                  → Bağlı operasyon iş Id'si
+    ///   VehicleTaskId             (Guid)                  → Araç-operasyon atama Id'si
+    ///   ParentMovementRequestId   (Guid?)                 → İade hareketinde ana talep Id'si
+    ///   Status                    (MovementStatusEnum)    → Talep durumu
+    ///   Priority                  (MovementPriorityEnum)  → Öncelik
+    ///   RequestNote               (string)                → Talep gerekçesi
+    ///   PlannedDate               (DateTime)              → Planlanan teslim tarihi
+    ///   CancellationNote          (string?)               → İptal gerekçesi
+    ///   WorkflowInstanceId        (Guid?)                 → Bağlı iş akışı Id'si
+    /// }
+    /// </remarks>
     [HttpPut("{id}")]
     [Authorize(InventoryTrackingAutomationPermissions.MovementRequests.Edit)]
     public async Task<Result<MovementRequestDto>> Update(Guid id, [FromBody] UpdateMovementRequestDto input)
@@ -82,7 +184,29 @@ public class MovementRequestController : InventoryTrackingAutomationController
         return result;
     }
 
-    /// Hareket talebi sevkiyatını gerçekleştirmek için kullanılır.
+    /// <summary>
+    /// Hareket talebini depodan araca sevk edildi durumuna taşır.
+    /// </summary>
+    /// <param name="id">Kaydın benzersiz Id'si.</param>
+    /// <param name="input">Sevk notu (opsiyonel).</param>
+    /// <remarks>
+    /// Request {
+    ///   DispatchNote (string?) → Sevk/yükleme notu
+    /// }
+    /// Response {
+    ///   RequestNumber             (string)                → Talep numarası
+    ///   RequestedByWorkerId       (Guid)                  → Talebi oluşturan çalışan Id'si
+    ///   TaskId                    (Guid)                  → Bağlı operasyon iş Id'si
+    ///   VehicleTaskId             (Guid)                  → Araç-operasyon atama Id'si
+    ///   ParentMovementRequestId   (Guid?)                 → İade hareketinde ana talep Id'si
+    ///   Status                    (MovementStatusEnum)    → Talep durumu
+    ///   Priority                  (MovementPriorityEnum)  → Öncelik
+    ///   RequestNote               (string)                → Talep gerekçesi
+    ///   PlannedDate               (DateTime)              → Planlanan teslim tarihi
+    ///   CancellationNote          (string?)               → İptal gerekçesi
+    ///   WorkflowInstanceId        (Guid?)                 → Bağlı iş akışı Id'si
+    /// }
+    /// </remarks>
     [HttpPost("{id}/dispatch")]
     [Authorize(InventoryTrackingAutomationPermissions.MovementRequests.Dispatch)]
     public async Task<Result<MovementRequestDto>> Dispatch(Guid id, [FromBody] DispatchMovementRequestDto? input)
@@ -91,7 +215,29 @@ public class MovementRequestController : InventoryTrackingAutomationController
         return result;
     }
 
-    /// Hareket talebini teslim almak için kullanılır.
+    /// <summary>
+    /// Hareket talebini hedef lokasyonda teslim alındı durumuna taşır.
+    /// </summary>
+    /// <param name="id">Kaydın benzersiz Id'si.</param>
+    /// <param name="input">Teslim alma notu ve satır detayları (opsiyonel).</param>
+    /// <remarks>
+    /// Request {
+    ///   ReceiveNote (string?) → Teslim alma notu
+    /// }
+    /// Response {
+    ///   RequestNumber             (string)                → Talep numarası
+    ///   RequestedByWorkerId       (Guid)                  → Talebi oluşturan çalışan Id'si
+    ///   TaskId                    (Guid)                  → Bağlı operasyon iş Id'si
+    ///   VehicleTaskId             (Guid)                  → Araç-operasyon atama Id'si
+    ///   ParentMovementRequestId   (Guid?)                 → İade hareketinde ana talep Id'si
+    ///   Status                    (MovementStatusEnum)    → Talep durumu
+    ///   Priority                  (MovementPriorityEnum)  → Öncelik
+    ///   RequestNote               (string)                → Talep gerekçesi
+    ///   PlannedDate               (DateTime)              → Planlanan teslim tarihi
+    ///   CancellationNote          (string?)               → İptal gerekçesi
+    ///   WorkflowInstanceId        (Guid?)                 → Bağlı iş akışı Id'si
+    /// }
+    /// </remarks>
     [HttpPost("{id}/receive")]
     [Authorize(InventoryTrackingAutomationPermissions.MovementRequests.Receive)]
     public async Task<Result<MovementRequestDto>> Receive(Guid id, [FromBody] ReceiveMovementRequestDto? input)
@@ -100,7 +246,10 @@ public class MovementRequestController : InventoryTrackingAutomationController
         return result;
     }
 
-    /// Hareket talebini silmek için kullanılır.
+    /// <summary>
+    /// Hareket talebi kaydını siler.
+    /// </summary>
+    /// <param name="id">Kaydın benzersiz Id'si.</param>
     [HttpDelete("{id}")]
     [Authorize(InventoryTrackingAutomationPermissions.MovementRequests.Delete)]
     public async Task<Result> Delete(Guid id)

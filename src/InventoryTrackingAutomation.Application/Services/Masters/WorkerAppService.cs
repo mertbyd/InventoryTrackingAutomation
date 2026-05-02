@@ -11,6 +11,7 @@ using InventoryTrackingAutomation.Services.Masters;
 using FluentValidation;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Uow;
+using Volo.Abp.DependencyInjection;
 
 namespace InventoryTrackingAutomation.Application.Services.Masters;
 
@@ -19,28 +20,21 @@ namespace InventoryTrackingAutomation.Application.Services.Masters;
 //sistemdeki görevi: Uygulama katmanındaki kullanım senaryolarını (use-case) gerçekleştiren ana servis birimidir.
 public class WorkerAppService : InventoryTrackingAutomationAppService, IWorkerAppService
 {
+    public WorkerAppService(IAbpLazyServiceProvider abpLazyServiceProvider)
+        : base(abpLazyServiceProvider)
+    {
+    }
+
     // Read/list/persist için ana repository.
-    private readonly IWorkerRepository _repository;
+    private IWorkerRepository _repository => LazyGetRequiredService<IWorkerRepository>();
     // Domain manager — Department/Warehouse/Manager FK kontrolleri ve self-assignment kuralları.
-    private readonly WorkerManager _manager;
-    private readonly IValidator<CreateWorkerDto> _createValidator;
-    private readonly IValidator<UpdateWorkerDto> _updateValidator;
+    private WorkerManager _manager => LazyGetRequiredService<WorkerManager>();
+    private IValidator<CreateWorkerDto> _createValidator => LazyGetRequiredService<IValidator<CreateWorkerDto>>();
+    private IValidator<UpdateWorkerDto> _updateValidator => LazyGetRequiredService<IValidator<UpdateWorkerDto>>();
 
     // Tüm bağımlılıkları DI ile alır.
-    private readonly IMapper _mapper;
-    public WorkerAppService(
-        IWorkerRepository repository,
-        WorkerManager manager,
-        IValidator<CreateWorkerDto> createValidator,
-        IValidator<UpdateWorkerDto> updateValidator,
-        IMapper mapper)
-    {
-        _mapper = mapper;
-        _repository = repository;
-        _manager = manager;
-        _createValidator = createValidator;
-        _updateValidator = updateValidator;
-    }
+    private IMapper _mapper => LazyGetRequiredService<IMapper>();
+
 
     // Id ile çalışanı getirir; yoksa EntityNotFoundException.
 //işlevi: İlgili iş senaryosunu (use-case) yürütür.

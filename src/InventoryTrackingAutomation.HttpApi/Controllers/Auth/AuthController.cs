@@ -6,6 +6,7 @@ using InventoryTrackingAutomation.Dtos.Auth;
 using InventoryTrackingAutomation.Services.Auth;
 using InventoryTrackingAutomation.Permissions;
 using SystemStandards.Results;
+using Volo.Abp.DependencyInjection;
 
 namespace InventoryTrackingAutomation.Controllers.Auth;
 
@@ -16,25 +17,33 @@ namespace InventoryTrackingAutomation.Controllers.Auth;
 [ApiController]
 [IgnoreAntiforgeryToken]
 [ApiExplorerSettings(GroupName = "Auth")]
-//işlevi: Auth modülü için HTTP isteklerini karşılar.
-//sistemdeki görevi: Dış dünya ile sistem arasındaki iletişimi sağlayan API uç noktasıdır.
 public class AuthController : InventoryTrackingAutomationController
 {
-    private readonly IAuthAppService _authAppService;
-
-    public AuthController(IAuthAppService authAppService)
+    public AuthController(IAbpLazyServiceProvider abpLazyServiceProvider)
+        : base(abpLazyServiceProvider)
     {
-        _authAppService = authAppService;
     }
 
+    private IAuthAppService _authAppService => LazyGetRequiredService<IAuthAppService>();
+
     /// <summary>
-    /// Kullanıcı girişi (Login) — E-posta ve şifreyle JWT token almayı sağlar.
-    /// Herkese açık endpoint (kimlik doğrulama gerekmez).
+    /// Kullanıcı adı ve parola ile access token alır.
     /// </summary>
+    /// <param name="input">Giriş bilgileri.</param>
+    /// <remarks>
+    /// Request {
+    ///   UserName (string) → Kullanıcı adı
+    ///   Password (string) → Parola
+    /// }
+    /// Response {
+    ///   UserId (Guid)           → Sistemdeki kullanıcı Id'si
+    ///   AccessToken (string)    → Bearer JWT token
+    ///   RefreshToken (string)   → Yenileme token'ı
+    ///   ExpiresIn (int)         → Token geçerlilik süresi (saniye)
+    /// }
+    /// </remarks>
     [HttpPost("login")]
     [AllowAnonymous]
-//işlevi: İlgili HTTP isteğini işler ve servis katmanına yönlendirir.
-//sistemdeki görevi: Belirli bir API aksiyonunun giriş noktasını tanımlar.
     public async Task<Result<TokenResponse>> Login([FromBody] LoginDto input)
     {
         var token = await _authAppService.LoginAsync(input);
@@ -42,13 +51,22 @@ public class AuthController : InventoryTrackingAutomationController
     }
 
     /// <summary>
-    /// Kullanıcı kaydı (Register) — Yeni kullanıcı oluşturur ve kullanıcı ID'sini döner.
-    /// Herkese açık endpoint (kimlik doğrulama gerekmez).
+    /// Yeni kullanıcı kaydı oluşturur.
     /// </summary>
+    /// <param name="input">Kayıt bilgileri.</param>
+    /// <remarks>
+    /// Request {
+    ///   UserName        (string) → Kullanıcı adı
+    ///   Email           (string) → E-posta adresi
+    ///   Password        (string) → Parola
+    ///   PasswordConfirm (string) → Parola tekrarı
+    /// }
+    /// Response {
+    ///   (Guid) → Oluşturulan kullanıcının Id'si
+    /// }
+    /// </remarks>
     [HttpPost("register")]
     [AllowAnonymous]
-//işlevi: İlgili HTTP isteğini işler ve servis katmanına yönlendirir.
-//sistemdeki görevi: Belirli bir API aksiyonunun giriş noktasını tanımlar.
     public async Task<Result<Guid>> Register([FromBody] RegisterDto input)
     {
         var userId = await _authAppService.RegisterAsync(input);
@@ -56,13 +74,15 @@ public class AuthController : InventoryTrackingAutomationController
     }
 
     /// <summary>
-    /// Giriş yapmış mevcut kullanıcının ID'sini döner.
-    /// [Authorize] ile korunur ve JwtBearer şemasını kullanır.
+    /// Oturumdaki kullanıcının sistemdeki kullanıcı Id'sini getirir.
     /// </summary>
+    /// <remarks>
+    /// Response {
+    ///   (Guid?) → Oturumdaki kullanıcı Id'si
+    /// }
+    /// </remarks>
     [HttpGet("me")]
     [Authorize]
-//işlevi: İlgili HTTP isteğini işler ve servis katmanına yönlendirir.
-//sistemdeki görevi: Belirli bir API aksiyonunun giriş noktasını tanımlar.
     public async Task<Result<Guid?>> GetMe()
     {
         var userId = await _authAppService.GetMeAsync();

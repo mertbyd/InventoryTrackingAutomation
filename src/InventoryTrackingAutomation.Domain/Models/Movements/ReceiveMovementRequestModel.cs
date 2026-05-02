@@ -9,15 +9,15 @@ namespace InventoryTrackingAutomation.Models.Movements;
 public class ReceiveMovementRequestModel
 {
     public string? ReceiveNote { get; set; }
-    public List<ReceiveMovementRequestLineModel> Lines { get; set; } = new();
+    public List<ReceiveMovementRequestVehicleTaskLineModel> Lines { get; set; } = new();
 }
 
 /// <summary>
 /// Gorev iade tesliminde satir bazli kontrol sonucunu tasiyan domain modeli.
 /// </summary>
-public class ReceiveMovementRequestLineModel
+public class ReceiveMovementRequestVehicleTaskLineModel
 {
-    public Guid ProductId { get; set; }
+    public Guid VehicleTaskLineId { get; set; } // Uzlastirilacak arac-gorev kalem Id'si.
     public int ReceivedQuantity { get; set; }
     public int DamagedQuantity { get; set; }
     public int LostQuantity { get; set; }

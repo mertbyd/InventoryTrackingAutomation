@@ -1,34 +1,38 @@
-ï»¿using System;
+using System;
+using InventoryTrackingAutomation.Managers;
 using System.Linq;
 using System.Threading.Tasks;
 using Volo.Abp;
 using Volo.Abp.Domain.Services;
 using Volo.Abp.Settings;
+using Volo.Abp.DependencyInjection;
 
 namespace InventoryTrackingAutomation.Managers.Shared;
 
 /// <summary>
-/// Proje genelindeki Enum doÄŸrulama iÅŸlemlerini SettingProvider Ã¼zerinden
-/// dinamik ve merkezi olarak yÃ¶neten servis.
+/// Proje genelindeki Enum doğrulama işlemlerini SettingProvider üzerinden
+/// dinamik ve merkezi olarak yöneten servis.
 /// </summary>
-//iÅŸlevi: EnumValidation etki alanÄ± (domain) kurallarÄ±nÄ± ve karmaÅŸÄ±k veri bÃ¼tÃ¼nlÃ¼ÄŸÃ¼nÃ¼ saÄŸlar.
-//sistemdeki gÃ¶revi: Domain katmanÄ±ndaki iÅŸ kurallarÄ±nÄ±n merkezi yÃ¶netimini ve validasyonunu saÄŸlar.
-public class EnumValidationManager : DomainService
+//işlevi: EnumValidation etki alanı (domain) kurallarını ve karmaşık veri bütünlüğünü sağlar.
+//sistemdeki görevi: Domain katmanındaki iş kurallarının merkezi yönetimini ve validasyonunu sağlar.
+public class EnumValidationManager : InventoryTrackingAutomationDomainService
 {
-    private readonly ISettingProvider _settingProvider;
-
-    public EnumValidationManager(ISettingProvider settingProvider)
+    public EnumValidationManager(IAbpLazyServiceProvider abpLazyServiceProvider)
+        : base(abpLazyServiceProvider)
     {
-        _settingProvider = settingProvider;
     }
 
+    private ISettingProvider _settingProvider => LazyGetRequiredService<ISettingProvider>();
+
+
+
     /// <summary>
-    /// Verilen Enum deÄŸerinin belirtilen ayar adÄ±ndaki izin verilen deÄŸerler
-    /// listesinde olup olmadÄ±ÄŸÄ±nÄ± kontrol eder.
+    /// Verilen Enum değerinin belirtilen ayar adındaki izin verilen değerler
+    /// listesinde olup olmadığını kontrol eder.
     /// </summary>
     /// <typeparam name="TEnum">Enum tipi</typeparam>
-    /// <param name="enumValue">Kontrol edilecek Enum deÄŸeri</param>
-    /// <param name="settingName">Ä°zin verilen deÄŸerlerin tutulduÄŸu Setting adÄ± (Ã–rn: InventoryTrackingAutomationSettings.Workflows.AllowedStates)</param>
+    /// <param name="enumValue">Kontrol edilecek Enum değeri</param>
+    /// <param name="settingName">İzin verilen değerlerin tutulduğu Setting adı (Örn: InventoryTrackingAutomationSettings.Workflows.AllowedStates)</param>
     public async Task ValidateAllowedEnumAsync<TEnum>(TEnum enumValue, string settingName) where TEnum : struct, Enum
     {
         var allowedValuesStr = await _settingProvider.GetOrNullAsync(settingName);

@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
 using Volo.Abp;
 using Volo.Abp.Authorization;
 using Volo.Abp.Autofac;
@@ -6,6 +6,7 @@ using Volo.Abp.Data;
 using Volo.Abp.Modularity;
 using Volo.Abp.PermissionManagement.Identity;
 using Volo.Abp.Threading;
+using Volo.Abp.Identity;
 
 namespace InventoryTrackingAutomation;
 
@@ -14,6 +15,7 @@ namespace InventoryTrackingAutomation;
     typeof(AbpTestBaseModule),
     typeof(AbpAuthorizationModule),
     typeof(AbpPermissionManagementDomainIdentityModule),
+    typeof(AbpIdentityDomainModule),
     typeof(InventoryTrackingAutomationDomainModule)
     )]
 public class InventoryTrackingAutomationTestBaseModule : AbpModule

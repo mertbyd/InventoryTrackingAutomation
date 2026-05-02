@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using InventoryTrackingAutomation.Entities.Workflows;
 using InventoryTrackingAutomation.Interface.Workflows;
+using InventoryTrackingAutomation.Managers;
 using InventoryTrackingAutomation.Managers.Workflows.Approvers;
 using Volo.Abp.DependencyInjection;
 
@@ -14,14 +15,17 @@ namespace InventoryTrackingAutomation.Managers.Workflows;
 // Yeni resolver eklemek için sadece yeni bir IApproverStrategy implementasyonu eklenir; bu sınıfa dokunulmaz.
 //işlevi: DefaultWorkflowApproverResolver.cs etki alanı (domain) kurallarını ve karmaşık veri bütünlüğünü sağlar.
 //sistemdeki görevi: Domain katmanındaki iş kurallarının merkezi yönetimini ve validasyonunu sağlar.
-public class DefaultWorkflowApproverResolver : IWorkflowApproverResolver, ITransientDependency
+public class DefaultWorkflowApproverResolver : InventoryTrackingAutomationLazyService, IWorkflowApproverResolver, ITransientDependency
 {
-    private readonly IReadOnlyDictionary<string, IApproverStrategy> _strategies;
-
-    public DefaultWorkflowApproverResolver(IEnumerable<IApproverStrategy> strategies)
+    public DefaultWorkflowApproverResolver(IAbpLazyServiceProvider abpLazyServiceProvider)
+        : base(abpLazyServiceProvider)
     {
-        _strategies = strategies.ToDictionary(s => s.Key, StringComparer.Ordinal);
     }
+
+    private IReadOnlyDictionary<string, IApproverStrategy> _strategies =>
+        LazyGetRequiredService<IEnumerable<IApproverStrategy>>()
+            .GroupBy(s => s.Key, StringComparer.Ordinal)
+            .ToDictionary(g => g.Key, g => g.First(), StringComparer.Ordinal);
 
 //işlevi: Etki alanı kuralını veya validasyonunu işletir.
 //sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.

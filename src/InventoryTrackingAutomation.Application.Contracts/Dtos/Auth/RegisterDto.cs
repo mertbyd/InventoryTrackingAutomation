@@ -1,29 +1,23 @@
 namespace InventoryTrackingAutomation.Dtos.Auth;
 
-/// <summary>
-/// Kayıt (Register) isteği DTO'su.
-/// </summary>
 //işlevi: Register verisinin transferi sırasında taşınacak olan yapıyı tanımlar.
 //sistemdeki görevi: Katmanlar arası veri alışverişini standartlaştırır.
 public class RegisterDto
 {
     /// <summary>
-    /// Kullanıcı adı.
+    /// UserName alanı.
     /// </summary>
     public string UserName { get; set; }
-
     /// <summary>
-    /// Kullanıcı e-posta adresi.
+    /// Email alanı.
     /// </summary>
     public string Email { get; set; }
-
     /// <summary>
-    /// Kullanıcı şifresi.
+    /// Password alanı.
     /// </summary>
     public string Password { get; set; }
-
     /// <summary>
-    /// Şifre doğrulama (confirmation).
+    /// PasswordConfirm alanı.
     /// </summary>
     public string PasswordConfirm { get; set; }
 }

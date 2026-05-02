@@ -1,9 +1,10 @@
 using System.Threading.Tasks;
-using InventoryTrackingAutomation.Entities.Inventory;
+using InventoryTrackingAutomation.Managers;
 using InventoryTrackingAutomation.Entities.Inventory;
 using InventoryTrackingAutomation.Models.Inventory;
 using Volo.Abp;
 using Volo.Abp.Domain.Services;
+using Volo.Abp.DependencyInjection;
 
 namespace InventoryTrackingAutomation.Managers.Inventory;
 
@@ -12,18 +13,17 @@ namespace InventoryTrackingAutomation.Managers.Inventory;
 /// </summary>
 //işlevi: StockTransfer etki alanı (domain) kurallarını ve karmaşık veri bütünlüğünü sağlar.
 //sistemdeki görevi: Domain katmanındaki iş kurallarının merkezi yönetimini ve validasyonunu sağlar.
-public class StockTransferManager : DomainService
+public class StockTransferManager : InventoryTrackingAutomationDomainService
 {
-    private readonly StockLocationManager _stockLocationManager;
-    private readonly InventoryTransactionManager _transactionManager;
-
-    public StockTransferManager(
-        StockLocationManager stockLocationManager,
-        InventoryTransactionManager transactionManager)
+    public StockTransferManager(IAbpLazyServiceProvider abpLazyServiceProvider)
+        : base(abpLazyServiceProvider)
     {
-        _stockLocationManager = stockLocationManager;
-        _transactionManager = transactionManager;
     }
+
+    private StockLocationManager _stockLocationManager => LazyGetRequiredService<StockLocationManager>();
+    private InventoryTransactionManager _transactionManager => LazyGetRequiredService<InventoryTransactionManager>();
+
+
 
     /// Stok transfer işlemini gerçekleştirmek için kullanılır.
     public async Task<InventoryTransaction> ExecuteAsync(StockTransferModel model)

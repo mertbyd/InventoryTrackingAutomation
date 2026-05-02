@@ -14,7 +14,7 @@ public class ProductStockLocationSummaryModel
     public Guid? WarehouseId { get; set; }                  // Depo lokasyonu ise Warehouse Id'si.
     public Guid? VehicleId { get; set; }                        // Arac lokasyonu ise Vehicle Id'si.
     public Guid? VehicleTaskId { get; set; }                    // Arac aktif gorevdeyse VehicleTask Id'si.
-    public Guid? InventoryTaskId { get; set; }                  // Aracin bagli oldugu gorev Id'si.
+    public Guid? TaskId { get; set; }                           // Aracin bagli oldugu operasyon isi Id'si.
     public int Quantity { get; set; }                           // Lokasyondaki fiziksel miktar.
     public int ReservedQuantity { get; set; }                   // Lokasyondaki rezerve miktar.
 }

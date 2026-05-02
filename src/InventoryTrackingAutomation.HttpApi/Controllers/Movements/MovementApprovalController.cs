@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using SystemStandards.Results;
 using InventoryTrackingAutomation.Dtos.Movements;
 using InventoryTrackingAutomation.Services.Movements;
+using Volo.Abp.DependencyInjection;
 
 using Microsoft.AspNetCore.Authorization;
 using InventoryTrackingAutomation.Permissions;
@@ -18,18 +19,30 @@ namespace InventoryTrackingAutomation.Controllers.Movements;
 [Route("api/movement-requests")]
 [ApiExplorerSettings(GroupName = "Movements")]
 [Tags("MovementApprovals")]
-//işlevi: MovementApproval modülü için HTTP isteklerini karşılar.
-//sistemdeki görevi: Dış dünya ile sistem arasındaki iletişimi sağlayan API uç noktasıdır.
 public class MovementApprovalController : InventoryTrackingAutomationController
 {
-    private readonly IMovementApprovalAppService _appService;
-
-    public MovementApprovalController(IMovementApprovalAppService appService)
+    public MovementApprovalController(IAbpLazyServiceProvider abpLazyServiceProvider)
+        : base(abpLazyServiceProvider)
     {
-        _appService = appService;
     }
 
-    /// Onay geçmişini getirmek için kullanılır.
+    private IMovementApprovalAppService _appService => LazyGetRequiredService<IMovementApprovalAppService>();
+
+    /// <summary>
+    /// Hareket talebinin onay geçmişini getirir.
+    /// </summary>
+    /// <param name="id">Hareket talebi Id'si.</param>
+    /// <remarks>
+    /// Response {
+    ///   Id                (Guid)      → Onay kaydı Id'si
+    ///   MovementRequestId (Guid)      → Bağlı hareket talebi Id'si
+    ///   ApproverWorkerId  (Guid)      → Onaylayan çalışan Id'si
+    ///   StepOrder         (int)       → Onay adım sırası
+    ///   Status            (string)    → Onay durumu
+    ///   DecidedAt         (DateTime?) → Karar tarihi
+    ///   Note              (string)    → Onay notu
+    /// }
+    /// </remarks>
     [HttpGet("{id}/approvals")]
     [Authorize(InventoryTrackingAutomationPermissions.Workflows.View)]
     public async Task<Result<List<MovementApprovalDto>>> GetApprovals(Guid id)
@@ -38,16 +51,52 @@ public class MovementApprovalController : InventoryTrackingAutomationController
         return result;
     }
 
-    /// Onay işlemini gerçekleştirmek için kullanılır.
+    /// <summary>
+    /// Hareket talebi için onay veya red kararını işler.
+    /// </summary>
+    /// <param name="id">Hareket talebi Id'si.</param>
+    /// <param name="input">Onay kararı bilgileri.</param>
+    /// <remarks>
+    /// Request {
+    ///   IsApproved (bool)   → Onay kararı (true: onay, false: red)
+    ///   Note       (string) → Karar notu
+    /// }
+    /// Response {
+    ///   Id                (Guid)      → Onay kaydı Id'si
+    ///   MovementRequestId (Guid)      → Bağlı hareket talebi Id'si
+    ///   ApproverWorkerId  (Guid)      → Onaylayan çalışan Id'si
+    ///   StepOrder         (int)       → Onay adım sırası
+    ///   Status            (string)    → Onay durumu
+    ///   DecidedAt         (DateTime?) → Karar tarihi
+    ///   Note              (string)    → Onay notu
+    /// }
+    /// </remarks>
     [HttpPost("{id}/process-approval")]
-    [Authorize(InventoryTrackingAutomationPermissions.Workflows.Approve)] // Veya Workflows.Reject
+    [Authorize(InventoryTrackingAutomationPermissions.Workflows.Approve)]
     public async Task<Result<MovementApprovalDto>> ProcessApproval(Guid id, [FromBody] ProcessMovementApprovalDto input)
     {
         var result = await _appService.ProcessApprovalAsync(id, input);
         return result;
     }
 
-    /// Bekleyen onayları getirmek için kullanılır.
+    /// <summary>
+    /// Oturumdaki kullanıcının bekleyen hareket talebi onaylarını getirir.
+    /// </summary>
+    /// <remarks>
+    /// Response {
+    ///   MovementRequestId       (Guid)                  → Hareket talebi Id'si
+    ///   WorkflowInstanceStepId  (Guid)                  → İş akışı adım Id'si
+    ///   RequestNumber           (string)                → Talep numarası
+    ///   SourceWarehouseName     (string)                → Kaynak depo adı
+    ///   TargetWarehouseName     (string)                → Hedef depo adı
+    ///   CurrentStepOrder        (int)                   → Mevcut onay adımı sırası
+    ///   CurrentStepName         (string)                → Mevcut adım adı
+    ///   CreatedAt               (DateTime)              → Talep oluşturma tarihi
+    ///   PlannedDate             (DateTime)              → Planlanan teslim tarihi
+    ///   RequestNote             (string)                → Talep gerekçesi
+    ///   Priority                (MovementPriorityEnum)  → Öncelik
+    /// }
+    /// </remarks>
     [HttpGet("pending-approvals")]
     [Authorize(InventoryTrackingAutomationPermissions.Workflows.View)]
     public async Task<Result<List<PendingApprovalDto>>> GetPendingApprovals()

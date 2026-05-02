@@ -5,52 +5,56 @@ using Volo.Abp.Domain.Entities.Auditing;
 namespace InventoryTrackingAutomation.Entities.Workflows;
 
 /// <summary>
-/// Başlatılmış bir iş akışı sürecinin onay adımlarını temsil eden entity.
+/// Baslatilmis bir is akisi surecinin tek bir onay adimini temsil eden entity.
 /// </summary>
 public class WorkflowInstanceStep : AuditedEntity<Guid>
 {
     /// <summary>
-    /// Bağlı olduğu iş akışı süreci Id'si.
+    /// Bagli oldugu is akisi surecinin kimligini tasir.
     /// </summary>
     public Guid WorkflowInstanceId { get; private set; }
 
     /// <summary>
-    /// Hangi tanımdan üretildiği.
+    /// Bu adimin hangi sablon adimindan uretildigini tasir.
     /// </summary>
     public Guid WorkflowStepDefinitionId { get; private set; }
 
     /// <summary>
-    /// Bu adımı onaylamak üzere atanmış spesifik kullanıcı Id'si (ResolverKey üzerinden çözüldüğünde dolu olur).
+    /// ResolverKey ile belirlenen spesifik onayci kullanici kimligini tasir.
     /// </summary>
     public Guid? AssignedUserId { get; private set; }
 
     /// <summary>
-    /// Adımın durumu / Alınan aksiyon.
+    /// Adimda bekleyen veya alinmis aksiyonu belirler.
     /// </summary>
     public WorkflowActionType ActionTaken { get; internal set; }
 
     /// <summary>
-    /// Onaylarken/Reddederken girilen not.
+    /// Onay veya red sirasinda girilen notu tasir.
     /// </summary>
     public string? Note { get; internal set; }
 
     /// <summary>
-    /// Aksiyonun alındığı tarih.
+    /// Aksiyonun alinma zamanini tasir.
     /// </summary>
     public DateTime? ActionDate { get; internal set; }
 
     /// <summary>
-    /// Bağlı olduğu iş akışı süreci navigation property'si.
+    /// Workflow entity'leri mevcut mimaride navigation kullanan istisnai kume oldugu icin
+    /// EF konfigurasyonu surec iliskisini bu property uzerinden kurar.
     /// </summary>
     public virtual WorkflowInstance WorkflowInstance { get; private set; }
 
     /// <summary>
-    /// İş akışı adım tanımı navigation property'si.
+    /// Workflow entity'leri mevcut mimaride navigation kullanan istisnai kume oldugu icin
+    /// EF konfigurasyonu sablon adim iliskisini bu property uzerinden kurar.
     /// </summary>
     public virtual WorkflowStepDefinition WorkflowStepDefinition { get; private set; }
 
     private WorkflowInstanceStep()
     {
+        WorkflowInstance = default!;
+        WorkflowStepDefinition = default!;
     }
 
     public WorkflowInstanceStep(Guid id, Guid workflowInstanceId, Guid workflowStepDefinitionId, Guid? assignedUserId, WorkflowActionType actionTaken = WorkflowActionType.Pending)
@@ -60,5 +64,7 @@ public class WorkflowInstanceStep : AuditedEntity<Guid>
         WorkflowStepDefinitionId = workflowStepDefinitionId;
         AssignedUserId = assignedUserId;
         ActionTaken = actionTaken;
+        WorkflowInstance = default!;
+        WorkflowStepDefinition = default!;
     }
 }

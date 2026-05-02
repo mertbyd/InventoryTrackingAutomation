@@ -22,4 +22,8 @@ public interface IInventoryTaskAppService : IApplicationService
     Task<InventoryTaskDto> CompleteAsync(Guid id);
     Task<InventoryTaskDto> CancelAsync(Guid id);
     Task DeleteAsync(Guid id);
+    Task<List<TaskLineDto>> GetLinesAsync(Guid taskId);
+    Task<TaskLineDto> AddLineAsync(Guid taskId, CreateTaskLineDto input);
+    Task<TaskLineDto> UpdateLineAsync(Guid taskId, Guid lineId, UpdateTaskLineDto input);
+    Task DeleteLineAsync(Guid taskId, Guid lineId);
 }

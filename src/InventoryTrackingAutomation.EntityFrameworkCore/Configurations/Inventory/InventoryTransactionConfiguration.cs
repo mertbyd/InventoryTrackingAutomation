@@ -3,7 +3,6 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using InventoryTrackingAutomation.Entities.Masters;
 using InventoryTrackingAutomation.Entities.Movements;
 using InventoryTrackingAutomation.Entities.Inventory;
-using InventoryTrackingAutomation.Entities.Tasks;
 using Volo.Abp.EntityFrameworkCore.Modeling;
 
 namespace InventoryTrackingAutomation.EntityFrameworkCore.Configurations.Stock;
@@ -31,9 +30,5 @@ public class InventoryTransactionConfiguration : IEntityTypeConfiguration<Invent
             .HasForeignKey(x => x.RelatedMovementRequestId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasOne<InventoryTask>()
-            .WithMany()
-            .HasForeignKey(x => x.RelatedTaskId)
-            .OnDelete(DeleteBehavior.Restrict);
     }
 }

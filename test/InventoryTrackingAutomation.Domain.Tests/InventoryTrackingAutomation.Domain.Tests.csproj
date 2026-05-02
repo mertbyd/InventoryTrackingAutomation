@@ -9,7 +9,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.0" />
-    <ProjectReference Include="..\InventoryTrackingAutomation.EntityFrameworkCore.Tests\InventoryTrackingAutomation.EntityFrameworkCore.Tests.csproj" />
+    <ProjectReference Include="..\InventoryTrackingAutomation.TestBase\InventoryTrackingAutomation.TestBase.csproj" />
   </ItemGroup>
 
 </Project>

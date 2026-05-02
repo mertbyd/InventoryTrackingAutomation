@@ -1,10 +1,12 @@
 using AutoMapper;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using InventoryTrackingAutomation.Dtos.Movements;
 using InventoryTrackingAutomation.Entities.Movements;
 using InventoryTrackingAutomation.Enums;
+using InventoryTrackingAutomation.Events.Cache;
 using InventoryTrackingAutomation.Interface.Masters;
 using InventoryTrackingAutomation.Interface.Movements;
 using InventoryTrackingAutomation.Managers.Movements;
@@ -12,8 +14,10 @@ using InventoryTrackingAutomation.Models.Movements;
 using InventoryTrackingAutomation.Services.Movements;
 using Volo.Abp;
 using Volo.Abp.Application.Dtos;
+using Volo.Abp.EventBus.Local;
 using Volo.Abp.Uow;
 using Volo.Abp.Users;
+using Volo.Abp.DependencyInjection;
 
 namespace InventoryTrackingAutomation.Application.Services.Movements;
 
@@ -23,29 +27,27 @@ namespace InventoryTrackingAutomation.Application.Services.Movements;
 //sistemdeki görevi: Uygulama katmanındaki kullanım senaryolarını (use-case) gerçekleştiren ana servis birimidir.
 public class MovementRequestAppService : InventoryTrackingAutomationAppService, IMovementRequestAppService
 {
-    // Read/list ve update/delete persist için ana repository.
-    private readonly IMovementRequestRepository _repository;
-    // Domain manager — iş kuralları, validasyon, workflow tetikleme.
-    private readonly MovementRequestManager _manager;
-    // Tüm bağımlılıkları DI ile alır.
-    private readonly IMapper _mapper;
-    public MovementRequestAppService(
-        IMovementRequestRepository repository,
-        MovementRequestManager manager,
-        IMapper mapper)
+    public MovementRequestAppService(IAbpLazyServiceProvider abpLazyServiceProvider)
+        : base(abpLazyServiceProvider)
     {
-        _mapper = mapper;
-        _repository = repository;
-        _manager = manager;
     }
 
+    // Read/list ve update/delete persist için ana repository.
+    private IMovementRequestRepository _repository => LazyGetRequiredService<IMovementRequestRepository>();
+    private InventoryTrackingAutomation.Interface.Tasks.IVehicleTaskLineRepository _vehicleTaskLineRepository => LazyGetRequiredService<InventoryTrackingAutomation.Interface.Tasks.IVehicleTaskLineRepository>();
+    private InventoryTrackingAutomation.Interface.Tasks.ITaskLineRepository _taskLineRepository => LazyGetRequiredService<InventoryTrackingAutomation.Interface.Tasks.ITaskLineRepository>();
+    // Domain manager — iş kuralları, validasyon, workflow tetikleme.
+    private MovementRequestManager _manager => LazyGetRequiredService<MovementRequestManager>();
+    // Cache temizleme eventleri uygulama katmanindan local event bus ile yayinlanir.
+    private ILocalEventBus _localEventBus => LazyGetRequiredService<ILocalEventBus>();
+    // Tüm bağımlılıkları DI ile alır.
+    private IMapper _mapper => LazyGetRequiredService<IMapper>();
     /// Hareket talebi verisini getirmek için kullanılır.
     public async Task<MovementRequestDto> GetAsync(Guid id)
     {
         var entity = await _manager.EnsureExistsAsync(id);
-        return _mapper.Map<MovementRequest, MovementRequestDto>(entity);
+        return await MapToDtoAsync(entity);
     }
-
     /// Hareket talebi listesini getirmek için kullanılır.
     public async Task<PagedResultDto<MovementRequestDto>> GetListAsync(PagedResultRequestDto input)
     {
@@ -54,29 +56,26 @@ public class MovementRequestAppService : InventoryTrackingAutomationAppService, 
             input.SkipCount, input.MaxResultCount, sorting: string.Empty);
         return new PagedResultDto<MovementRequestDto>(
             totalCount,
-            _mapper.Map<List<MovementRequest>, List<MovementRequestDto>>(entities));
+            await MapToDtosAsync(entities));
     }
-
     /// Yeni bir hareket talebi oluşturmak için kullanılır.
     [UnitOfWork]
     public async Task<MovementRequestDto> CreateAsync(CreateMovementRequestDto input)
     {
         var currentUserId = CurrentUser.GetId();
+        var currentWorkerId = await ResolveCurrentWorkerIdAsync();
         var model = _mapper.Map<CreateMovementRequestDto, CreateMovementRequestModel>(input);
-        model.RequestedByWorkerId = await ResolveCurrentWorkerIdAsync();
-
+        model.RequestedByWorkerId = currentWorkerId;
         // Manager Create + Workflow assignment + Insert akışını birlikte yürütür.
         var inserted = await _manager.CreateWithWorkflowAsync(model, currentUserId);
-        return _mapper.Map<MovementRequest, MovementRequestDto>(inserted);
+        return await MapToDtoAsync(inserted);
     }
-
     /// Birden fazla hareket talebini toplu olarak oluşturmak için kullanılır.
     [UnitOfWork]
     public async Task<List<MovementRequestDto>> CreateManyAsync(List<CreateMovementRequestDto> inputs)
     {
         var currentUserId = CurrentUser.GetId();
         var currentWorkerId = await ResolveCurrentWorkerIdAsync();
-
         // DTO listesini Model listesine map'le ve current worker bilgisini set et.
         var models = new List<CreateMovementRequestModel>();
         foreach (var dto in inputs)
@@ -85,13 +84,11 @@ public class MovementRequestAppService : InventoryTrackingAutomationAppService, 
             model.RequestedByWorkerId = currentWorkerId;
             models.Add(model);
         }
-
         // Manager toplu Create + Workflow + Insert akışını yürütür.
         var inserted = await _manager.CreateManyWithWorkflowAsync(models, currentUserId);
 
-        return _mapper.Map<List<MovementRequest>, List<MovementRequestDto>>(inserted);
+        return await MapToDtosAsync(inserted);
     }
-
     /// Mevcut bir hareket talebini güncellemek için kullanılır.
     [UnitOfWork]
     public async Task<MovementRequestDto> UpdateAsync(Guid id, UpdateMovementRequestDto input)
@@ -99,10 +96,9 @@ public class MovementRequestAppService : InventoryTrackingAutomationAppService, 
         var existing = await _manager.EnsureExistsAsync(id);
         var model = _mapper.Map<UpdateMovementRequestDto, UpdateMovementRequestModel>(input);
         model.RequestedByWorkerId = await ResolveCurrentWorkerIdAsync();
-
         var updated = await _manager.UpdateAsync(existing, model);
         var saved = await _repository.UpdateAsync(updated, autoSave: true);
-        return _mapper.Map<MovementRequest, MovementRequestDto>(saved);
+        return await MapToDtoAsync(saved);
     }
 
     /// Hareket talebi sevkiyatını gerçekleştirmek için kullanılır.
@@ -115,7 +111,8 @@ public class MovementRequestAppService : InventoryTrackingAutomationAppService, 
             CurrentUser.GetId(),
             await ResolveCurrentWorkerIdAsync());
 
-        return _mapper.Map<MovementRequest, MovementRequestDto>(dispatched);
+        await InvalidateMovementCacheAsync(dispatched);
+        return await MapToDtoAsync(dispatched);
     }
 
     /// Hareket talebini teslim almak için kullanılır.
@@ -128,21 +125,8 @@ public class MovementRequestAppService : InventoryTrackingAutomationAppService, 
             model,
             CurrentUser.GetId());
 
-        return _mapper.Map<MovementRequest, MovementRequestDto>(received);
-    }
-
-    /// Hareket talebini satırları ile birlikte oluşturmak için kullanılır.
-    [UnitOfWork]
-    public async Task<MovementRequestDto> CreateWithLinesAsync(CreateMovementRequestWithLinesDto input)
-    {
-        var currentUserId = CurrentUser.GetId();
-
-        var model = _mapper.Map<CreateMovementRequestWithLinesDto, CreateMovementRequestWithLinesModel>(input);
-        model.RequestedByWorkerId = await ResolveCurrentWorkerIdAsync();
-
-        var inserted = await _manager.CreateWithLinesAndWorkflowAsync(model, currentUserId);
-
-        return _mapper.Map<MovementRequest, MovementRequestDto>(inserted);
+        await InvalidateMovementCacheAsync(received);
+        return await MapToDtoAsync(received);
     }
 
     /// Hareket talebini silmek için kullanılır.
@@ -161,4 +145,54 @@ public class MovementRequestAppService : InventoryTrackingAutomationAppService, 
         await _repository.SoftDeleteAsync(id);
     }
 
+    private async Task InvalidateMovementCacheAsync(MovementRequest request)
+    {
+        var context = await _repository.GetOperationalContextAsync(request.Id);
+        var keys = new List<string>();
+
+        if (context != null)
+        {
+            // Urun stok cache'ini VehicleTaskLine uzerinden temizle.
+            if (context.VehicleTaskId != Guid.Empty)
+            {
+                var lines = await _vehicleTaskLineRepository.GetByVehicleTaskIdAsync(context.VehicleTaskId);
+                var taskLineIds = lines.Select(l => l.TaskLineId).Distinct().ToList();
+                var taskLines = await _taskLineRepository.GetListAsync(x => taskLineIds.Contains(x.Id));
+                keys.AddRange(taskLines.Select(l => CacheKeys.ProductStockSummary(l.ProductId)));
+            }
+            if (context.VehicleId != Guid.Empty)
+                keys.Add(CacheKeys.VehicleInventories(context.VehicleId));
+
+            if (context.TaskId != Guid.Empty)
+                keys.Add(CacheKeys.TaskInventory(context.TaskId));
+        }
+
+        if (keys.Count > 0)
+        {
+            await _localEventBus.PublishAsync(CacheInvalidationEto.ForKeys(keys.ToArray()));
+        }
     }
+
+    private async Task<MovementRequestDto> MapToDtoAsync(MovementRequest entity)
+    {
+        var dto = _mapper.Map<MovementRequest, MovementRequestDto>(entity);
+        var context = await _repository.GetOperationalContextAsync(entity.Id);
+        if (context != null)
+        {
+            dto.TaskId = context.TaskId;
+        }
+
+        return dto;
+    }
+
+    private async Task<List<MovementRequestDto>> MapToDtosAsync(IReadOnlyCollection<MovementRequest> entities)
+    {
+        var result = new List<MovementRequestDto>(entities.Count);
+        foreach (var entity in entities)
+        {
+            result.Add(await MapToDtoAsync(entity));
+        }
+
+        return result;
+    }
+}

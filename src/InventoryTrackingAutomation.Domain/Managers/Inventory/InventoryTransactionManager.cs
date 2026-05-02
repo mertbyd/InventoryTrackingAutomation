@@ -5,9 +5,9 @@ using InventoryTrackingAutomation.Enums.Inventory;
 using InventoryTrackingAutomation.Interface.Inventory;
 using InventoryTrackingAutomation.Interface.Masters;
 using InventoryTrackingAutomation.Interface.Movements;
-using InventoryTrackingAutomation.Interface.Tasks;
 using InventoryTrackingAutomation.Models.Inventory;
 using Volo.Abp;
+using Volo.Abp.DependencyInjection;
 
 namespace InventoryTrackingAutomation.Managers.Inventory;
 
@@ -20,29 +20,20 @@ namespace InventoryTrackingAutomation.Managers.Inventory;
 //sistemdeki görevi: Domain katmanındaki iş kurallarının merkezi yönetimini ve validasyonunu sağlar.
 public class InventoryTransactionManager : BaseManager<InventoryTransaction>
 {
-    private readonly IProductRepository _productRepository;
-    private readonly IMovementRequestRepository _movementRequestRepository;
-    private readonly IVehicleTaskRepository _vehicleTaskRepository;
-    private readonly IMapper _mapper;
+    private IProductRepository _productRepository => LazyGetRequiredService<IProductRepository>();
+    private IMovementRequestRepository _movementRequestRepository => LazyGetRequiredService<IMovementRequestRepository>();
+    private IMapper _mapper => LazyGetRequiredService<IMapper>();
 
-    public InventoryTransactionManager(
-        IInventoryTransactionRepository repository,
-        IProductRepository productRepository,
-        IMovementRequestRepository movementRequestRepository,
-        IVehicleTaskRepository vehicleTaskRepository,
-        IMapper mapper)
-        : base(repository)
+    public InventoryTransactionManager(IInventoryTransactionRepository repository,
+        IAbpLazyServiceProvider abpLazyServiceProvider)
+        : base(repository, abpLazyServiceProvider)
     {
-        _productRepository = productRepository;
-        _movementRequestRepository = movementRequestRepository;
-        _vehicleTaskRepository = vehicleTaskRepository;
-        _mapper = mapper;
     }
 
     /// Yeni bir stok hareket kaydı oluşturmak için kullanılır.
     public async Task<InventoryTransaction> CreateAsync(CreateInventoryTransactionModel model)
     {
-        await ValidateReferencesAsync(model.ProductId, model.RelatedMovementRequestId, model.RelatedTaskId);
+        await ValidateReferencesAsync(model.ProductId, model.RelatedMovementRequestId);
         ValidateQuantity(model.Quantity);
 
         var entity = new InventoryTransaction(GuidGenerator.Create());
@@ -53,7 +44,7 @@ public class InventoryTransactionManager : BaseManager<InventoryTransaction>
     /// Mevcut bir stok hareket kaydını güncellemek için kullanılır.
     public async Task<InventoryTransaction> UpdateAsync(InventoryTransaction existing, UpdateInventoryTransactionModel model)
     {
-        await ValidateReferencesAsync(model.ProductId, model.RelatedMovementRequestId, model.RelatedTaskId);
+        await ValidateReferencesAsync(model.ProductId, model.RelatedMovementRequestId);
         ValidateQuantity(model.Quantity);
 
         _mapper.Map(model, existing);
@@ -61,12 +52,11 @@ public class InventoryTransactionManager : BaseManager<InventoryTransaction>
     }
 
     /// Hareket referanslarını doğrulamak için kullanılır.
-    private async Task ValidateReferencesAsync(System.Guid productId, System.Guid? movementRequestId, System.Guid? vehicleTaskId)
+    private async Task ValidateReferencesAsync(System.Guid productId, System.Guid? movementRequestId)
     {
-        // Transaction kaynak referanslari domain katmaninda dogrulanir.
+        // Transaction kaynak referanslari domain katmaninda repository uzerinden dogrulanir.
         await EnsureExistsInAsync(_productRepository, productId);
         await EnsureExistsInAsync(_movementRequestRepository, movementRequestId);
-        await EnsureExistsInAsync(_vehicleTaskRepository, vehicleTaskId);
     }
 
     /// Miktarın geçerliliğini doğrulamak için kullanılır.
@@ -93,7 +83,6 @@ public class InventoryTransactionManager : BaseManager<InventoryTransaction>
             Quantity = model.Quantity,
             OccurredAt = System.DateTime.UtcNow,
             RelatedMovementRequestId = model.RelatedMovementRequestId,
-            RelatedTaskId = model.RelatedTaskId,
             PerformedByUserId = model.PerformedByUserId,
             Note = model.Note
         };
@@ -115,7 +104,6 @@ public class InventoryTransactionManager : BaseManager<InventoryTransaction>
             Quantity = model.Quantity,
             OccurredAt = System.DateTime.UtcNow,
             RelatedMovementRequestId = model.RelatedMovementRequestId,
-            RelatedTaskId = model.RelatedTaskId,
             PerformedByUserId = model.PerformedByUserId,
             Note = model.Note
         };

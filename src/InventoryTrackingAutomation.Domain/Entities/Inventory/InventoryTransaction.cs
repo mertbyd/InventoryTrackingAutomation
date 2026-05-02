@@ -20,7 +20,6 @@ public class InventoryTransaction : FullAuditedEntity<Guid>
     public StockLocationTypeEnum? TargetLocationType { get; set; } // Hedef lokasyonun depo mu arac mi oldugunu belirler.
     public Guid? TargetLocationId { get; set; } // Hedef depo veya arac kimligini tasir.
     public Guid? RelatedMovementRequestId { get; set; } // Hareketi doguran talep baglamini tasir.
-    public Guid? RelatedTaskId { get; set; } // Hareketin bagli oldugu saha gorevi baglamini tasir.
     public Guid? PerformedByUserId { get; set; } // Hareketi baslatan kullanici baglamini tasir.
     public DateTime OccurredAt { get; set; } // Hareketin gerceklestigi zamani tasir.
     public string? Note { get; set; } // Hareket icin operasyonel aciklama baglamini tasir.

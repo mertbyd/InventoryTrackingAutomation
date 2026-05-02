@@ -5,37 +5,40 @@ using Volo.Abp.Domain.Entities.Auditing;
 namespace InventoryTrackingAutomation.Entities.Workflows;
 
 /// <summary>
-/// Dinamik iş akışı tanımlarını temsil eden entity.
+/// Dinamik is akisi tanimini temsil eden aggregate root.
 /// </summary>
 public class WorkflowDefinition : FullAuditedAggregateRoot<Guid>
 {
     /// <summary>
-    /// İş akışının adı (Örn: "MovementRequest"). Lookup için kullanılır.
+    /// Is akisinin teknik adini tasir. Ornek: MovementRequest.
     /// </summary>
     public string Name { get; private set; }
 
     /// <summary>
-    /// İş akışının okunabilir açıklaması (Örn: "Hareket Talebi İş Akışı").
+    /// Is akisinin kullanici tarafindan okunabilir aciklamasini tasir.
     /// </summary>
     public string? Description { get; private set; }
 
     /// <summary>
-    /// İş akışının aktif olup olmadığı.
+    /// Is akisi taniminin yeni surecler icin kullanilip kullanilmayacagini belirler.
     /// </summary>
     public bool IsActive { get; private set; }
 
     /// <summary>
-    /// İş akışının versiyon numarası.
+    /// Is akisi taniminin surum bilgisini tasir.
     /// </summary>
     public int Version { get; private set; }
 
     /// <summary>
-    /// İş akışının içerdiği adımlar.
+    /// Workflow entity'leri mevcut mimaride navigation kullanan istisnai kume oldugu icin
+    /// EF konfigurasyonlari adim iliskisini bu koleksiyon uzerinden kurar.
     /// </summary>
     public virtual ICollection<WorkflowStepDefinition> Steps { get; private set; }
 
     private WorkflowDefinition()
     {
+        Name = string.Empty;
+        Steps = new List<WorkflowStepDefinition>();
     }
 
     public WorkflowDefinition(Guid id, string name, string? description, bool isActive, int version = 1)

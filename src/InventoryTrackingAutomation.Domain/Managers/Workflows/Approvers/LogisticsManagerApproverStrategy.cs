@@ -1,4 +1,5 @@
 using System;
+using InventoryTrackingAutomation.Managers;
 using System.Threading.Tasks;
 using InventoryTrackingAutomation.Interface.Masters;
 using InventoryTrackingAutomation.Interface.Movements;
@@ -9,21 +10,18 @@ namespace InventoryTrackingAutomation.Managers.Workflows.Approvers;
 
 // Sahaya malzeme çıkışlarında (TaskMovementRequest), çıkışın yapıldığı kaynak deponun yöneticisini onaycı olarak çözer.
 // Bu adım, hedef depo olmadığı durumlarda lojistik operasyon onayını temsil eder.
-public class LogisticsManagerApproverStrategy : IApproverStrategy, ITransientDependency
+public class LogisticsManagerApproverStrategy : InventoryTrackingAutomationLazyService, IApproverStrategy, ITransientDependency
 {
-    private readonly IMovementRequestRepository _movementRequestRepository;
-    private readonly IWarehouseRepository _warehouseRepository;
-    private readonly IWorkerRepository _workerRepository;
-
-    public LogisticsManagerApproverStrategy(
-        IMovementRequestRepository movementRequestRepository,
-        IWarehouseRepository warehouseRepository,
-        IWorkerRepository workerRepository)
+    public LogisticsManagerApproverStrategy(IAbpLazyServiceProvider abpLazyServiceProvider)
+        : base(abpLazyServiceProvider)
     {
-        _movementRequestRepository = movementRequestRepository;
-        _warehouseRepository = warehouseRepository;
-        _workerRepository = workerRepository;
     }
+
+    private IMovementRequestRepository _movementRequestRepository => LazyGetRequiredService<IMovementRequestRepository>();
+    private IWarehouseRepository _warehouseRepository => LazyGetRequiredService<IWarehouseRepository>();
+    private IWorkerRepository _workerRepository => LazyGetRequiredService<IWorkerRepository>();
+
+
 
     public string Key => WorkflowResolverKeys.LogisticsManager;
 

@@ -11,6 +11,7 @@ using InventoryTrackingAutomation.Services.Lookups;
 using FluentValidation;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Uow;
+using Volo.Abp.DependencyInjection;
 
 namespace InventoryTrackingAutomation.Application.Services.Lookups;
 
@@ -19,28 +20,21 @@ namespace InventoryTrackingAutomation.Application.Services.Lookups;
 //sistemdeki görevi: Uygulama katmanındaki kullanım senaryolarını (use-case) gerçekleştiren ana servis birimidir.
 public class DepartmentAppService : InventoryTrackingAutomationAppService, IDepartmentAppService
 {
+    public DepartmentAppService(IAbpLazyServiceProvider abpLazyServiceProvider)
+        : base(abpLazyServiceProvider)
+    {
+    }
+
     // Read/list/persist için ana repository.
-    private readonly IDepartmentRepository _repository;
+    private IDepartmentRepository _repository => LazyGetRequiredService<IDepartmentRepository>();
     // Domain manager — Code uniqueness ve diğer iş kuralları.
-    private readonly DepartmentManager _manager;
-    private readonly IValidator<CreateDepartmentDto> _createValidator;
-    private readonly IValidator<UpdateDepartmentDto> _updateValidator;
+    private DepartmentManager _manager => LazyGetRequiredService<DepartmentManager>();
+    private IValidator<CreateDepartmentDto> _createValidator => LazyGetRequiredService<IValidator<CreateDepartmentDto>>();
+    private IValidator<UpdateDepartmentDto> _updateValidator => LazyGetRequiredService<IValidator<UpdateDepartmentDto>>();
 
     // Tüm bağımlılıkları DI ile alır.
-    private readonly IMapper _mapper;
-    public DepartmentAppService(
-        IDepartmentRepository repository,
-        DepartmentManager manager,
-        IValidator<CreateDepartmentDto> createValidator,
-        IValidator<UpdateDepartmentDto> updateValidator,
-        IMapper mapper)
-    {
-        _mapper = mapper;
-        _repository = repository;
-        _manager = manager;
-        _createValidator = createValidator;
-        _updateValidator = updateValidator;
-    }
+    private IMapper _mapper => LazyGetRequiredService<IMapper>();
+
 
     // Id ile departmanı getirir; yoksa EntityNotFoundException.
 //işlevi: İlgili iş senaryosunu (use-case) yürütür.

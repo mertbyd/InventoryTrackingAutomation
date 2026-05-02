@@ -1,54 +1,48 @@
 using AutoMapper;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using InventoryTrackingAutomation.Dtos.Tasks;
 using InventoryTrackingAutomation.Entities.Tasks;
+using InventoryTrackingAutomation.Events.Cache;
 using InventoryTrackingAutomation.Interface.Tasks;
 using InventoryTrackingAutomation.Managers.Tasks;
 using InventoryTrackingAutomation.Models.Tasks;
 using InventoryTrackingAutomation.Services.Tasks;
 using FluentValidation;
 using Volo.Abp.Application.Dtos;
+using Volo.Abp.EventBus.Local;
 using Volo.Abp.Uow;
+using Volo.Abp.DependencyInjection;
 
 namespace InventoryTrackingAutomation.Application.Services.Tasks;
 
-// Arac-gorev atamasi application servisi - is kurallari VehicleTaskManager'da kalir.
-//işlevi: VehicleTask iş mantığını koordine eder ve DTO dönüşümlerini yönetir.
-//sistemdeki görevi: Uygulama katmanındaki kullanım senaryolarını (use-case) gerçekleştiren ana servis birimidir.
+// Arac-gorev atamasi application servisi - is kurallari VehicleTaskManager ve VehicleTaskLineManager'da kalir.
 public class VehicleTaskAppService : InventoryTrackingAutomationAppService, IVehicleTaskAppService
 {
-    private readonly IVehicleTaskRepository _repository;
-    private readonly VehicleTaskManager _manager;
-    private readonly IValidator<CreateVehicleTaskDto> _createValidator;
-    private readonly IValidator<UpdateVehicleTaskDto> _updateValidator;
-    private readonly IMapper _mapper;
-
-    public VehicleTaskAppService(
-        IVehicleTaskRepository repository,
-        VehicleTaskManager manager,
-        IValidator<CreateVehicleTaskDto> createValidator,
-        IValidator<UpdateVehicleTaskDto> updateValidator,
-        IMapper mapper)
+    public VehicleTaskAppService(IAbpLazyServiceProvider abpLazyServiceProvider)
+        : base(abpLazyServiceProvider)
     {
-        _repository = repository;
-        _manager = manager;
-        _createValidator = createValidator;
-        _updateValidator = updateValidator;
-        _mapper = mapper;
     }
 
-//işlevi: İlgili iş senaryosunu (use-case) yürütür.
-//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
+    private IVehicleTaskRepository _repository => LazyGetRequiredService<IVehicleTaskRepository>();
+    private IVehicleTaskLineRepository _vehicleTaskLineRepository => LazyGetRequiredService<IVehicleTaskLineRepository>();
+    private VehicleTaskManager _manager => LazyGetRequiredService<VehicleTaskManager>();
+    private VehicleTaskLineManager _vehicleTaskLineManager => LazyGetRequiredService<VehicleTaskLineManager>();
+    private IVehicleTaskLineAppService _vehicleTaskLineAppService => LazyGetRequiredService<IVehicleTaskLineAppService>();
+    // Task-arac cache anahtarlari degisince local event ile temizlenir.
+    private ILocalEventBus _localEventBus => LazyGetRequiredService<ILocalEventBus>();
+    private IValidator<CreateVehicleTaskDto> _createValidator => LazyGetRequiredService<IValidator<CreateVehicleTaskDto>>();
+    private IValidator<UpdateVehicleTaskDto> _updateValidator => LazyGetRequiredService<IValidator<UpdateVehicleTaskDto>>();
+    private IMapper _mapper => LazyGetRequiredService<IMapper>();
+
     public async Task<VehicleTaskDto> GetAsync(Guid id)
     {
         var entity = await _manager.EnsureExistsAsync(id);
         return _mapper.Map<VehicleTask, VehicleTaskDto>(entity);
     }
 
-//işlevi: İlgili iş senaryosunu (use-case) yürütür.
-//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<PagedResultDto<VehicleTaskDto>> GetListAsync(PagedResultRequestDto input)
     {
         var totalCount = await _repository.GetCountAsync();
@@ -57,20 +51,25 @@ public class VehicleTaskAppService : InventoryTrackingAutomationAppService, IVeh
     }
 
     [UnitOfWork]
-//işlevi: İlgili iş senaryosunu (use-case) yürütür.
-//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<VehicleTaskDto> CreateAsync(CreateVehicleTaskDto input)
     {
         await _createValidator.ValidateAndThrowAsync(input);
         var model = _mapper.Map<CreateVehicleTaskDto, CreateVehicleTaskModel>(input);
         var entity = await _manager.CreateAsync(model);
         var inserted = await _repository.InsertAsync(entity, autoSave: true);
+
+        if (input.Lines is { Count: > 0 })
+        {
+            var lineModels = _mapper.Map<List<CreateVehicleTaskLineDto>, List<CreateVehicleTaskLineModel>>(input.Lines);
+            var lineEntities = await _vehicleTaskLineManager.CreateManyAsync(inserted.Id, lineModels);
+            await _vehicleTaskLineRepository.InsertManyAsync(lineEntities, autoSave: true);
+        }
+
+        await _localEventBus.PublishAsync(CacheInvalidationEto.ForKeys(CacheKeys.TaskVehicles(inserted.TaskId)));
         return _mapper.Map<VehicleTask, VehicleTaskDto>(inserted);
     }
 
     [UnitOfWork]
-//işlevi: İlgili iş senaryosunu (use-case) yürütür.
-//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<List<VehicleTaskDto>> CreateManyAsync(List<CreateVehicleTaskDto> inputs)
     {
         var entities = new List<VehicleTask>();
@@ -82,12 +81,25 @@ public class VehicleTaskAppService : InventoryTrackingAutomationAppService, IVeh
         }
 
         var inserted = await _repository.InsertManyAndGetListAsync(entities);
+
+        for (var i = 0; i < inputs.Count; i++)
+        {
+            var dto = inputs[i];
+            var insertedTask = inserted[i];
+            if (dto.Lines is { Count: > 0 })
+            {
+                var lineModels = _mapper.Map<List<CreateVehicleTaskLineDto>, List<CreateVehicleTaskLineModel>>(dto.Lines);
+                var lineEntities = await _vehicleTaskLineManager.CreateManyAsync(insertedTask.Id, lineModels);
+                await _vehicleTaskLineRepository.InsertManyAsync(lineEntities, autoSave: true);
+            }
+        }
+
+        var taskKeys = inserted.Select(e => CacheKeys.TaskVehicles(e.TaskId)).Distinct().ToArray();
+        await _localEventBus.PublishAsync(CacheInvalidationEto.ForKeys(taskKeys));
         return _mapper.Map<List<VehicleTask>, List<VehicleTaskDto>>(inserted);
     }
 
     [UnitOfWork]
-//işlevi: İlgili iş senaryosunu (use-case) yürütür.
-//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<VehicleTaskDto> UpdateAsync(Guid id, UpdateVehicleTaskDto input)
     {
         await _updateValidator.ValidateAndThrowAsync(input);
@@ -95,15 +107,44 @@ public class VehicleTaskAppService : InventoryTrackingAutomationAppService, IVeh
         var model = _mapper.Map<UpdateVehicleTaskDto, UpdateVehicleTaskModel>(input);
         var updated = await _manager.UpdateAsync(existing, model);
         var saved = await _repository.UpdateAsync(updated, autoSave: true);
+        await _localEventBus.PublishAsync(CacheInvalidationEto.ForKeys(CacheKeys.TaskVehicles(saved.TaskId)));
         return _mapper.Map<VehicleTask, VehicleTaskDto>(saved);
     }
 
     [UnitOfWork]
-//işlevi: İlgili iş senaryosunu (use-case) yürütür.
-//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task DeleteAsync(Guid id)
     {
-        await _manager.EnsureExistsAsync(id);
+        var existing = await _manager.EnsureExistsAsync(id);
         await _repository.SoftDeleteAsync(id);
+        await _localEventBus.PublishAsync(CacheInvalidationEto.ForKeys(CacheKeys.TaskVehicles(existing.TaskId)));
+    }
+
+    // ────────────────────── Lines ──────────────────────
+
+    /// Arac-gorev kalemlerini getirmek icin kullanilir.
+    public async Task<List<VehicleTaskLineDto>> GetLinesAsync(Guid vehicleTaskId)
+    {
+        return await _vehicleTaskLineAppService.GetByVehicleTaskAsync(vehicleTaskId);
+    }
+
+    [UnitOfWork]
+    /// Arac-goreve yeni kalem eklemek icin kullanilir.
+    public async Task<VehicleTaskLineDto> AddLineAsync(Guid vehicleTaskId, CreateVehicleTaskLineDto input)
+    {
+        return await _vehicleTaskLineAppService.CreateForVehicleTaskAsync(vehicleTaskId, input);
+    }
+
+    [UnitOfWork]
+    /// Arac-gorev kalemini guncellemek icin kullanilir.
+    public async Task<VehicleTaskLineDto> UpdateLineAsync(Guid vehicleTaskId, Guid lineId, UpdateVehicleTaskLineDto input)
+    {
+        return await _vehicleTaskLineAppService.UpdateAsync(vehicleTaskId, lineId, input);
+    }
+
+    [UnitOfWork]
+    /// Arac-gorev kalemini silmek icin kullanilir.
+    public async Task DeleteLineAsync(Guid vehicleTaskId, Guid lineId)
+    {
+        await _vehicleTaskLineAppService.DeleteAsync(vehicleTaskId, lineId);
     }
 }

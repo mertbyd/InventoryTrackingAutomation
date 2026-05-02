@@ -30,7 +30,7 @@ public class InventoryTrackingAutomationSettingDefinitionProvider : SettingDefin
             ),
             new SettingDefinition(
                 InventoryTrackingAutomationSettings.Products.AllowedUnitTypes,
-                $"{(int)UnitTypeEnum.Piece},{(int)UnitTypeEnum.Kilogram},{(int)UnitTypeEnum.Liter},{(int)UnitTypeEnum.Meter}"
+                $"{(int)UnitTypeEnum.Piece},{(int)UnitTypeEnum.Box},{(int)UnitTypeEnum.Kilogram},{(int)UnitTypeEnum.Meter},{(int)UnitTypeEnum.Liter}"
             )
         );
 

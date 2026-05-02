@@ -8,6 +8,7 @@ using InventoryTrackingAutomation.Interface.Masters;
 using InventoryTrackingAutomation.Interface.Tasks;
 using InventoryTrackingAutomation.Models.Tasks;
 using Volo.Abp;
+using Volo.Abp.DependencyInjection;
 
 namespace InventoryTrackingAutomation.Managers.Tasks;
 
@@ -20,26 +21,21 @@ namespace InventoryTrackingAutomation.Managers.Tasks;
 //sistemdeki görevi: Domain katmanındaki iş kurallarının merkezi yönetimini ve validasyonunu sağlar.
 public class VehicleTaskManager : BaseManager<VehicleTask>
 {
-    private readonly IVehicleRepository _vehicleRepository;
-    private readonly IInventoryTaskRepository _inventoryTaskRepository;
-    private readonly IMapper _mapper;
+    private IVehicleRepository _vehicleRepository => LazyGetRequiredService<IVehicleRepository>();
+    private IInventoryTaskRepository _inventoryTaskRepository => LazyGetRequiredService<IInventoryTaskRepository>();
+    private IWorkerRepository _workerRepository => LazyGetRequiredService<IWorkerRepository>();
+    private IMapper _mapper => LazyGetRequiredService<IMapper>();
 
-    public VehicleTaskManager(
-        IVehicleTaskRepository repository,
-        IVehicleRepository vehicleRepository,
-        IInventoryTaskRepository inventoryTaskRepository,
-        IMapper mapper)
-        : base(repository)
+    public VehicleTaskManager(IVehicleTaskRepository repository,
+        IAbpLazyServiceProvider abpLazyServiceProvider)
+        : base(repository, abpLazyServiceProvider)
     {
-        _vehicleRepository = vehicleRepository;
-        _inventoryTaskRepository = inventoryTaskRepository;
-        _mapper = mapper;
     }
 
     /// Yeni bir araç görev ataması oluşturmak için kullanılır.
     public async Task<VehicleTask> CreateAsync(CreateVehicleTaskModel model)
     {
-        await ValidateReferencesAsync(model.VehicleId, model.InventoryTaskId);
+        await ValidateReferencesAsync(model.VehicleId, model.TaskId, model.ResponsibleWorkerId);
         await ValidateVehicleActiveTaskAsync(model.VehicleId, null);
         ValidateDateRange(model.AssignedAt, model.ReleasedAt);
 
@@ -51,7 +47,7 @@ public class VehicleTaskManager : BaseManager<VehicleTask>
     /// Mevcut bir araç görev atamasını güncellemek için kullanılır.
     public async Task<VehicleTask> UpdateAsync(VehicleTask existing, UpdateVehicleTaskModel model)
     {
-        await ValidateReferencesAsync(model.VehicleId, model.InventoryTaskId);
+        await ValidateReferencesAsync(model.VehicleId, model.TaskId, model.ResponsibleWorkerId);
         await ValidateVehicleActiveTaskAsync(model.VehicleId, existing.Id);
         ValidateDateRange(model.AssignedAt, model.ReleasedAt);
 
@@ -60,11 +56,12 @@ public class VehicleTaskManager : BaseManager<VehicleTask>
     }
 
     /// Atama referanslarını doğrulamak için kullanılır.
-    private async Task ValidateReferencesAsync(Guid vehicleId, Guid inventoryTaskId)
+    private async Task ValidateReferencesAsync(Guid vehicleId, Guid taskId, Guid responsibleWorkerId)
     {
-        // Arac ve gorev varligi domain katmaninda dogrulanir.
+        // Arac, operasyon isi ve sorumlu calisan varligi repository uzerinden dogrulanir.
         await EnsureExistsInAsync<Vehicle>(_vehicleRepository, vehicleId);
-        await EnsureExistsInAsync(_inventoryTaskRepository, inventoryTaskId);
+        await EnsureExistsInAsync(_inventoryTaskRepository, taskId);
+        await EnsureExistsInAsync(_workerRepository, responsibleWorkerId);
     }
 
     /// Aracın aktif görev durumunu doğrulamak için kullanılır.
@@ -73,7 +70,6 @@ public class VehicleTaskManager : BaseManager<VehicleTask>
         // Ayni arac ayni anda yalnizca bir aktif gorevde bulunabilir.
         var activeVehicleTasks = await Repository.GetListAsync(x =>
             x.VehicleId == vehicleId &&
-            x.IsActive &&
             !x.ReleasedAt.HasValue);
 
         if (activeVehicleTasks.Any(x => !excludeId.HasValue || x.Id != excludeId.Value))
@@ -93,41 +89,39 @@ public class VehicleTaskManager : BaseManager<VehicleTask>
     }
 
     /// Aracın göreve atanmış olmasını garantilemek için kullanılır.
-    public async Task EnsureAssignedAsync(Guid inventoryTaskId, Guid vehicleId, Guid driverWorkerId)
+    public async Task<VehicleTask> EnsureAssignedAsync(Guid taskId, Guid vehicleId, Guid responsibleWorkerId)
     {
-        await ValidateReferencesAsync(vehicleId, inventoryTaskId);
+        await ValidateReferencesAsync(vehicleId, taskId, responsibleWorkerId);
 
         var existing = await Repository.FindAsync(x =>
-            x.InventoryTaskId == inventoryTaskId &&
+            x.TaskId == taskId &&
             x.VehicleId == vehicleId &&
-            x.IsActive &&
             !x.ReleasedAt.HasValue);
 
         if (existing != null)
         {
-            return;
+            return existing;
         }
 
         await ValidateVehicleActiveTaskAsync(vehicleId, null);
 
         var entity = new VehicleTask(GuidGenerator.Create())
         {
-            InventoryTaskId = inventoryTaskId,
+            TaskId = taskId,
             VehicleId = vehicleId,
-            DriverWorkerId = driverWorkerId,
+            ResponsibleWorkerId = responsibleWorkerId,
             AssignedAt = System.DateTime.UtcNow,
-            IsActive = true
         };
-        await Repository.InsertAsync(entity, autoSave: true);
+        return await Repository.InsertAsync(entity, autoSave: true);
     }
 
     /// Göreve bağlı tüm araçları serbest bırakmak için kullanılır.
     public async Task ReleaseAllForTaskAsync(Guid taskId)
     {
-        var actives = await Repository.GetListAsync(x => x.InventoryTaskId == taskId && x.IsActive);
+        var actives = await Repository.GetListAsync(x => x.TaskId == taskId && !x.ReleasedAt.HasValue);
         foreach (var vt in actives)
         {
-            vt.IsActive = false;
+            vt.ReleasedAt = System.DateTime.UtcNow;
             await Repository.UpdateAsync(vt, autoSave: true);
         }
     }
@@ -136,14 +130,13 @@ public class VehicleTaskManager : BaseManager<VehicleTask>
     public async Task ReleaseForTaskVehicleAsync(Guid taskId, Guid vehicleId)
     {
         var actives = await Repository.GetListAsync(x =>
-            x.InventoryTaskId == taskId &&
+            x.TaskId == taskId &&
             x.VehicleId == vehicleId &&
-            x.IsActive);
+            !x.ReleasedAt.HasValue);
 
         foreach (var vt in actives)
         {
             vt.ReleasedAt = System.DateTime.UtcNow;
-            vt.IsActive = false;
             await Repository.UpdateAsync(vt, autoSave: true);
         }
     }

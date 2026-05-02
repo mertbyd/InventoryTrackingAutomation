@@ -1,4 +1,5 @@
 using System;
+using InventoryTrackingAutomation.Managers;
 using System.Threading.Tasks;
 using InventoryTrackingAutomation.Interface.Masters;
 using InventoryTrackingAutomation.Interface.Movements;
@@ -11,21 +12,18 @@ namespace InventoryTrackingAutomation.Managers.Workflows.Approvers;
 // Şu an sadece MovementRequest tipinde aktif; başka entity tipleri için ayrı bir strategy eklenmeli.
 //işlevi: SourceWarehouseManagerApproverStrategy.cs etki alanı (domain) kurallarını ve karmaşık veri bütünlüğünü sağlar.
 //sistemdeki görevi: Domain katmanındaki iş kurallarının merkezi yönetimini ve validasyonunu sağlar.
-public class SourceWarehouseManagerApproverStrategy : IApproverStrategy, ITransientDependency
+public class SourceWarehouseManagerApproverStrategy : InventoryTrackingAutomationLazyService, IApproverStrategy, ITransientDependency
 {
-    private readonly IMovementRequestRepository _movementRequestRepository;
-    private readonly IWarehouseRepository _WarehouseRepository;
-    private readonly IWorkerRepository _workerRepository;
-
-    public SourceWarehouseManagerApproverStrategy(
-        IMovementRequestRepository movementRequestRepository,
-        IWarehouseRepository WarehouseRepository,
-        IWorkerRepository workerRepository)
+    public SourceWarehouseManagerApproverStrategy(IAbpLazyServiceProvider abpLazyServiceProvider)
+        : base(abpLazyServiceProvider)
     {
-        _movementRequestRepository = movementRequestRepository;
-        _WarehouseRepository = WarehouseRepository;
-        _workerRepository = workerRepository;
     }
+
+    private IMovementRequestRepository _movementRequestRepository => LazyGetRequiredService<IMovementRequestRepository>();
+    private IWarehouseRepository _WarehouseRepository => LazyGetRequiredService<IWarehouseRepository>();
+    private IWorkerRepository _workerRepository => LazyGetRequiredService<IWorkerRepository>();
+
+
 
     public string Key => WorkflowResolverKeys.SourceWarehouseManager;
 

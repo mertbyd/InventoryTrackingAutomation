@@ -1,7 +1,7 @@
 namespace InventoryTrackingAutomation.Enums.Workflows;
 
 /// <summary>
-/// İş akışı adımı üzerinde alınan aksiyon tipini temsil eden enum.
+/// Is akisi adimi uzerinde alinan aksiyon tipini temsil eden enum.
 /// </summary>
 public enum WorkflowActionType : byte
 {
@@ -9,12 +9,12 @@ public enum WorkflowActionType : byte
     /// Onay bekliyor.
     /// </summary>
     Pending = 0,
-    
+
     /// <summary>
-    /// Onaylandı.
+    /// Onaylandi.
     /// </summary>
     Approved = 1,
-    
+
     /// <summary>
     /// Reddedildi.
     /// </summary>

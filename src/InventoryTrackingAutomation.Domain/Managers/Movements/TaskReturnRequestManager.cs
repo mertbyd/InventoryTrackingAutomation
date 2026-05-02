@@ -1,47 +1,40 @@
 using System;
+using InventoryTrackingAutomation.Managers;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using InventoryTrackingAutomation.Entities.Movements;
+using InventoryTrackingAutomation.Entities.Tasks;
 using InventoryTrackingAutomation.Enums;
 using InventoryTrackingAutomation.Enums.Inventory;
+using InventoryTrackingAutomation.Enums.Tasks;
 using InventoryTrackingAutomation.Interface.Inventory;
 using InventoryTrackingAutomation.Interface.Movements;
 using InventoryTrackingAutomation.Interface.Tasks;
 using InventoryTrackingAutomation.Managers.Tasks;
 using Volo.Abp;
-using Volo.Abp.Domain.Services;
 using Volo.Abp.Uow;
+using Volo.Abp.DependencyInjection;
 
 namespace InventoryTrackingAutomation.Managers.Movements;
 
 /// <summary>
 /// Gorev kapanisinda aractaki kalan malzemeler icin kontrollu iade talebi uretir.
 /// </summary>
-public class TaskReturnRequestManager : DomainService
+public class TaskReturnRequestManager : InventoryTrackingAutomationDomainService
 {
-    private readonly IInventoryTaskRepository _taskRepository;
-    private readonly IVehicleTaskRepository _vehicleTaskRepository;
-    private readonly IInventoryTransactionRepository _inventoryTransactionRepository;
-    private readonly IMovementRequestRepository _movementRequestRepository;
-    private readonly IMovementRequestLineRepository _movementRequestLineRepository;
-    private readonly VehicleTaskManager _vehicleTaskManager;
-
-    public TaskReturnRequestManager(
-        IInventoryTaskRepository taskRepository,
-        IVehicleTaskRepository vehicleTaskRepository,
-        IInventoryTransactionRepository inventoryTransactionRepository,
-        IMovementRequestRepository movementRequestRepository,
-        IMovementRequestLineRepository movementRequestLineRepository,
-        VehicleTaskManager vehicleTaskManager)
+    public TaskReturnRequestManager(IAbpLazyServiceProvider abpLazyServiceProvider)
+        : base(abpLazyServiceProvider)
     {
-        _taskRepository = taskRepository;
-        _vehicleTaskRepository = vehicleTaskRepository;
-        _inventoryTransactionRepository = inventoryTransactionRepository;
-        _movementRequestRepository = movementRequestRepository;
-        _movementRequestLineRepository = movementRequestLineRepository;
-        _vehicleTaskManager = vehicleTaskManager;
     }
+
+    private IInventoryTaskRepository _taskRepository => LazyGetRequiredService<IInventoryTaskRepository>();
+    private IVehicleTaskRepository _vehicleTaskRepository => LazyGetRequiredService<IVehicleTaskRepository>();
+    private IInventoryTransactionRepository _inventoryTransactionRepository => LazyGetRequiredService<IInventoryTransactionRepository>();
+    private IMovementRequestRepository _movementRequestRepository => LazyGetRequiredService<IMovementRequestRepository>();
+    private ITaskLineRepository _taskLineRepository => LazyGetRequiredService<ITaskLineRepository>();
+    private IVehicleTaskLineRepository _vehicleTaskLineRepository => LazyGetRequiredService<IVehicleTaskLineRepository>();
+    private VehicleTaskManager _vehicleTaskManager => LazyGetRequiredService<VehicleTaskManager>();
 
     /// Görev için iade talepleri oluşturmak için kullanılır.
     [UnitOfWork]
@@ -56,13 +49,18 @@ public class TaskReturnRequestManager : DomainService
             return;
         }
 
+        if (task.Type != InventoryTaskTypeEnum.FieldOperation)
+        {
+            return;
+        }
+
         var activeAssignments = await _vehicleTaskRepository.GetListAsync(x =>
-            x.InventoryTaskId == taskId &&
-            x.IsActive);
+            x.TaskId == taskId &&
+            !x.ReleasedAt.HasValue);
 
         foreach (var assignment in activeAssignments)
         {
-            var returnLines = await GetTaskVehicleReturnLinesAsync(taskId, assignment.VehicleId);
+            var returnLines = await GetTaskVehicleReturnLinesAsync(taskId, assignment.Id, assignment.VehicleId);
             if (returnLines.Count == 0)
             {
                 await _vehicleTaskManager.ReleaseForTaskVehicleAsync(taskId, assignment.VehicleId);
@@ -70,9 +68,8 @@ public class TaskReturnRequestManager : DomainService
             }
 
             var existingReturnRequest = await _movementRequestRepository.FindAsync(x =>
-                x.Type == MovementRequestTypeEnum.TaskReturnToWarehouse &&
-                x.AssignedTaskId == taskId &&
-                x.RequestedVehicleId == assignment.VehicleId &&
+                x.VehicleTaskId == assignment.Id &&
+                x.ParentMovementRequestId != null &&
                 x.Status != MovementStatusEnum.Completed &&
                 x.Status != MovementStatusEnum.Rejected &&
                 x.Status != MovementStatusEnum.Cancelled);
@@ -82,16 +79,23 @@ public class TaskReturnRequestManager : DomainService
                 continue;
             }
 
-            var returnWarehouseId = task.ReturnWarehouseId ?? await ResolveLastSourceWarehouseAsync(taskId, assignment.VehicleId);
+            var returnWarehouseId = task.ReturnWarehouseId ?? await ResolveLastSourceWarehouseAsync(taskId, assignment.Id, assignment.VehicleId);
+            var parentMovementId = await _movementRequestRepository.FindLatestMainMovementIdAsync(assignment.Id);
+            if (!parentMovementId.HasValue)
+            {
+                throw new BusinessException(InventoryTrackingAutomationErrorCodes.General.InvalidOperation)
+                    .WithData("TaskId", taskId)
+                    .WithData("VehicleTaskId", assignment.Id)
+                    .WithData("Reason", "Cannot resolve parent movement request");
+            }
+
+            // Doner iade talebini olustur (header). Satirlar VehicleTaskLine'da tutulur.
             var request = new MovementRequest(GuidGenerator.Create())
             {
                 RequestNumber = GenerateRequestNumber(),
-                RequestedByWorkerId = changedByWorkerId ?? assignment.DriverWorkerId,
-                SourceWarehouseId = returnWarehouseId,
-                TargetWarehouseId = returnWarehouseId,
-                RequestedVehicleId = assignment.VehicleId,
-                AssignedTaskId = taskId,
-                Type = MovementRequestTypeEnum.TaskReturnToWarehouse,
+                RequestedByWorkerId = changedByWorkerId ?? assignment.ResponsibleWorkerId,
+                VehicleTaskId = assignment.Id,
+                ParentMovementRequestId = parentMovementId.Value,
                 Status = MovementStatusEnum.Shipped,
                 Priority = MovementPriorityEnum.Normal,
                 RequestNote = $"Task return request for {task.Code}",
@@ -99,23 +103,73 @@ public class TaskReturnRequestManager : DomainService
                 WorkflowInstanceId = null
             };
 
-            var insertedRequest = await _movementRequestRepository.InsertAsync(request, autoSave: true);
-            var lineEntities = returnLines.Select(line => new MovementRequestLine(GuidGenerator.Create())
-            {
-                MovementRequestId = insertedRequest.Id,
-                ProductId = line.ProductId,
-                Quantity = line.Quantity
-            }).ToList();
+            await _movementRequestRepository.InsertAsync(request, autoSave: true);
 
-            await _movementRequestLineRepository.InsertManyAsync(lineEntities, autoSave: true);
+            // VehicleTaskLine kayitlarini iade miktarlariyla guncelle/olustur.
+            await EnsureVehicleTaskLinesAsync(taskId, assignment.Id, returnLines);
+        }
+    }
+
+    /// Iade akisi icin VehicleTaskLine kayitlarini guvenceye alir; eksikse olusturur.
+    private async Task EnsureVehicleTaskLinesAsync(Guid taskId, Guid vehicleTaskId, IReadOnlyList<TaskVehicleReturnLine> returnLines)
+    {
+        foreach (var line in returnLines)
+        {
+            // TaskLine urunu temsil eder; VehicleTaskLine sadece bu gorev kalemine arac tahsisini baglar.
+            var taskLine = await _taskLineRepository.FindByTaskAndProductAsync(taskId, line.ProductId);
+            if (taskLine == null)
+            {
+                taskLine = new TaskLine(GuidGenerator.Create())
+                {
+                    TaskId = taskId,
+                    ProductId = line.ProductId,
+                    Quantity = line.Quantity
+                };
+                taskLine = await _taskLineRepository.InsertAsync(taskLine, autoSave: true);
+            }
+
+            var existing = await _vehicleTaskLineRepository.FindByVehicleTaskAndTaskLineAsync(vehicleTaskId, taskLine.Id);
+            var targetVehicleLineQuantity = Math.Max(existing?.AllocatedQuantity ?? 0, line.Quantity);
+            var allocatedExceptCurrent = await _vehicleTaskLineRepository.GetAllocatedQuantityByTaskLineIdAsync(taskLine.Id, existing?.Id);
+            var requiredTaskQuantity = allocatedExceptCurrent + targetVehicleLineQuantity;
+            if (requiredTaskQuantity > taskLine.Quantity)
+            {
+                taskLine.Quantity = requiredTaskQuantity;
+                await _taskLineRepository.UpdateAsync(taskLine, autoSave: true);
+            }
+
+            if (existing != null)
+            {
+                // Daha onceden olusturulmus; iade edilecek fiili miktar daha yuksekse arac tahsisini guncelle.
+                if (existing.AllocatedQuantity < line.Quantity)
+                {
+                    existing.AllocatedQuantity = line.Quantity;
+                    await _vehicleTaskLineRepository.UpdateAsync(existing, autoSave: true);
+                }
+                continue;
+            }
+
+            var vtl = new VehicleTaskLine(GuidGenerator.Create())
+            {
+                VehicleTaskId = vehicleTaskId,
+                TaskLineId = taskLine.Id,
+                AllocatedQuantity = line.Quantity
+            };
+            await _vehicleTaskLineRepository.InsertAsync(vtl, autoSave: true);
         }
     }
 
     /// En son kaynak depoyu çözümlemek için kullanılır.
-    private async Task<Guid> ResolveLastSourceWarehouseAsync(Guid taskId, Guid vehicleId)
+    private async Task<Guid> ResolveLastSourceWarehouseAsync(Guid taskId, Guid vehicleTaskId, Guid vehicleId)
     {
+        var movementIds = (await _movementRequestRepository.GetListAsync(x =>
+                x.VehicleTaskId == vehicleTaskId))
+            .Select(x => x.Id)
+            .ToHashSet();
+
         var lastTransaction = (await _inventoryTransactionRepository.GetListAsync(x =>
-            x.RelatedTaskId == taskId &&
+            x.RelatedMovementRequestId.HasValue &&
+            movementIds.Contains(x.RelatedMovementRequestId.Value) &&
             x.TargetLocationType == StockLocationTypeEnum.Vehicle &&
             x.TargetLocationId == vehicleId &&
             x.TransactionType == InventoryTransactionTypeEnum.WarehouseToVehicle))
@@ -135,10 +189,16 @@ public class TaskReturnRequestManager : DomainService
     }
 
     /// Görev aracındaki iade satırlarını getirmek için kullanılır.
-    private async Task<IReadOnlyList<TaskVehicleReturnLine>> GetTaskVehicleReturnLinesAsync(Guid taskId, Guid vehicleId)
+    private async Task<IReadOnlyList<TaskVehicleReturnLine>> GetTaskVehicleReturnLinesAsync(Guid taskId, Guid vehicleTaskId, Guid vehicleId)
     {
+        var movementIds = (await _movementRequestRepository.GetListAsync(x =>
+                x.VehicleTaskId == vehicleTaskId))
+            .Select(x => x.Id)
+            .ToHashSet();
+
         var transactions = await _inventoryTransactionRepository.GetListAsync(x =>
-            x.RelatedTaskId == taskId &&
+            x.RelatedMovementRequestId.HasValue &&
+            movementIds.Contains(x.RelatedMovementRequestId.Value) &&
             (
                 (x.TransactionType == InventoryTransactionTypeEnum.WarehouseToVehicle &&
                  x.TargetLocationType == StockLocationTypeEnum.Vehicle &&

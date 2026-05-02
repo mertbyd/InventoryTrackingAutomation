@@ -1,335 +1,166 @@
-# Current Architecture & Workflow Baseline
+# Current Architecture And Workflow Baseline
 
-**Tarih:** 2026-04-25
-**Durum:** Architecture Documentation Complete → Wiki-Brain Integrated
+Last updated: 2026-05-01
 
----
+This file summarizes the current working-tree model. The old `MovementRequestLine` API/entity layer has been removed from the production surface. Movement quantities now come from task and vehicle-task line entities.
 
 ## Project Overview
 
-**InventoryTrackingAutomation** — Stok hareket yönetimi sistemi, DDD ve Workflow Engine pattern'leri kullanan .NET 8+ uygulaması.
+InventoryTrackingAutomation is an ABP 10.3 / .NET 10 inventory workflow system for warehouse transfers and field operations.
 
----
+## Core Entity Shape
 
-## Architecture Baseline
-
-### Core Principles
-
-✅ **Domain-Driven Design (DDD)**
-- Entities & Aggregate Roots (FullAuditedAggregateRoot)
-- Domain Services (WorkflowManager, MovementRequestManager)
-- Value Objects & Enums
-- NO Navigation Properties (Exception: WorkflowInstance)
-
-✅ **Layered Architecture**
-```
-API Endpoints
-    ↓
-AppServices (Orchestration)
-    ↓
-Domain Services & Managers (Business Logic)
-    ↓
-Entities & Repositories
-    ↓
-Entity Framework Core (EF)
+```text
+InventoryTask
+  -> TaskLine
+  -> VehicleTask
+      -> VehicleTaskLine
+      -> MovementRequest
+          -> InventoryTransaction
 ```
 
-✅ **Workflow Engine**
-- State Machine Pattern (Active → Approved/Rejected/Completed)
-- Dynamic Routing (Template-based step generation)
-- Event-Driven Completion (LocalEventBus)
-- Approver Resolution (Manager/Role-based)
+Responsibilities:
 
-✅ **Security-First Approach**
-- User identity from CurrentUser (NEVER from DTO)
-- Authorization in Domain (Manager checks)
-- WorkerId resolution from authenticated User
-- Approval decisions validated at domain level
+- `InventoryTask`: operation/job, process type, warehouse route, return warehouse and task status.
+- `TaskLine`: product and total requested quantity for the task.
+- `VehicleTask`: vehicle assignment for an inventory task.
+- `VehicleTaskLine`: allocation and return reconciliation for a task line on a specific vehicle task.
+- `MovementRequest`: approval, dispatch and receive ticket linked by `VehicleTaskId`.
+- `InventoryTransaction`: append-only stock ledger linked by `RelatedMovementRequestId`.
 
----
+Important normalization rule:
 
-## Key Entity Relationships
+- Product lives on `TaskLine.ProductId`.
+- Vehicle allocation lives on `VehicleTaskLine.TaskLineId + AllocatedQuantity`.
+- `VehicleTaskLine` does not duplicate `ProductId`.
+- `MovementRequest` does not own product lines and has no `with-lines` creation endpoint.
 
-```
-MovementRequest (Aggregate Root)
-  ├── RequestedByWorkerId → Worker
-  ├── SourceSiteId → Site
-  ├── TargetSiteId → Site
-  └── WorkflowInstanceId? → WorkflowInstance
+## Critical Rules
 
-ProductStock (Entity, per site)
-  ├── ProductId → Product
-  └── SiteId → Site
+- Process type comes from `InventoryTask.Type`.
+- Warehouse route comes from `InventoryTask.SourceWarehouseId`, `TargetWarehouseId`, and `ReturnWarehouseId`.
+- Vehicle context comes from `MovementRequest.VehicleTaskId -> VehicleTask.VehicleId`.
+- Task context comes from `MovementRequest.VehicleTaskId -> VehicleTask.TaskId`.
+- Product context comes from `VehicleTaskLine.TaskLineId -> TaskLine.ProductId`.
+- Return flow is `MovementRequest.ParentMovementRequestId != null`.
+- Ledger context is `InventoryTransaction.RelatedMovementRequestId`.
 
-WorkflowInstance (Aggregate Root)
-  ├── EntityType="MovementRequest"
-  ├── EntityId=MovementRequest.Id
-  ├── WorkflowDefinitionId → WorkflowDefinition
-  └── Steps: WorkflowInstanceStep[] (nav property - exception)
+Removed production surface:
 
-WorkflowInstanceStep (Entity)
-  ├── AssignedUserId? → Approver
-  ├── WorkflowStepDefinitionId → WorkflowStepDefinition
-  └── ActionTaken: (Pending/Approved/Rejected)
-```
+- `MovementRequestLine` entity, DTOs, validators, AppService, controller, repository and EF configuration
+- `POST /api/movement-requests/with-lines`
+- `CreateMovementRequestWithLinesDto`
+- `MovementRequestManager.CreateWithLinesAndWorkflowAsync`
 
----
+Do not reintroduce:
 
-## Critical Rules (RED LINES)
+- `MovementRequest.Type`
+- `MovementRequest.RequestedVehicleId`
+- `MovementRequest.AssignedTaskId`
+- `MovementRequest.TaskId`
+- `MovementRequest.SourceWarehouseId`
+- `MovementRequest.TargetWarehouseId`
+- `InventoryTransaction.RelatedTaskId`
+- `MovementRequestTypeEnum`
+- movement-owned product line APIs
 
-🔴 **DO NOT VIOLATE:**
+## Workflow
 
-### 1. User Identity
-- **ALWAYS:** `CurrentUser.GetId()` for identity
-- **NEVER:** `input.UserId` from DTO
-- **NEVER:** Trust client-provided user/worker IDs
+Workflow definition is selected in `MovementRequestManager.AssignWorkflowAsync` from `InventoryTask.Type`:
 
-### 2. Authorization
-- Approval decisions → Domain Service (WorkflowManager)
-- Not AppService-level filters
-- WorkflowManager validates approver assignment
-- Role checks happen in domain
+- `WarehouseTransfer` -> `MovementRequest`
+- `FieldOperation` -> `TaskMovementRequest`
 
-### 3. DDD Navigation
-- **NO** `virtual ICollection<T>` or `virtual Entity` in Entities
-- **EXCEPTION:** WorkflowInstance (currently has navigation)
-- **Use:** Foreign Keys (GUID) only
+Approval changes movement state. Stock does not move during approval.
 
-### 4. Business Logic Location
-- **AppService:** DTO mapping, repository calls, transaction boundaries
-- **Domain Services:** State transitions, routing, authorization
-- **Entities:** Validation in constructors, invariant checks
+## Stock Lifecycle
 
----
+Dispatch:
 
-## Key Files (Architectural Understanding Required)
-
-| File | Role | Pattern |
-|------|------|---------|
-| `MovementRequest.cs` | Aggregate Root | DDD Entity (no nav props) |
-| `WorkflowInstance.cs` | Aggregate Root | DDD Entity (has nav - exception) |
-| `ProductStock.cs` | Entity | Stock tracking per location |
-| `WorkflowManager.cs` | Domain Service | State Machine + Routing |
-| `MovementRequestAppService.cs` | Orchestrator | HTTP ↔ Domain bridge |
-| `InventoryTrackingAutomationDbContext.cs` | Persistence | EF Core mappings |
-| `InventoryTrackingAutomationPermissions.cs` | Authorization | Permission constants |
-| `InventoryTrackingAutomationPermissionDefinitionProvider.cs` | Authorization | ABP permission definitions + localization |
-
----
-
-## Knowledge Graph Integration
-
-**Wiki-Brain Vault:** `C:\Users\mertb\OneDrive\Belgeler\InventoryWiki`
-
-**Ingested Pages:**
-- `inventory-architecture-overview` — Full system architecture
-- `workflow-manager` — State machine details & routing
-- `movement-request-app-service` — HTTP orchestration layer
-- `security-critical-rules` — 🔴 **CRITICAL** security rules
-
-**Usage:** `/wiki-brain query "workflow routing"` or `/recall`
-
----
-
-## Next Steps (For Other Agents)
-
-1. **Architecture Questions:** Use `/wiki-brain query` instead of reading files
-2. **Implementation:** Reference security-critical-rules before coding
-3. **Code Review:** Check security rules checklist
-4. **New Features:** Understand inventory-architecture-overview first
-
----
-
----
-
-## Identity & Role Seeding
-
-**Tarih:** 2026-04-25 | **Durum:** ✅ Complete
-
-### Roller (Identity Roles)
-
-7 rol veritabanına seed'leniyor (IdentityRoleManager ile):
-
-| Rol | Amaç | Permissions |
-|-----|------|-----------|
-| **Admin** | Sistem yöneticisi | Tüm izinler |
-| **Manager** | Operasyon yöneticisi | Inventory.Manage, Workflows.Approve |
-| **WarehouseWorker** | Depo çalışanı | Inventory.View, MovementRequests.View |
-| **FieldWorker** | Saha işçisi | MovementRequests.Create, Inventory.View |
-| **LogisticsSupervisor** | Lojistik müdürü | Inventory.Manage, Workflows.Approve/Reject |
-| **WorkflowApprover** | İş akışı onaylayanı | Workflows.Approve, Workflows.Reject |
-| **VehicleManager** | Araç yöneticisi | Masters.Manage (vehicles) |
-
-### Seed Mekanizması
-
-**File:** `InventoryTrackingAutomationDataSeedContributor.cs`
-
-```csharp
-private async Task SeedRolesAsync()
-{
-    // RoleConstants'dan tüm roller oku
-    var rolesToCreate = new[] { Admin, Manager, ... };
-    
-    // Her rol için: FindByName → if not exists → Create
-    foreach (var roleName in rolesToCreate)
-    {
-        if (await _identityRoleManager.FindByNameAsync(roleName) == null)
-        {
-            var role = new IdentityRole(_guidGenerator.Create(), roleName);
-            await _identityRoleManager.CreateAsync(role);
-        }
-    }
-}
+```text
+InventoryTask.SourceWarehouseId -> VehicleTask.VehicleId
 ```
 
-**Çalıştırma Sırası:**
-1. SeedAsync → SeedRolesAsync (ilk olarak)
-2. Rol'ler create edilir
-3. Sonra domain data (Worker, Site, Product, Workflow) seed'lenir
+Dispatch reads transfer lines from:
 
-### İzinler (Permissions)
-
-**File 1:** `InventoryTrackingAutomationPermissions.cs`
-- Permission sabitleri (BankApp örneğine benzer)
-- 4 namespace: MovementRequests, Workflows, Inventory, Masters
-- `ReflectionHelper.GetPublicConstantsRecursively()` ile otomatik GetAll()
-
-**File 2:** `InventoryTrackingAutomationPermissionDefinitionProvider.cs` ✅ **TAMAMLANDI**
-- ABP `PermissionDefinitionProvider` implementation
-- Hierarchical permission structure (parent → children) — MovementRequests, Workflows, Inventory, Masters
-- Localization support (`L()` helper method → InventoryTrackingAutomationResource)
-- Turkish comments for each permission definition
-
-**Kod Örneği (Controller'da):**
-```csharp
-[Authorize(InventoryTrackingAutomationPermissions.MovementRequests.Create)]
-public async Task<MovementRequestDto> CreateAsync(CreateMovementRequestDto input)
-{
-    return await _accountAppService.CreateAsync(input);
-}
+```text
+MovementRequest.VehicleTaskId
+  -> VehicleTaskLine
+      -> TaskLine.ProductId
 ```
 
-**Rol ↔ Permission Atama Tablosu:**
+Receive warehouse transfer:
 
-| Rol | İzinler |
-|-----|---------|
-| **Admin** | MovementRequests.* + Workflows.* + Inventory.Manage + Masters.Manage |
-| **Manager** | MovementRequests.View + Workflows.Approve/Reject + Inventory.Manage |
-| **WorkflowApprover** | Workflows.Approve + Workflows.Reject + Workflows.View |
-| **WarehouseWorker** | Inventory.View + MovementRequests.View |
-| **FieldWorker** | MovementRequests.Create + Inventory.View |
-| **LogisticsSupervisor** | Inventory.Manage + Workflows.Approve/Reject |
-| **VehicleManager** | Masters.Manage |
-
-### Critical Points
-
-✅ **RoleConstants** — Hardcode-free rol isimleri  
-✅ **IGuidGenerator** — ID üretimi ABP standart  
-✅ **DRY** — Roller listeden döng döngüyle oluşturuluyor  
-✅ **No Navigation** — Sadece Id referansları kullanıldı  
-✅ **No Duplication** — Her rol bir kez check/create  
-
----
-
-### Permission Attributes on Controllers
-
-✅ **AuthController** — Login & Register public ([AllowAnonymous])  
-✅ **ProductController** — All endpoints protected with [Authorize(Masters.Manage)]  
-
-**Pattern (tüm controller'larda uygulanacak):**
-```csharp
-// Controller seviyesi (all endpoints protected)
-[ApiController]
-[Authorize]
-public class SomeController : InventoryTrackingAutomationController { }
-
-// Action method seviyesi (specific permission)
-[HttpPost]
-[Authorize(InventoryTrackingAutomationPermissions.Inventory.Manage)]
-public async Task<Result<Dto>> Create([FromBody] CreateDto input) { }
-
-// Public endpoint
-[HttpPost("login")]
-[AllowAnonymous]
-public async Task<TokenResponse> Login([FromBody] LoginDto input) { }
+```text
+VehicleTask.VehicleId -> InventoryTask.TargetWarehouseId
 ```
 
----
+Field operation main receive:
 
-## Authentication & Authorization Framework
+- completes the main movement
+- keeps stock on the vehicle
+- task remains active until explicitly completed
 
-**Tarih:** 2026-04-25 | **Durum:** ✅ Complete
+Return receive:
 
-### Role & Permission Seeding
+- reads expected return lines from `VehicleTaskLine`
+- validates `received + damaged + lost + consumed == VehicleTaskLine.AllocatedQuantity`
+- received quantity moves `Vehicle -> ReturnWarehouse`
+- damaged/lost/consumed quantities are vehicle stock adjustments
+- reconciliation values are written back to `VehicleTaskLine`
+- vehicle assignment is released
 
-✅ **InventoryTrackingAutomationRoleConstants.cs** — 7 rol tanımı  
-✅ **InventoryTrackingAutomationPermissions.cs** — 4 namespace (MovementRequests, Workflows, Inventory, Masters)  
-✅ **InventoryTrackingAutomationPermissionDefinitionProvider.cs** — ABP hierarchical permission definitions  
-✅ **InventoryTrackingAutomationDataSeedContributor.cs** — Rol seed işlemi (`SeedRolesAsync`)  
+## Key Files
 
-### Auth Service Stack (BankApp Pattern)
+| File | Role |
+| --- | --- |
+| `src/InventoryTrackingAutomation.Domain/Entities/Tasks/InventoryTask.cs` | Operation and route aggregate |
+| `src/InventoryTrackingAutomation.Domain/Entities/Tasks/TaskLine.cs` | Task product demand line |
+| `src/InventoryTrackingAutomation.Domain/Entities/Tasks/VehicleTask.cs` | Vehicle assignment aggregate |
+| `src/InventoryTrackingAutomation.Domain/Entities/Tasks/VehicleTaskLine.cs` | Vehicle allocation and return reconciliation line |
+| `src/InventoryTrackingAutomation.Domain/Entities/Movements/MovementRequest.cs` | Movement lifecycle ticket |
+| `src/InventoryTrackingAutomation.Domain/Models/Movements/MovementRequestOperationalContextModel.cs` | Joined movement context |
+| `src/InventoryTrackingAutomation.Domain/Managers/Movements/MovementRequestManager.cs` | Movement orchestration |
+| `src/InventoryTrackingAutomation.Domain/Managers/Movements/TaskReturnRequestManager.cs` | Return request generation |
+| `src/InventoryTrackingAutomation.Domain/Managers/Tasks/TaskLineManager.cs` | Task line rules |
+| `src/InventoryTrackingAutomation.Domain/Managers/Tasks/VehicleTaskLineManager.cs` | Vehicle task line allocation/reconciliation rules |
+| `src/InventoryTrackingAutomation.EntityFrameworkCore/Repository/Movements/MovementRequestRepository.cs` | Operational context query |
+| `test/InventoryTrackingAutomation.EntityFrameworkCore.Tests/EntityFrameworkCore/Movements/MovementFlow_Integration_Tests.cs` | Full movement process tests and table logs |
 
-**Three-Layer Architecture:**
+## Test Baseline
 
-1. **API Controller Layer** (`HttpApi`)
-   - **AuthController** — Thin controller, just calls AppService
-   - Routes: `POST /api/auth/login`, `POST /api/auth/register`
-   - `[AllowAnonymous]` on both (public endpoints)
+Latest verified targeted process test command:
 
-2. **Application Service Layer** (`Application`)
-   - **IAuthAppService** interface (contract) → 2 methods
-   - **AuthAppService** implementation
-     - Uses `AuthManager` (domain service) for business logic
-     - Calls OpenIddict token endpoint (`GetTokenFromOpenIddictAsync`)
-     - Maps DTO ↔ Model using AutoMapper
-     - Returns DTOs (TokenResponse, Guid)
-   - **AuthMappingProfile** — AutoMapper configuration
-     - LoginDto → LoginModel
-     - RegisterDto → RegisterModel
+```bash
+dotnet test test/InventoryTrackingAutomation.EntityFrameworkCore.Tests/InventoryTrackingAutomation.EntityFrameworkCore.Tests.csproj --no-restore --filter MovementFlow_Integration_Tests
+```
 
-3. **Domain Service Layer** (`Domain`)
-   - **AuthManager** (DomainService) — Pure business logic
-     - `CreateUserAsync(RegisterModel)` — Validates uniqueness, creates user with default role
-     - `ValidateLoginAsync(LoginModel)` — Password validation
-     - Private validation methods
-     - Uses ABP's `IdentityUserManager`, `IIdentityUserRepository`
+Result: `4 passed, 0 failed, 0 skipped`.
 
-**Models** (`Domain.Shared`)
-- **LoginModel** — userName, password
-- **RegisterModel** — userName, email, password, passwordConfirm
+Process test logs are written to:
 
-**DTOs** (`Application.Contracts`)
-- **LoginDto** — userName, password
-- **RegisterDto** — userName, email, password, passwordConfirm
-- **TokenResponse** — userId, accessToken, refreshToken, expiresIn, tokenType
+```text
+test/InventoryTrackingAutomation.EntityFrameworkCore.Tests/TestResults/movement-flow-logs
+```
 
-**Error Codes** (`Domain.Shared`)
-- `Auth.UserNameAlreadyExists`, `EmailAlreadyExists`, `InvalidCredentials`
-- `PasswordMismatch`, `UserCreationFailed`, `TokenRequestFailed`
+Generated log files:
 
-**DI Registration:**
-- `InventoryTrackingAutomationApplicationModule` → AddScoped<IAuthAppService, AuthAppService>
-- AuthManager auto-registered (DomainService pattern)
+- `wt.md`: warehouse transfer lifecycle
+- `fo.md`: field operation dispatch, task completion and return reconciliation
+- `wt-ins.md`: insufficient source stock regression
+- `fo-dup.md`: duplicate open return request regression
 
----
+Important scenarios:
 
-## Token Efficiency
+- warehouse transfer full lifecycle
+- field operation main movement
+- field operation return reconciliation
+- real workflow approvals through `MovementApprovalManager`
+- insufficient source stock blocks dispatch
+- duplicate open return request prevention
+- removed movement line API stays absent
 
-- Previous Claude instances wasted tokens re-reading the same 6 files
-- Wiki-brain reduces future context by **80%+** through knowledge graph queries
-- This agent (architecture role) guides others with prompts, not code
-- Other agents: query graph, implement from prompts, avoid re-exploration
+External wiki:
 
----
-
-## Workflow Implementation Roadmap
-
-**Hazırlık Skoru:** %90
-
-**Tamamlananlar (Faz 1 - 100% Hazır):**
-- Gerekli roller (Admin, Approver vb.) ve 3 adımlı "MovementRequest" iş akışı SeedContributor içerisinde fiziksel olarak kodlanmış ve oluşturulmaktadır.
-- `MovementRequestManager` içerisinde `CreateWithWorkflowAsync` metodu ile WorkflowInstance başlatan mekanizma başarıyla kurulmuştur.
-- **Güvenlik (OpenIddict & ABP Permissions):** Tüm Controller'lar `[Authorize]` attribute'u ile korunmakta ve Seed Data aşamasında roller, `IPermissionManager.SetAsync` ile yetkilerine (Permissions) otomatik bağlanmaktadır. DTO-based Identity ihlali yoktur, `CurrentUserId` arka planda güvenle çözülür.
-- **Tekil Onay Uç Noktası:** Frontend kullanımını kolaylaştırmak için Approve/Reject işlemleri tek bir `ProcessApprovalAsync` servisinde ve `/api/movement-requests/{id}/process-approval` endpoint'inde birleştirildi.
-- **Arabaya Yükleme (Sevkiyat):** Kapanış adımı için `MovementRequestWorkflowEventHandler` event listener'ı eklenmiş; onay tamamlandığında UOW destekli stok düşümü yapılmakta ve otomatik olarak **Shipment (Sevkiyat)** oluşturulup talebe (ShipmentId) bağlanmaktadır. Faz 1'in "Arabaya yüklenmiş olması" şartı sağlanmıştır.
+`C:\Users\mertb\OneDrive\Belgeler\InventoryWiki\wiki`
 

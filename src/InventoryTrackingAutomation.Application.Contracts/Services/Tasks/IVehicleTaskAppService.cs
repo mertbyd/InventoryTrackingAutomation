@@ -18,4 +18,8 @@ public interface IVehicleTaskAppService : IApplicationService
     Task<List<VehicleTaskDto>> CreateManyAsync(List<CreateVehicleTaskDto> inputs);
     Task<VehicleTaskDto> UpdateAsync(Guid id, UpdateVehicleTaskDto input);
     Task DeleteAsync(Guid id);
+    Task<List<VehicleTaskLineDto>> GetLinesAsync(Guid vehicleTaskId);
+    Task<VehicleTaskLineDto> AddLineAsync(Guid vehicleTaskId, CreateVehicleTaskLineDto input);
+    Task<VehicleTaskLineDto> UpdateLineAsync(Guid vehicleTaskId, Guid lineId, UpdateVehicleTaskLineDto input);
+    Task DeleteLineAsync(Guid vehicleTaskId, Guid lineId);
 }

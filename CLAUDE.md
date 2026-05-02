@@ -1,153 +1,163 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Claude Code when working with this repository. It mirrors `AGENTS.md` so all local agents share the same current model.
 
-## Build & Run
+## Build And Run
 
 ```bash
-# Build entire solution
 dotnet build InventoryTrackingAutomation.sln
-
-# Run the main API host
 dotnet run --project host/InventoryTrackingAutomation.HttpApi.Host
-
-# Run the auth server
 dotnet run --project host/InventoryTrackingAutomation.AuthServer
-
-# Run all tests
 dotnet test
+```
 
-# Run a specific test project
-dotnet test test/InventoryTrackingAutomation.Application.Tests
+Angular commands run inside `angular/`:
 
-# Angular frontend (inside /angular)
+```bash
 ng serve
 ng build
 ng test
 ```
 
-## Database Migrations (EF Core)
+## Current Core Model
 
-Run these from `src/InventoryTrackingAutomation.EntityFrameworkCore/`:
+The system is normalized around task demand lines and vehicle assignment lines:
+
+```text
+InventoryTask
+  -> TaskLine
+  -> VehicleTask
+      -> VehicleTaskLine
+      -> MovementRequest
+          -> InventoryTransaction
+```
+
+Meaning:
+
+- `InventoryTask.Type` decides whether the process is `WarehouseTransfer` or `FieldOperation`.
+- `InventoryTask.SourceWarehouseId`, `TargetWarehouseId`, and `ReturnWarehouseId` own warehouse route context.
+- `TaskLine.TaskId`, `ProductId`, and `Quantity` own the product demand for the task.
+- `VehicleTask.TaskId`, `VehicleId`, and `ResponsibleWorkerId` own the vehicle assignment.
+- `VehicleTaskLine.VehicleTaskId`, `TaskLineId`, and `AllocatedQuantity` own how much of a task line goes to that vehicle assignment.
+- `VehicleTaskLine` also stores return reconciliation fields: `ReceivedQuantity`, `DamagedQuantity`, `LostQuantity`, `ConsumedQuantity`, `ReceiveNote`.
+- `MovementRequest.VehicleTaskId` points to the task/vehicle context.
+- `MovementRequest.ParentMovementRequestId` identifies return movements.
+- `InventoryTransaction.RelatedMovementRequestId` is the ledger link.
+
+Important: `ProductId` is not duplicated on `VehicleTaskLine`. Resolve product through `VehicleTaskLine.TaskLineId -> TaskLine.ProductId`.
+
+Never add these back:
+
+- `MovementRequest.Type`
+- `MovementRequest.RequestedVehicleId`
+- `MovementRequest.AssignedTaskId`
+- `MovementRequest.TaskId`
+- `MovementRequest.SourceWarehouseId`
+- `MovementRequest.TargetWarehouseId`
+- `InventoryTransaction.RelatedTaskId`
+- `MovementRequestTypeEnum`
+- production `MovementRequestLine` API/entity/service/controller/repository surface
+- `POST /api/movement-requests/with-lines`
+
+## Layer Conventions
+
+- Domain rules live in `src/InventoryTrackingAutomation.Domain/Managers/`.
+- AppServices stay thin: resolve current user/worker, map DTOs, call managers, publish cache events.
+- Use repository interfaces from `Domain/Interface/`.
+- Register EF repositories in `InventoryTrackingAutomationEntityFrameworkCoreModule`.
+- Keep entities FK-only; do not add navigation properties.
+- Use `MovementRequestOperationalContextModel` for movement decisions.
+- Use `TaskLine` and `VehicleTaskLine` for product quantities; do not make movement request own lines again.
+
+## Workflow And Stock Rules
+
+Workflow selection comes from `InventoryTask.Type`, not `MovementRequest.Type`.
+
+Dispatch:
+
+- allowed only from `Approved`
+- blocked for return flows
+- reads transfer quantities from `VehicleTaskLine`
+- resolves product through `TaskLine`
+- moves `Warehouse -> Vehicle`
+- starts a `Draft` task as `InProgress`
+
+Receive:
+
+- warehouse transfer moves `Vehicle -> TargetWarehouse`, completes task, releases vehicle
+- field operation main receive completes the movement but leaves stock on vehicle
+- return receive splits `VehicleTaskLine` quantities into received/damaged/lost/consumed, writes reconciliation back to `VehicleTaskLine`, then releases vehicle
+
+## Database Notes
+
+Current FK shape:
+
+- `operation.task_lines.TaskId -> operation.tasks.Id`
+- `operation.task_lines.ProductId -> master.products.Id`
+- `operation.vehicle_task_lines.VehicleTaskId -> operation.vehicle_tasks.Id`
+- `operation.vehicle_task_lines.TaskLineId -> operation.task_lines.Id`
+- `movement.movement_requests.VehicleTaskId -> operation.vehicle_tasks.Id`
+- `movement.movement_requests.ParentMovementRequestId -> movement.movement_requests.Id`
+- `operation.vehicle_tasks.TaskId -> operation.tasks.Id`
+- `operation.tasks.SourceWarehouseId/TargetWarehouseId/ReturnWarehouseId -> master.warehouses.Id`
+- `stock.inventory_transactions.RelatedMovementRequestId -> movement.movement_requests.Id`
+
+Recent migrations in this worktree:
+
+- `20260429111119_NormalizeTaskVehicleMovementFlow`
+- `20260430110525_MoveMovementRouteToTask`
+- `20260501094502_AddTaskLineAndVehicleTaskLine`
+- `20260501132731_RemoveMovementRequestLine`
+- `20260501142000_NormalizeTaskLineVehicleTaskLine`
+
+## Test Guidance
+
+- Create real FK rows in integration tests.
+- Run query/repository logic inside UnitOfWork.
+- Keep SQLite EFCore tests non-parallel.
+- Regression searches for removed movement fields should only hit migrations or historical warning docs.
+
+Critical process tests:
+
+`test/InventoryTrackingAutomation.EntityFrameworkCore.Tests/EntityFrameworkCore/Movements/MovementFlow_Integration_Tests.cs`
+
+Run:
 
 ```bash
-dotnet ef migrations add "MigrationName" --startup-project ../../../host/InventoryTrackingAutomation.HttpApi.Host
-dotnet ef database update --startup-project ../../../host/InventoryTrackingAutomation.HttpApi.Host
+dotnet test test/InventoryTrackingAutomation.EntityFrameworkCore.Tests/InventoryTrackingAutomation.EntityFrameworkCore.Tests.csproj --no-restore --filter MovementFlow_Integration_Tests
 ```
 
-Local PostgreSQL is available via Docker:
+Latest verified result: `4 passed, 0 failed, 0 skipped`.
 
-```bash
-docker-compose up -d
-```
+The process tests write step-by-step markdown logs to:
 
-## Architecture Overview
+`test/InventoryTrackingAutomation.EntityFrameworkCore.Tests/TestResults/movement-flow-logs`
 
-**Framework:** ABP Framework 10.3.0, .NET 10 (`net10.0`), PostgreSQL (Npgsql 10.0.0), AutoMapper 12.0.1
+Expected log files:
 
-All projects target `net10.0` (Domain.Shared dahil — eski `netstandard2.1` hedefi kaldırıldı). SDK pin: `global.json` → `10.0.203` (`rollForward: latestFeature`).
+- `wt.md`
+- `fo.md`
+- `wt-ins.md`
+- `fo-dup.md`
 
-### Layer Hierarchy
+Each log shows what happened in that step and snapshots these tables:
 
-```
-Domain.Shared       → Enums, error codes, localization (net10.0)
-Domain              → Entities, Manager classes, repository interfaces, EventHandlers
-Application.Contracts → DTOs, IAppService interfaces
-Application         → AppService implementations, AutoMapper profiles
-EntityFrameworkCore → DbContext, FluentAPI configs, custom repositories, Migrations
-HttpApi             → REST controller module configuration
-HttpApi.Host        → Entry point (Serilog, Autofac, Swagger, OpenIddict)
-AuthServer          → Standalone OpenIddict authorization server
-Blazor / Blazor.Server / Blazor.WebAssembly  → Blazor UI varyantları (opsiyonel)
-Web / Web.Host / Web.Unified                 → MVC tabanlı Web UI (opsiyonel)
-MongoDB / Installer                          → Alternatif provider + setup tooling
-```
+- `operation.tasks`
+- `operation.task_lines`
+- `operation.vehicle_tasks`
+- `operation.vehicle_task_lines`
+- `movement.movement_requests`
+- `movement.movement_approvals`
+- `workflow.workflow_instances`
+- `workflow.workflow_instance_steps`
+- `stock.stock_locations`
+- `stock.inventory_transactions`
 
-**SystemStandards bağımlılığı:** `..\..\..\SystemStandards\src\` altından `ProjectReference` olarak eklenmiş (Core, Validation, AspNetCore, Abp). NuGet paketine dönüştürme planı için bkz. wiki `plan-cicd-enterprise-upgrade.md` Faz 2.
+## Wiki
 
-### Domain Layer Conventions
+External wiki path:
 
-**Entity base classes:** `FullAuditedAggregateRoot<Guid>` for aggregate roots, `Entity<Guid>` for child entities. All implement `IMultiTenant` with `public Guid? TenantId { get; set; }`.
+`C:\Users\mertb\OneDrive\Belgeler\InventoryWiki\wiki`
 
-**Constructor pattern** (required for every entity):
-```csharp
-protected EntityName() { }
-public EntityName(Guid id) : base(id) { }
-```
-
-**No navigation properties** — only `XxxId` FK references. Collections are not included.
-
-**Business logic** lives in `Domain/Managers/` (e.g., `DepartmentManager`, `ProductManager`, `WorkflowManager`, `MovementApprovalManager`). AppServices delegate to managers; they do not contain domain logic themselves.
-
-**BaseManager helpers** (paylaşılan): `EnsureExistsAsync(id)`, `EnsureExistsInAsync(otherRepo, id)`, `EnsureUniqueAsync(predicate)`, `EnsureValidEnumAsync(value, settingName)`. Custom error code parametresi yok — otomatik `EntityNotFoundException` ve `InventoryTrackingAutomation:{TEntity}.AlreadyExists` üretir.
-
-**Mapping:** Manager ve AppService'ler ctor'a `IMapper` (AutoMapper) inject eder. Kalıp: `var e = new X(GuidGenerator.Create()); _mapper.Map(model, e);` — `IObjectMapper`/`MapAndAssignId`/`MapForUpdate` artık kullanılmıyor.
-
-**Workflow approver çözümleme:** Strategy pattern. `IApproverStrategy` impl'leri (`InitiatorManagerApproverStrategy`, `SourceSiteManagerApproverStrategy`, `TargetSiteManagerApproverStrategy`) `DefaultWorkflowApproverResolver` içinde DI'dan toplanır, `ResolverKey`'e göre dispatch edilir. Yeni resolver eklemek için sadece yeni `IApproverStrategy` impl'i yeterli (OCP).
-
-**Repository interfaces** are declared in `Domain/Interface/` and implemented in `EntityFrameworkCore/Repository/`. Register custom repos in `InventoryTrackingAutomationEntityFrameworkCoreModule.ConfigureServices`.
-
-### Application Layer Conventions
-
-- AppServices inherit `InventoryTrackingAutomationAppService`
-- Standard CRUD methods: `GetAsync(id)`, `GetListAsync(PagedResultRequestDto)`, `CreateAsync(dto)`, `CreateManyAsync(List<dto>)`, `UpdateAsync(id, dto)`, `DeleteAsync(id)`
-- DTOs follow naming: `Create{Entity}Dto`, `Update{Entity}Dto`; responses use `{Entity}Dto`
-- AutoMapper profiles are auto-discovered from the module assembly (no manual registration needed)
-- **Controller pattern:** Class-level `[Authorize]`, endpoint-level permission attribute (örn. `[Authorize(InventoryTrackingAutomationPermissions.MovementRequests.View)]`). Auth endpoint'leri (`login`/`register`) `[AllowAnonymous]`.
-- **Return type:** `Task<Result<T>>` veya `Task<Result>` (SystemStandards.Results paketi). Ham DTO döndürülmez.
-
-### Database Schemas
-
-The DbContext partitions tables by functional area:
-
-| Schema | Contains |
-|--------|----------|
-| `abp` | ABP framework tables (identity, permissions, audit, settings) |
-| `openiddict` | OAuth2/OIDC tables |
-| `lookup` | Department, ProductCategory |
-| `master` | Product, Site, Vehicle, Worker |
-| `stock` | ProductStock, StockMovement |
-| `movement` | MovementRequest, MovementRequestLine, MovementApproval |
-| `shipment` | Shipment, ShipmentLine |
-| `public` (default) | WorkflowDefinition, WorkflowStepDefinition, WorkflowInstance, WorkflowInstanceStep — **dikkat:** custom schema atanmamış, varsayılan `public` schema'da kalıyor |
-
-### Error Codes
-
-Centralized in `Domain.Shared/InventoryTrackingAutomationDomainErrorCodes.cs`. Pattern:
-
-```csharp
-public const string ProductNotFound = "InventoryTracking:Products.NotFound";
-public const string ProductCodeNotUnique = "InventoryTracking:Products.CodeNotUnique";
-```
-
-Managers expose `EnsureExistsAsync(id, errorCode)` and `EnsureUniqueAsync(predicate, errorCode)` helpers.
-
-### Module Registration
-
-ABP modules use `[DependsOn(...)]` and `ConfigureServices`/`OnApplicationInitialization`. When adding a new feature:
-1. Define entity in Domain, add to DbContext
-2. Add DbSet and FluentAPI config in `InventoryTrackingAutomationDbContext`
-3. Register custom repository in `InventoryTrackingAutomationEntityFrameworkCoreModule`
-4. Create manager in Domain, DTO + interface in Application.Contracts, service in Application
-5. Add error codes to `InventoryTrackingAutomationDomainErrorCodes`
-
-## Key Conventions
-
-- **Language version:** `latest`, **Nullable:** `enabled` — enforce non-nullable by default
-- **Comments:** XML `<summary>` on all classes/enums; `//` inline comments on properties with example values. Domain comments are written in Turkish.
-- **File-scoped namespaces:** `namespace InventoryTrackingAutomation.X.Y;`
-- **Shared build props:** All `.csproj` files import `common.props` — do not duplicate version or language settings per-project
-- **Secrets:** Connection strings go in `appsettings.secrets.json` (gitignored), not `appsettings.json`
-
----
-
-## Geçmiş Sürümler & Değişiklikler
-
-### v1.1.0 (2026-04-25)
-- **Serialization Fix**: `System.Type` kaynaklı crash sorunu `SystemStandards` kütüphanesinde `[JsonIgnore]` ile çözüldü.
-- **Logging Middleware**: Tüm request/response döngüsünü loglayan `RequestResponseLoggingMiddleware` pipeline'a eklendi.
-- **Fluent API**: Result sınıflarına profesyonel zincirlenebilir metodlar (`WithCorrelationId`, `WithLocation`) eklendi.
-- **Dinamik Mapping**: `appsettings.json` üzerinden mapping kuralları ve DI kayıtları `SystemStandards` tarafında optimize edildi.
-- **Modern Altyapı**: Tüm projeler .NET 10 ve ABP 10.3.0 standartlarına yükseltildi.
-- **Sürüm Güncellemesi**: `common.props` ve ilgili paket referansları `v1.1.0` olarak güncellendi.
+Start with `current-system-state-for-claude.md`.
 

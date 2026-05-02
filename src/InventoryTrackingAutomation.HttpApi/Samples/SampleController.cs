@@ -1,7 +1,8 @@
-﻿using System.Threading.Tasks;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Volo.Abp;
+using Volo.Abp.DependencyInjection;
 
 namespace InventoryTrackingAutomation.Samples;
 
@@ -10,12 +11,14 @@ namespace InventoryTrackingAutomation.Samples;
 [Route("api/InventoryTrackingAutomation/sample")]
 public class SampleController : InventoryTrackingAutomationController, ISampleAppService
 {
-    private readonly ISampleAppService _sampleAppService;
-
-    public SampleController(ISampleAppService sampleAppService)
+    public SampleController(IAbpLazyServiceProvider abpLazyServiceProvider)
+        : base(abpLazyServiceProvider)
     {
-        _sampleAppService = sampleAppService;
     }
+
+    private ISampleAppService _sampleAppService => LazyGetRequiredService<ISampleAppService>();
+
+
 
     [HttpGet]
     public async Task<SampleDto> GetAsync()

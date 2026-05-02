@@ -5,6 +5,7 @@ using InventoryTrackingAutomation.Entities.Masters;
 using InventoryTrackingAutomation.Interface.Lookups;
 using InventoryTrackingAutomation.Interface.Masters;
 using InventoryTrackingAutomation.Models.Masters;
+using Volo.Abp.DependencyInjection;
 
 namespace InventoryTrackingAutomation.Managers.Masters;
 
@@ -15,23 +16,17 @@ namespace InventoryTrackingAutomation.Managers.Masters;
 //sistemdeki görevi: Domain katmanındaki iş kurallarının merkezi yönetimini ve validasyonunu sağlar.
 public class WorkerManager : BaseManager<Worker>
 {
-    private readonly IDepartmentRepository _departmentRepository;  // DepartmentId FK validasyonu için
-    private readonly IWarehouseRepository _warehouseRepository;              // DefaultWarehouseId FK validasyonu için
+    private IDepartmentRepository _departmentRepository => LazyGetRequiredService<IDepartmentRepository>();  // DepartmentId FK validasyonu için
+    private IWarehouseRepository _warehouseRepository => LazyGetRequiredService<IWarehouseRepository>();              // DefaultWarehouseId FK validasyonu için
 
     /// <summary>
     /// WorkerManager constructor'ı.
     /// </summary>
-    private readonly IMapper _mapper;
-    public WorkerManager(
-        IWorkerRepository repository,
-        IDepartmentRepository departmentRepository,
-        IWarehouseRepository warehouseRepository,
-        IMapper mapper)
-        : base(repository)
+    private IMapper _mapper => LazyGetRequiredService<IMapper>();
+    public WorkerManager(IWorkerRepository repository,
+        IAbpLazyServiceProvider abpLazyServiceProvider)
+        : base(repository, abpLazyServiceProvider)
     {
-        _mapper = mapper;
-        _departmentRepository = departmentRepository;
-        _warehouseRepository = warehouseRepository;
     }
 
     /// <summary>

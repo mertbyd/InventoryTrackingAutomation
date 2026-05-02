@@ -14,11 +14,11 @@ public class VehicleTaskConfiguration : IEntityTypeConfiguration<VehicleTask>
         builder.ConfigureByConvention();
 
         builder.Property(x => x.VehicleId).IsRequired();
-        builder.Property(x => x.InventoryTaskId).IsRequired();
+        builder.Property(x => x.TaskId).IsRequired();
+        builder.Property(x => x.ResponsibleWorkerId).IsRequired();
         builder.Property(x => x.AssignedAt).IsRequired();
-        builder.Property(x => x.IsActive).IsRequired();
 
-        builder.HasIndex(x => new { x.VehicleId, x.IsActive });
+        builder.HasIndex(x => new { x.VehicleId, x.ReleasedAt });
 
         builder.HasOne<Vehicle>()
             .WithMany()
@@ -27,7 +27,12 @@ public class VehicleTaskConfiguration : IEntityTypeConfiguration<VehicleTask>
 
         builder.HasOne<InventoryTask>()
             .WithMany()
-            .HasForeignKey(x => x.InventoryTaskId)
+            .HasForeignKey(x => x.TaskId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne<Worker>()
+            .WithMany()
+            .HasForeignKey(x => x.ResponsibleWorkerId)
             .OnDelete(DeleteBehavior.Restrict);
     }
 }

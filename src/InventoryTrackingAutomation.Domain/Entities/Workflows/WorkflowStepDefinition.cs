@@ -4,42 +4,39 @@ using Volo.Abp.Domain.Entities.Auditing;
 namespace InventoryTrackingAutomation.Entities.Workflows;
 
 /// <summary>
-/// İş akışı şablonundaki bir adımı temsil eden entity.
-/// Onaycı çözümleme tamamen ResolverKey üzerinden yapılır (configuration-based).
+/// Is akisi sablonundaki tek bir onay adimini temsil eden entity.
 /// </summary>
 public class WorkflowStepDefinition : AuditedEntity<Guid>
 {
     /// <summary>
-    /// Bağlı olduğu iş akışı tanımı ID'si.
+    /// Bagli oldugu is akisi taniminin kimligini tasir.
     /// </summary>
     public Guid WorkflowDefinitionId { get; private set; }
 
     /// <summary>
-    /// Adımın sırası (1, 2, 3...).
+    /// Adimin is akisi icindeki sirasini belirler.
     /// </summary>
     public int StepOrder { get; private set; }
 
     /// <summary>
-    /// Bu adımı onaylayabilecek olan rol adı (Örn: "DepartmentManager").
-    /// ResolverKey boşsa rol bazlı yetkilendirme yapılır.
+    /// ResolverKey kullanilmadiginda onay icin gereken rol adini tasir.
     /// </summary>
     public string? RequiredRoleName { get; private set; }
 
     /// <summary>
-    /// Onaycı çözümleme mantığının anahtarı.
-    /// Örnekler: "InitiatorManager", "SourceWarehouseManager", "TargetWarehouseManager".
-    /// DefaultWorkflowApproverResolver bu anahtara bakarak dinamik onaycıyı bulur.
-    /// Null/boş ise sadece RequiredRoleName ve rol bazlı yetki kontrol edilir.
+    /// Dinamik onayci cozumleme kuralini tasir. Ornek: InitiatorManager veya SourceWarehouseManager.
     /// </summary>
     public string? ResolverKey { get; private set; }
 
     /// <summary>
-    /// Bağlı olduğu iş akışı tanımı navigation property'si.
+    /// Workflow entity'leri mevcut mimaride navigation kullanan istisnai kume oldugu icin
+    /// EF konfigurasyonu tanim iliskisini bu property uzerinden kurar.
     /// </summary>
     public virtual WorkflowDefinition WorkflowDefinition { get; private set; }
 
     private WorkflowStepDefinition()
     {
+        WorkflowDefinition = default!;
     }
 
     public WorkflowStepDefinition(Guid id, Guid workflowDefinitionId, int stepOrder, string? requiredRoleName, string? resolverKey = null)
@@ -49,5 +46,6 @@ public class WorkflowStepDefinition : AuditedEntity<Guid>
         StepOrder = stepOrder;
         RequiredRoleName = requiredRoleName;
         ResolverKey = resolverKey;
+        WorkflowDefinition = default!;
     }
 }

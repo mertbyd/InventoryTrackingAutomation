@@ -4,14 +4,17 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using InventoryTrackingAutomation.Dtos.Inventory;
 using InventoryTrackingAutomation.Entities.Inventory;
+using InventoryTrackingAutomation.Enums.Inventory;
+using InventoryTrackingAutomation.Events.Cache;
 using InventoryTrackingAutomation.Interface.Inventory;
 using InventoryTrackingAutomation.Managers.Inventory;
 using InventoryTrackingAutomation.Models.Inventory;
 using InventoryTrackingAutomation.Services.Inventory;
 using FluentValidation;
-using InventoryTrackingAutomation.Managers.Inventory;
 using Volo.Abp.Application.Dtos;
+using Volo.Abp.EventBus.Local;
 using Volo.Abp.Uow;
+using Volo.Abp.DependencyInjection;
 
 namespace InventoryTrackingAutomation.Application.Services.Stock;
 
@@ -20,25 +23,20 @@ namespace InventoryTrackingAutomation.Application.Services.Stock;
 //sistemdeki görevi: Uygulama katmanındaki kullanım senaryolarını (use-case) gerçekleştiren ana servis birimidir.
 public class StockLocationAppService : InventoryTrackingAutomationAppService, IStockLocationAppService
 {
-    private readonly IStockLocationRepository _repository;
-    private readonly StockLocationManager _manager;
-    private readonly IValidator<CreateStockLocationDto> _createValidator;
-    private readonly IValidator<UpdateStockLocationDto> _updateValidator;
-    private readonly IMapper _mapper;
-
-    public StockLocationAppService(
-        IStockLocationRepository repository,
-        StockLocationManager manager,
-        IValidator<CreateStockLocationDto> createValidator,
-        IValidator<UpdateStockLocationDto> updateValidator,
-        IMapper mapper)
+    public StockLocationAppService(IAbpLazyServiceProvider abpLazyServiceProvider)
+        : base(abpLazyServiceProvider)
     {
-        _repository = repository;
-        _manager = manager;
-        _createValidator = createValidator;
-        _updateValidator = updateValidator;
-        _mapper = mapper;
     }
+
+    private IStockLocationRepository _repository => LazyGetRequiredService<IStockLocationRepository>();
+    private StockLocationManager _manager => LazyGetRequiredService<StockLocationManager>();
+    // Stok lokasyonu degisiklikleri urun/arac stok cachelerini local event ile temizler.
+    private ILocalEventBus _localEventBus => LazyGetRequiredService<ILocalEventBus>();
+    private IValidator<CreateStockLocationDto> _createValidator => LazyGetRequiredService<IValidator<CreateStockLocationDto>>();
+    private IValidator<UpdateStockLocationDto> _updateValidator => LazyGetRequiredService<IValidator<UpdateStockLocationDto>>();
+    private IMapper _mapper => LazyGetRequiredService<IMapper>();
+
+
 
 //işlevi: İlgili iş senaryosunu (use-case) yürütür.
 //sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
@@ -66,6 +64,7 @@ public class StockLocationAppService : InventoryTrackingAutomationAppService, IS
         var model = _mapper.Map<CreateStockLocationDto, CreateStockLocationModel>(input);
         var entity = await _manager.CreateAsync(model);
         var inserted = await _repository.InsertAsync(entity, autoSave: true);
+        await InvalidateStockCacheAsync(inserted.ProductId, inserted.LocationType, inserted.LocationId);
         return _mapper.Map<StockLocation, StockLocationDto>(inserted);
     }
 
@@ -83,6 +82,8 @@ public class StockLocationAppService : InventoryTrackingAutomationAppService, IS
         }
 
         var inserted = await _repository.InsertManyAndGetListAsync(entities);
+        foreach (var e in inserted)
+            await InvalidateStockCacheAsync(e.ProductId, e.LocationType, e.LocationId);
         return _mapper.Map<List<StockLocation>, List<StockLocationDto>>(inserted);
     }
 
@@ -96,6 +97,7 @@ public class StockLocationAppService : InventoryTrackingAutomationAppService, IS
         var model = _mapper.Map<UpdateStockLocationDto, UpdateStockLocationModel>(input);
         var updated = await _manager.UpdateAsync(existing, model);
         var saved = await _repository.UpdateAsync(updated, autoSave: true);
+        await InvalidateStockCacheAsync(saved.ProductId, saved.LocationType, saved.LocationId);
         return _mapper.Map<StockLocation, StockLocationDto>(saved);
     }
 
@@ -104,7 +106,17 @@ public class StockLocationAppService : InventoryTrackingAutomationAppService, IS
 //sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task DeleteAsync(Guid id)
     {
-        await _manager.EnsureExistsAsync(id);
+        var existing = await _manager.EnsureExistsAsync(id);
         await _repository.SoftDeleteAsync(id);
+        await InvalidateStockCacheAsync(existing.ProductId, existing.LocationType, existing.LocationId);
+    }
+
+    private async Task InvalidateStockCacheAsync(Guid productId, StockLocationTypeEnum locationType, Guid locationId)
+    {
+        var keys = locationType == StockLocationTypeEnum.Vehicle
+            ? new[] { CacheKeys.ProductStockSummary(productId), CacheKeys.VehicleInventories(locationId) }
+            : new[] { CacheKeys.ProductStockSummary(productId) };
+
+        await _localEventBus.PublishAsync(CacheInvalidationEto.ForKeys(keys));
     }
 }

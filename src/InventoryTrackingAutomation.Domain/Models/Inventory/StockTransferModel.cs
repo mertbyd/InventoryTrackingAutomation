@@ -16,7 +16,6 @@ public class StockTransferModel
     public Guid DestinationLocationId { get; set; }
     public InventoryTransactionTypeEnum TransactionType { get; set; }
     public Guid? RelatedMovementRequestId { get; set; }
-    public Guid? RelatedTaskId { get; set; }
     public Guid? PerformedByUserId { get; set; }
     public string? Note { get; set; }
 }

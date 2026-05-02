@@ -1,0 +1,8 @@
+using InventoryTrackingAutomation.Tasks;
+using InventoryTrackingAutomation.EntityFrameworkCore;
+
+namespace InventoryTrackingAutomation.EntityFrameworkCore.Tasks;
+
+public class InventoryTaskAppService_Tests : InventoryTrackingAutomation.Tasks.InventoryTaskAppService_Tests<InventoryTrackingAutomationEntityFrameworkCoreTestModule>
+{
+}

@@ -35,6 +35,9 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
     private readonly IRepository<InventoryTrackingAutomation.Entities.Inventory.InventoryTransaction, Guid> _inventoryTransactionRepository;
     private readonly IRepository<InventoryTrackingAutomation.Entities.Tasks.InventoryTask, Guid> _inventoryTaskRepository;
     private readonly IRepository<InventoryTrackingAutomation.Entities.Tasks.VehicleTask, Guid> _vehicleTaskRepository;
+    private readonly IRepository<InventoryTrackingAutomation.Entities.Tasks.TaskLine, Guid> _taskLineRepository;
+    private readonly IRepository<InventoryTrackingAutomation.Entities.Tasks.VehicleTaskLine, Guid> _vehicleTaskLineRepository;
+    private readonly IRepository<InventoryTrackingAutomation.Entities.Movements.MovementRequest, Guid> _movementRequestRepository;
     private readonly InventoryTrackingAutomation.Interface.Workflows.IWorkflowDefinitionRepository _workflowDefinitionRepository;
     private readonly IdentityRoleManager _identityRoleManager;
     private readonly IdentityUserManager _identityUserManager;
@@ -52,6 +55,9 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
         IRepository<InventoryTrackingAutomation.Entities.Inventory.InventoryTransaction, Guid> inventoryTransactionRepository,
         IRepository<InventoryTrackingAutomation.Entities.Tasks.InventoryTask, Guid> inventoryTaskRepository,
         IRepository<InventoryTrackingAutomation.Entities.Tasks.VehicleTask, Guid> vehicleTaskRepository,
+        IRepository<InventoryTrackingAutomation.Entities.Tasks.TaskLine, Guid> taskLineRepository,
+        IRepository<InventoryTrackingAutomation.Entities.Tasks.VehicleTaskLine, Guid> vehicleTaskLineRepository,
+        IRepository<InventoryTrackingAutomation.Entities.Movements.MovementRequest, Guid> movementRequestRepository,
         InventoryTrackingAutomation.Interface.Workflows.IWorkflowDefinitionRepository workflowDefinitionRepository,
         IdentityRoleManager identityRoleManager,
         IdentityUserManager identityUserManager,
@@ -68,6 +74,9 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
         _inventoryTransactionRepository = inventoryTransactionRepository;
         _inventoryTaskRepository = inventoryTaskRepository;
         _vehicleTaskRepository = vehicleTaskRepository;
+        _taskLineRepository = taskLineRepository;
+        _vehicleTaskLineRepository = vehicleTaskLineRepository;
+        _movementRequestRepository = movementRequestRepository;
         _workflowDefinitionRepository = workflowDefinitionRepository;
         _identityRoleManager = identityRoleManager;
         _identityUserManager = identityUserManager;
@@ -521,7 +530,7 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
     {
         if (await _inventoryTaskRepository.GetCountAsync() > 0) return;
 
-        // Gerekli verileri çek
+        // Seed icin gerekli master verileri repository uzerinden okunur.
         var allVehicles = await _vehicleRepository.GetListAsync();
         var allProducts = await _productRepository.GetListAsync();
         var allWarehouses = await _warehouseRepository.GetListAsync();
@@ -530,103 +539,171 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
         var vehicle1 = allVehicles.FirstOrDefault(v => v.PlateNumber == "34 ABC 123");
         var vehicle2 = allVehicles.FirstOrDefault(v => v.PlateNumber == "34 ABC 456");
         var warehouse1 = allWarehouses.FirstOrDefault(w => w.Code == "WH-01");
-        var telsiz = allProducts.FirstOrDefault(p => p.Code == "EQP-01"); // Hilti Kırıcı → Telsiz olarak kullan
+        var hilti = allProducts.FirstOrDefault(p => p.Code == "EQP-01");
         var matkap = allProducts.FirstOrDefault(p => p.Code == "EQP-02");
         var driverAli = allWorkers.FirstOrDefault(w => w.RegistrationNumber == "DRV-001");
         var driverVeli = allWorkers.FirstOrDefault(w => w.RegistrationNumber == "DRV-002");
 
-        if (vehicle1 == null || vehicle2 == null || warehouse1 == null || telsiz == null || matkap == null) return;
+        if (vehicle1 == null || vehicle2 == null || warehouse1 == null || hilti == null || matkap == null) return;
         if (driverAli == null || driverVeli == null) return;
 
-        // --- InventoryTask 1: İzmir Saha Destek Görevi (InProgress) ---
+        // Saha operasyon task'lari Type alanini tek surec kaynagi olarak tasir.
         var task1 = new InventoryTrackingAutomation.Entities.Tasks.InventoryTask(_guidGenerator.Create())
         {
+            Type = InventoryTaskTypeEnum.FieldOperation,
             Code = "TSK-001",
-            Name = "İzmir Saha Destek Görevi",
-            Region = "İzmir / Bornova",
+            Name = "Izmir Saha Destek Gorevi",
+            Region = "Izmir / Bornova",
             StartDate = DateTime.UtcNow.AddDays(-3),
             EndDate = null,
             Status = TaskStatusEnum.InProgress,
-            Description = "İzmir Bornova bölgesinde saha destek operasyonu.",
-            ReturnWarehouseId = warehouse1.Id,
-            IsActive = true
+            Description = "Izmir Bornova bolgesinde saha destek operasyonu.",
+            SourceWarehouseId = warehouse1.Id,
+            TargetWarehouseId = null,
+            ReturnWarehouseId = warehouse1.Id
         };
         await _inventoryTaskRepository.InsertAsync(task1, autoSave: true);
 
-        // --- InventoryTask 2: Ankara Bakım Görevi (Draft) ---
         var task2 = new InventoryTrackingAutomation.Entities.Tasks.InventoryTask(_guidGenerator.Create())
         {
+            Type = InventoryTaskTypeEnum.FieldOperation,
             Code = "TSK-002",
-            Name = "Ankara Bakım Görevi",
-            Region = "Ankara / Çankaya",
+            Name = "Ankara Bakim Gorevi",
+            Region = "Ankara / Cankaya",
             StartDate = DateTime.UtcNow.AddDays(2),
             EndDate = DateTime.UtcNow.AddDays(5),
             Status = TaskStatusEnum.Draft,
-            Description = "Ankara Çankaya bölgesinde planlı bakım operasyonu.",
-            ReturnWarehouseId = warehouse1.Id,
-            IsActive = true
+            Description = "Ankara Cankaya bolgesinde planli bakim operasyonu.",
+            SourceWarehouseId = warehouse1.Id,
+            TargetWarehouseId = null,
+            ReturnWarehouseId = warehouse1.Id
         };
         await _inventoryTaskRepository.InsertAsync(task2, autoSave: true);
 
-        // --- InventoryTask 3: Tamamlanmış Görev ---
         var task3 = new InventoryTrackingAutomation.Entities.Tasks.InventoryTask(_guidGenerator.Create())
         {
+            Type = InventoryTaskTypeEnum.FieldOperation,
             Code = "TSK-003",
-            Name = "Bursa Acil Müdahale",
-            Region = "Bursa / Nilüfer",
+            Name = "Bursa Acil Mudahale",
+            Region = "Bursa / Nilufer",
             StartDate = DateTime.UtcNow.AddDays(-10),
             EndDate = DateTime.UtcNow.AddDays(-7),
             Status = TaskStatusEnum.Completed,
-            Description = "Bursa Nilüfer bölgesinde tamamlanmış acil müdahale.",
-            ReturnWarehouseId = warehouse1.Id,
-            IsActive = false
+            Description = "Bursa Nilufer bolgesinde tamamlanmis acil mudahale.",
+            SourceWarehouseId = warehouse1.Id,
+            TargetWarehouseId = null,
+            ReturnWarehouseId = warehouse1.Id
         };
         await _inventoryTaskRepository.InsertAsync(task3, autoSave: true);
 
-        // --- VehicleTask: 34 ABC 123 → İzmir Görevi, Şoför Ali ---
+        // Arac atamalari aktiflik bilgisini ReleasedAt null olmasindan turetir.
         var vt1 = new InventoryTrackingAutomation.Entities.Tasks.VehicleTask(_guidGenerator.Create())
         {
             VehicleId = vehicle1.Id,
-            InventoryTaskId = task1.Id,
-            DriverWorkerId = driverAli.Id,
+            TaskId = task1.Id,
+            ResponsibleWorkerId = driverAli.Id,
             AssignedAt = DateTime.UtcNow.AddDays(-3),
-            IsActive = true
+            ReleasedAt = null
         };
         await _vehicleTaskRepository.InsertAsync(vt1, autoSave: true);
 
-        // --- VehicleTask: 34 ABC 456 → İzmir Görevi, Şoför Veli ---
         var vt2 = new InventoryTrackingAutomation.Entities.Tasks.VehicleTask(_guidGenerator.Create())
         {
             VehicleId = vehicle2.Id,
-            InventoryTaskId = task1.Id,
-            DriverWorkerId = driverVeli.Id,
+            TaskId = task1.Id,
+            ResponsibleWorkerId = driverVeli.Id,
             AssignedAt = DateTime.UtcNow.AddDays(-3),
-            IsActive = true
+            ReleasedAt = null
         };
         await _vehicleTaskRepository.InsertAsync(vt2, autoSave: true);
 
-        // --- Araç Üstü Stoklar (StockLocation) ---
-        // Araç 1'de 3 adet Hilti Kırıcı
+        // Arac stoklarinin ledger baglami icin ana movement request'ler olusturulur.
+        var movement1 = new InventoryTrackingAutomation.Entities.Movements.MovementRequest(_guidGenerator.Create())
+        {
+            RequestNumber = "MR-SEED-TSK001-V1",
+            RequestedByWorkerId = driverAli.Id,
+            VehicleTaskId = vt1.Id,
+            ParentMovementRequestId = null,
+            Status = MovementStatusEnum.Completed,
+            Priority = MovementPriorityEnum.Normal,
+            RequestNote = "Seed saha cikisi - arac 1",
+            PlannedDate = DateTime.UtcNow.AddDays(-3),
+            WorkflowInstanceId = null
+        };
+        await _movementRequestRepository.InsertAsync(movement1, autoSave: true);
+
+        var movement2 = new InventoryTrackingAutomation.Entities.Movements.MovementRequest(_guidGenerator.Create())
+        {
+            RequestNumber = "MR-SEED-TSK001-V2",
+            RequestedByWorkerId = driverVeli.Id,
+            VehicleTaskId = vt2.Id,
+            ParentMovementRequestId = null,
+            Status = MovementStatusEnum.Completed,
+            Priority = MovementPriorityEnum.Normal,
+            RequestNote = "Seed saha cikisi - arac 2",
+            PlannedDate = DateTime.UtcNow.AddDays(-3),
+            WorkflowInstanceId = null
+        };
+        await _movementRequestRepository.InsertAsync(movement2, autoSave: true);
+
+        // TaskLine kayitlari gorev bazli urun taleplerini tutar.
+        var tl_hilti = new InventoryTrackingAutomation.Entities.Tasks.TaskLine(_guidGenerator.Create())
+        {
+            TaskId = task1.Id,
+            ProductId = hilti.Id,
+            Quantity = 5            // vt1:3 + vt2:2
+        };
+        await _taskLineRepository.InsertAsync(tl_hilti, autoSave: true);
+
+        var tl_matkap = new InventoryTrackingAutomation.Entities.Tasks.TaskLine(_guidGenerator.Create())
+        {
+            TaskId = task1.Id,
+            ProductId = matkap.Id,
+            Quantity = 1
+        };
+        await _taskLineRepository.InsertAsync(tl_matkap, autoSave: true);
+
+        // VehicleTaskLine kayitlari arac bazli tahsis ve iade uzlasmasini tutar.
+        await _vehicleTaskLineRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Tasks.VehicleTaskLine(_guidGenerator.Create())
+        {
+            VehicleTaskId = vt1.Id,
+            TaskLineId = tl_hilti.Id,
+            AllocatedQuantity = 3
+        }, autoSave: true);
+
+        await _vehicleTaskLineRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Tasks.VehicleTaskLine(_guidGenerator.Create())
+        {
+            VehicleTaskId = vt1.Id,
+            TaskLineId = tl_matkap.Id,
+            AllocatedQuantity = 1
+        }, autoSave: true);
+
+        await _vehicleTaskLineRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Tasks.VehicleTaskLine(_guidGenerator.Create())
+        {
+            VehicleTaskId = vt2.Id,
+            TaskLineId = tl_hilti.Id,
+            AllocatedQuantity = 2
+        }, autoSave: true);
+
+        // Arac ustu stoklar fiziksel bakiye tablosuna yazilir.
         await _stockLocationRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Inventory.StockLocation(_guidGenerator.Create())
         {
-            ProductId = telsiz.Id,
+            ProductId = hilti.Id,
             LocationType = StockLocationTypeEnum.Vehicle,
             LocationId = vehicle1.Id,
             Quantity = 3,
             ReservedQuantity = 0
         }, autoSave: true);
 
-        // Araç 2'de 2 adet Hilti Kırıcı
         await _stockLocationRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Inventory.StockLocation(_guidGenerator.Create())
         {
-            ProductId = telsiz.Id,
+            ProductId = hilti.Id,
             LocationType = StockLocationTypeEnum.Vehicle,
             LocationId = vehicle2.Id,
             Quantity = 2,
             ReservedQuantity = 0
         }, autoSave: true);
 
-        // Araç 1'de 1 adet Bosch Matkap
         await _stockLocationRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Inventory.StockLocation(_guidGenerator.Create())
         {
             ProductId = matkap.Id,
@@ -636,38 +713,35 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
             ReservedQuantity = 0
         }, autoSave: true);
 
-        // --- InventoryTransaction Ledger Kayıtları ---
-        // Hilti Kırıcı: Depodan Araç 1'e 3 adet
+        // Ledger sadece movement baglamini tutar; task join ile cozulur.
         await _inventoryTransactionRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Inventory.InventoryTransaction(_guidGenerator.Create())
         {
-            ProductId = telsiz.Id,
+            ProductId = hilti.Id,
             TransactionType = InventoryTransactionTypeEnum.WarehouseToVehicle,
             Quantity = 3,
             SourceLocationType = StockLocationTypeEnum.Warehouse,
             SourceLocationId = warehouse1.Id,
             TargetLocationType = StockLocationTypeEnum.Vehicle,
             TargetLocationId = vehicle1.Id,
-            RelatedTaskId = task1.Id,
+            RelatedMovementRequestId = movement1.Id,
             OccurredAt = DateTime.UtcNow.AddDays(-3),
-            Note = "İzmir Saha Destek Görevi için Hilti Kırıcı yükleme"
+            Note = "Seed saha cikisi - hilti arac 1"
         }, autoSave: true);
 
-        // Hilti Kırıcı: Depodan Araç 2'ye 2 adet
         await _inventoryTransactionRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Inventory.InventoryTransaction(_guidGenerator.Create())
         {
-            ProductId = telsiz.Id,
+            ProductId = hilti.Id,
             TransactionType = InventoryTransactionTypeEnum.WarehouseToVehicle,
             Quantity = 2,
             SourceLocationType = StockLocationTypeEnum.Warehouse,
             SourceLocationId = warehouse1.Id,
             TargetLocationType = StockLocationTypeEnum.Vehicle,
             TargetLocationId = vehicle2.Id,
-            RelatedTaskId = task1.Id,
+            RelatedMovementRequestId = movement2.Id,
             OccurredAt = DateTime.UtcNow.AddDays(-3),
-            Note = "İzmir Saha Destek Görevi için Hilti Kırıcı yükleme"
+            Note = "Seed saha cikisi - hilti arac 2"
         }, autoSave: true);
 
-        // Bosch Matkap: Depodan Araç 1'e 1 adet
         await _inventoryTransactionRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Inventory.InventoryTransaction(_guidGenerator.Create())
         {
             ProductId = matkap.Id,
@@ -677,27 +751,11 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
             SourceLocationId = warehouse1.Id,
             TargetLocationType = StockLocationTypeEnum.Vehicle,
             TargetLocationId = vehicle1.Id,
-            RelatedTaskId = task1.Id,
+            RelatedMovementRequestId = movement1.Id,
             OccurredAt = DateTime.UtcNow.AddDays(-3),
-            Note = "İzmir Saha Destek Görevi için Bosch Matkap yükleme"
-        }, autoSave: true);
-
-        // Tamamlanmış görev: iade transaction'ı (Araçtan depoya geri dönüş)
-        await _inventoryTransactionRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Inventory.InventoryTransaction(_guidGenerator.Create())
-        {
-            ProductId = telsiz.Id,
-            TransactionType = InventoryTransactionTypeEnum.VehicleToWarehouse,
-            Quantity = 2,
-            SourceLocationType = StockLocationTypeEnum.Vehicle,
-            SourceLocationId = vehicle1.Id,
-            TargetLocationType = StockLocationTypeEnum.Warehouse,
-            TargetLocationId = warehouse1.Id,
-            RelatedTaskId = task3.Id,
-            OccurredAt = DateTime.UtcNow.AddDays(-7),
-            Note = "Bursa Acil Müdahale tamamlandı - ekipman iadesi"
+            Note = "Seed saha cikisi - matkap arac 1"
         }, autoSave: true);
     }
-
     private async Task CleanupOrphanWorkersAsync()
     {
         // UserId'si AbpUsers'da bulunmayan Worker kayıtlarını temizle.
@@ -785,6 +843,14 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
             InventoryTrackingAutomationPermissions.Tasks.Complete,
             InventoryTrackingAutomationPermissions.VehicleTasks.View,
             InventoryTrackingAutomationPermissions.VehicleTasks.Manage,
+            InventoryTrackingAutomationPermissions.TaskLines.View,
+            InventoryTrackingAutomationPermissions.TaskLines.Create,
+            InventoryTrackingAutomationPermissions.TaskLines.Edit,
+            InventoryTrackingAutomationPermissions.TaskLines.Delete,
+            InventoryTrackingAutomationPermissions.VehicleTaskLines.View,
+            InventoryTrackingAutomationPermissions.VehicleTaskLines.Create,
+            InventoryTrackingAutomationPermissions.VehicleTaskLines.Edit,
+            InventoryTrackingAutomationPermissions.VehicleTaskLines.Delete,
             InventoryTrackingAutomationPermissions.Masters.View,
             InventoryTrackingAutomationPermissions.Masters.Manage
         };
@@ -808,7 +874,15 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
                 InventoryTrackingAutomationPermissions.Tasks.Manage,
                 InventoryTrackingAutomationPermissions.Tasks.Complete,
                 InventoryTrackingAutomationPermissions.VehicleTasks.View,
-                InventoryTrackingAutomationPermissions.VehicleTasks.Manage
+                InventoryTrackingAutomationPermissions.VehicleTasks.Manage,
+                InventoryTrackingAutomationPermissions.TaskLines.View,
+                InventoryTrackingAutomationPermissions.TaskLines.Create,
+                InventoryTrackingAutomationPermissions.TaskLines.Edit,
+                InventoryTrackingAutomationPermissions.TaskLines.Delete,
+                InventoryTrackingAutomationPermissions.VehicleTaskLines.View,
+                InventoryTrackingAutomationPermissions.VehicleTaskLines.Create,
+                InventoryTrackingAutomationPermissions.VehicleTaskLines.Edit,
+                InventoryTrackingAutomationPermissions.VehicleTaskLines.Delete
             },
 
             [InventoryTrackingAutomationRoleConstants.WorkflowApprover] = new[]
@@ -820,7 +894,9 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
                 InventoryTrackingAutomationPermissions.Workflows.Approve,
                 InventoryTrackingAutomationPermissions.Workflows.Reject,
                 InventoryTrackingAutomationPermissions.Tasks.View,
-                InventoryTrackingAutomationPermissions.VehicleTasks.View
+                InventoryTrackingAutomationPermissions.VehicleTasks.View,
+                InventoryTrackingAutomationPermissions.TaskLines.View,
+                InventoryTrackingAutomationPermissions.VehicleTaskLines.View
             },
 
             [InventoryTrackingAutomationRoleConstants.WarehouseWorker] = new[]
@@ -833,7 +909,9 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
                 InventoryTrackingAutomationPermissions.MovementRequests.Dispatch,
                 InventoryTrackingAutomationPermissions.MovementRequests.Receive,
                 InventoryTrackingAutomationPermissions.Tasks.View,
-                InventoryTrackingAutomationPermissions.VehicleTasks.View
+                InventoryTrackingAutomationPermissions.VehicleTasks.View,
+                InventoryTrackingAutomationPermissions.TaskLines.View,
+                InventoryTrackingAutomationPermissions.VehicleTaskLines.View
             },
 
             [InventoryTrackingAutomationRoleConstants.FieldWorker] = new[]
@@ -845,7 +923,9 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
                 InventoryTrackingAutomationPermissions.MovementRequests.Create,
                 InventoryTrackingAutomationPermissions.MovementRequests.Receive,
                 InventoryTrackingAutomationPermissions.Tasks.View,
-                InventoryTrackingAutomationPermissions.VehicleTasks.View
+                InventoryTrackingAutomationPermissions.VehicleTasks.View,
+                InventoryTrackingAutomationPermissions.TaskLines.View,
+                InventoryTrackingAutomationPermissions.VehicleTaskLines.View
             },
 
             [InventoryTrackingAutomationRoleConstants.LogisticsSupervisor] = new[]
@@ -863,7 +943,15 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
                 InventoryTrackingAutomationPermissions.Tasks.Manage,
                 InventoryTrackingAutomationPermissions.Tasks.Complete,
                 InventoryTrackingAutomationPermissions.VehicleTasks.View,
-                InventoryTrackingAutomationPermissions.VehicleTasks.Manage
+                InventoryTrackingAutomationPermissions.VehicleTasks.Manage,
+                InventoryTrackingAutomationPermissions.TaskLines.View,
+                InventoryTrackingAutomationPermissions.TaskLines.Create,
+                InventoryTrackingAutomationPermissions.TaskLines.Edit,
+                InventoryTrackingAutomationPermissions.TaskLines.Delete,
+                InventoryTrackingAutomationPermissions.VehicleTaskLines.View,
+                InventoryTrackingAutomationPermissions.VehicleTaskLines.Create,
+                InventoryTrackingAutomationPermissions.VehicleTaskLines.Edit,
+                InventoryTrackingAutomationPermissions.VehicleTaskLines.Delete
             },
 
             [InventoryTrackingAutomationRoleConstants.VehicleManager] = new[]
@@ -875,7 +963,12 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
                 InventoryTrackingAutomationPermissions.Masters.Manage,
                 InventoryTrackingAutomationPermissions.Tasks.View,
                 InventoryTrackingAutomationPermissions.VehicleTasks.View,
-                InventoryTrackingAutomationPermissions.VehicleTasks.Manage
+                InventoryTrackingAutomationPermissions.VehicleTasks.Manage,
+                InventoryTrackingAutomationPermissions.TaskLines.View,
+                InventoryTrackingAutomationPermissions.VehicleTaskLines.View,
+                InventoryTrackingAutomationPermissions.VehicleTaskLines.Create,
+                InventoryTrackingAutomationPermissions.VehicleTaskLines.Edit,
+                InventoryTrackingAutomationPermissions.VehicleTaskLines.Delete
             },
 
             [InventoryTrackingAutomationRoleConstants.Driver] = new[]
@@ -884,6 +977,8 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
                 InventoryTrackingAutomationPermissions.MovementRequests.Receive,
                 InventoryTrackingAutomationPermissions.Tasks.View,
                 InventoryTrackingAutomationPermissions.VehicleTasks.View,
+                InventoryTrackingAutomationPermissions.TaskLines.View,
+                InventoryTrackingAutomationPermissions.VehicleTaskLines.View,
                 InventoryTrackingAutomationPermissions.Masters.View
             }
         };

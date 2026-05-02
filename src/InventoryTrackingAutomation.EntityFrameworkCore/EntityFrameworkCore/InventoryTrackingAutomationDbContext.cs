@@ -34,11 +34,12 @@ public class InventoryTrackingAutomationDbContext : AbpDbContext<InventoryTracki
     public DbSet<InventoryTransaction> InventoryTransactions { get; set; }
 
     public DbSet<MovementRequest> MovementRequests { get; set; }
-    public DbSet<MovementRequestLine> MovementRequestLines { get; set; }
     public DbSet<MovementApproval> MovementApprovals { get; set; }
 
     public DbSet<InventoryTask> InventoryTasks { get; set; }
     public DbSet<VehicleTask> VehicleTasks { get; set; }
+    public DbSet<TaskLine> TaskLines { get; set; }
+    public DbSet<VehicleTaskLine> VehicleTaskLines { get; set; }
 
     public DbSet<WorkflowDefinition> WorkflowDefinitions { get; set; }
     public DbSet<WorkflowStepDefinition> WorkflowStepDefinitions { get; set; }

@@ -13,6 +13,7 @@ using Microsoft.Extensions.Http;
 using Microsoft.Extensions.Logging;
 using Volo.Abp;
 using Volo.Abp.Uow;
+using Volo.Abp.DependencyInjection;
 
 namespace InventoryTrackingAutomation.Application.Services.Auth;
 
@@ -25,31 +26,24 @@ namespace InventoryTrackingAutomation.Application.Services.Auth;
 //sistemdeki görevi: Uygulama katmanındaki kullanım senaryolarını (use-case) gerçekleştiren ana servis birimidir.
 public class AuthAppService : InventoryTrackingAutomationAppService, IAuthAppService
 {
+    public AuthAppService(IAbpLazyServiceProvider abpLazyServiceProvider)
+        : base(abpLazyServiceProvider)
+    {
+    }
+
     // Domain manager — kullanıcı oluşturma ve giriş doğrulama iş kuralları.
-    private readonly AuthManager _authManager;
+    private AuthManager _authManager => LazyGetRequiredService<AuthManager>();
     // OpenIddict token endpoint çağrısı için HTTP client factory.
-    private readonly IHttpClientFactory _httpClientFactory;
+    private IHttpClientFactory _httpClientFactory => LazyGetRequiredService<IHttpClientFactory>();
     // SelfUrl, client_id gibi token çağrısı parametreleri için.
-    private readonly IConfiguration _configuration;
+    private IConfiguration _configuration => LazyGetRequiredService<IConfiguration>();
     // HTTP token akışındaki hataları loglamak için.
-    private readonly ILogger<AuthAppService> _logger;
+    private ILogger<AuthAppService> _logger => LazyGetRequiredService<ILogger<AuthAppService>>();
     // DTO ↔ Model dönüşümü için.
-    private readonly IMapper _mapper;
+    private IMapper _mapper => LazyGetRequiredService<IMapper>();
 
     // Tüm bağımlılıkları DI ile alır.
-    public AuthAppService(
-        AuthManager authManager,
-        IHttpClientFactory httpClientFactory,
-        IConfiguration configuration,
-        ILogger<AuthAppService> logger,
-        IMapper mapper)
-    {
-        _authManager = authManager;
-        _httpClientFactory = httpClientFactory;
-        _configuration = configuration;
-        _logger = logger;
-        _mapper = mapper;
-    }
+
 
     /// <summary>
     /// Yeni kullanıcı kaydı işlemini gerçekleştirir.

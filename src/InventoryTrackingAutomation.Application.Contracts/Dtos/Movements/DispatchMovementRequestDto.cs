@@ -1,9 +1,9 @@
 namespace InventoryTrackingAutomation.Dtos.Movements;
 
-/// <summary>
-/// Hareket talebinin fiziksel sevke cikmasi icin kullanilan DTO.
-/// </summary>
 public class DispatchMovementRequestDto
 {
+    /// <summary>
+    /// Sevk/yukleme notu.
+    /// </summary>
     public string? DispatchNote { get; set; } // Sevk/yukleme notu.
 }

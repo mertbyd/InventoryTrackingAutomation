@@ -11,6 +11,7 @@ using InventoryTrackingAutomation.Services.Masters;
 using FluentValidation;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Uow;
+using Volo.Abp.DependencyInjection;
 
 namespace InventoryTrackingAutomation.Application.Services.Masters;
 
@@ -19,28 +20,21 @@ namespace InventoryTrackingAutomation.Application.Services.Masters;
 //sistemdeki görevi: Uygulama katmanındaki kullanım senaryolarını (use-case) gerçekleştiren ana servis birimidir.
 public class WarehouseAppService : InventoryTrackingAutomationAppService, IWarehouseAppService
 {
+    public WarehouseAppService(IAbpLazyServiceProvider abpLazyServiceProvider)
+        : base(abpLazyServiceProvider)
+    {
+    }
+
     // Read/list/persist için ana repository.
-    private readonly IWarehouseRepository _repository;
+    private IWarehouseRepository _repository => LazyGetRequiredService<IWarehouseRepository>();
     // Domain manager — Code uniqueness, LinkedVehicle/Worker FK ve WarehouseType enum validasyonu.
-    private readonly WarehouseManager _manager;
-    private readonly IValidator<CreateWarehouseDto> _createValidator;
-    private readonly IValidator<UpdateWarehouseDto> _updateValidator;
+    private WarehouseManager _manager => LazyGetRequiredService<WarehouseManager>();
+    private IValidator<CreateWarehouseDto> _createValidator => LazyGetRequiredService<IValidator<CreateWarehouseDto>>();
+    private IValidator<UpdateWarehouseDto> _updateValidator => LazyGetRequiredService<IValidator<UpdateWarehouseDto>>();
 
     // Tüm bağımlılıkları DI ile alır.
-    private readonly IMapper _mapper;
-    public WarehouseAppService(
-        IWarehouseRepository repository,
-        WarehouseManager manager,
-        IValidator<CreateWarehouseDto> createValidator,
-        IValidator<UpdateWarehouseDto> updateValidator,
-        IMapper mapper)
-    {
-        _mapper = mapper;
-        _repository = repository;
-        _manager = manager;
-        _createValidator = createValidator;
-        _updateValidator = updateValidator;
-    }
+    private IMapper _mapper => LazyGetRequiredService<IMapper>();
+
 
     // Id ile lokasyonu getirir; yoksa EntityNotFoundException.
 //işlevi: İlgili iş senaryosunu (use-case) yürütür.

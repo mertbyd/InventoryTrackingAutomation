@@ -6,47 +6,51 @@ using Volo.Abp.Domain.Entities.Auditing;
 namespace InventoryTrackingAutomation.Entities.Workflows;
 
 /// <summary>
-/// Başlatılmış bir iş akışı sürecini (örneğini) temsil eden entity.
+/// Baslatilmis bir is akisi surecini temsil eden aggregate root.
 /// </summary>
 public class WorkflowInstance : FullAuditedAggregateRoot<Guid>
 {
     /// <summary>
-    /// Hangi iş akışı tanımından üretildiği.
+    /// Surecin hangi is akisi tanimindan uretildigini tasir.
     /// </summary>
     public Guid WorkflowDefinitionId { get; private set; }
 
     /// <summary>
-    /// Bu iş akışının hangi entity türü için başlatıldığı (Örn: "MovementRequest").
+    /// Is akisinin hangi entity tipi icin calistigini tasir. Ornek: MovementRequest.
     /// </summary>
     public string EntityType { get; private set; }
 
     /// <summary>
-    /// İş akışına tabi olan entity'nin Id'si.
+    /// Is akisina tabi olan entity kimligini tasir.
     /// </summary>
     public Guid EntityId { get; private set; }
 
     /// <summary>
-    /// İş akışının anlık durumu.
+    /// Surecin anlik durumunu belirler.
     /// </summary>
     public WorkflowState State { get; internal set; }
 
     /// <summary>
-    /// İş akışını başlatan kullanıcının Id'si.
+    /// Is akisini baslatan kullanicinin kimligini tasir.
     /// </summary>
     public Guid InitiatorUserId { get; private set; }
 
     /// <summary>
-    /// İş akışı tanımı navigation property'si.
+    /// Workflow entity'leri mevcut mimaride navigation kullanan istisnai kume oldugu icin
+    /// EF konfigurasyonu tanim iliskisini bu property uzerinden kurar.
     /// </summary>
     public virtual WorkflowDefinition WorkflowDefinition { get; private set; }
 
     /// <summary>
-    /// İş akışına ait adımlar.
+    /// Surece ait islenebilir adimlari tasir.
     /// </summary>
     public virtual ICollection<WorkflowInstanceStep> Steps { get; private set; }
 
     private WorkflowInstance()
     {
+        EntityType = string.Empty;
+        WorkflowDefinition = default!;
+        Steps = new List<WorkflowInstanceStep>();
     }
 
     public WorkflowInstance(Guid id, Guid workflowDefinitionId, string entityType, Guid entityId, WorkflowState state, Guid initiatorUserId)
@@ -57,6 +61,7 @@ public class WorkflowInstance : FullAuditedAggregateRoot<Guid>
         EntityId = entityId;
         State = state;
         InitiatorUserId = initiatorUserId;
+        WorkflowDefinition = default!;
         Steps = new List<WorkflowInstanceStep>();
     }
 }

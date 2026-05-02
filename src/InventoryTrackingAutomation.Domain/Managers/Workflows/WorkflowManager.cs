@@ -1,4 +1,5 @@
 using AutoMapper;
+using InventoryTrackingAutomation.Managers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,6 +13,7 @@ using InventoryTrackingAutomation.Models.Workflows;
 using Volo.Abp;
 using Volo.Abp.Domain.Services;
 using Volo.Abp.EventBus.Local;
+using Volo.Abp.DependencyInjection;
 
 namespace InventoryTrackingAutomation.Managers.Workflows;
 
@@ -19,30 +21,21 @@ namespace InventoryTrackingAutomation.Managers.Workflows;
 // Onaycı çözümleme tamamen IWorkflowApproverResolver'a delege edilir; manager initiator/Warehouse mantığı bilmez.
 //işlevi: Workflow etki alanı (domain) kurallarını ve karmaşık veri bütünlüğünü sağlar.
 //sistemdeki görevi: Domain katmanındaki iş kurallarının merkezi yönetimini ve validasyonunu sağlar.
-public class WorkflowManager : DomainService
+public class WorkflowManager : InventoryTrackingAutomationDomainService
 {
-    private readonly IWorkflowDefinitionRepository _workflowDefinitionRepository;
-    private readonly IWorkflowInstanceRepository _workflowInstanceRepository;
-    private readonly IWorkflowInstanceStepRepository _workflowInstanceStepRepository;
-    private readonly ILocalEventBus _localEventBus;
-    private readonly IWorkflowApproverResolver _workflowApproverResolver;
-
-    private readonly IMapper _mapper;
-    public WorkflowManager(
-        IWorkflowDefinitionRepository workflowDefinitionRepository,
-        IWorkflowInstanceRepository workflowInstanceRepository,
-        IWorkflowInstanceStepRepository workflowInstanceStepRepository,
-        ILocalEventBus localEventBus,
-        IWorkflowApproverResolver workflowApproverResolver,
-        IMapper mapper)
+    public WorkflowManager(IAbpLazyServiceProvider abpLazyServiceProvider)
+        : base(abpLazyServiceProvider)
     {
-        _mapper = mapper;
-        _workflowDefinitionRepository = workflowDefinitionRepository;
-        _workflowInstanceRepository = workflowInstanceRepository;
-        _workflowInstanceStepRepository = workflowInstanceStepRepository;
-        _localEventBus = localEventBus;
-        _workflowApproverResolver = workflowApproverResolver;
     }
+
+    private IWorkflowDefinitionRepository _workflowDefinitionRepository => LazyGetRequiredService<IWorkflowDefinitionRepository>();
+    private IWorkflowInstanceRepository _workflowInstanceRepository => LazyGetRequiredService<IWorkflowInstanceRepository>();
+    private IWorkflowInstanceStepRepository _workflowInstanceStepRepository => LazyGetRequiredService<IWorkflowInstanceStepRepository>();
+    private ILocalEventBus _localEventBus => LazyGetRequiredService<ILocalEventBus>();
+    private IWorkflowApproverResolver _workflowApproverResolver => LazyGetRequiredService<IWorkflowApproverResolver>();
+
+    private IMapper _mapper => LazyGetRequiredService<IMapper>();
+
 
     // Yeni iş akışı başlatır: instance oluşturur, ilk adımın tanımını yükler, ilk onaycıyı çözer ve adımı kuyruğa alır.
 //işlevi: Etki alanı kuralını veya validasyonunu işletir.

@@ -1,251 +1,141 @@
 # InventoryTrackingAutomation
 
-Saha ve depo operasyonları için geliştirilmiş kurumsal envanter yönetim sistemi. Stok hareketlerini, çok adımlı onay süreçlerini ve araç/görev bazlı stok takibini tek bir platformda yönetir.
+InventoryTrackingAutomation is an ABP Framework 10.3 / .NET 10 inventory workflow system for warehouse transfers, field operations, vehicle assignments and append-only stock ledger tracking.
 
-**Stack:** .NET 10 · ABP Framework 10.3.0 · PostgreSQL 17 · Angular 15 · SignalR · OpenIddict
+## Stack
 
----
+- .NET 10
+- ABP Framework 10.3.0
+- PostgreSQL
+- OpenIddict
+- SignalR
+- Angular
 
-## Veri Modeli
+## Current Domain Model
 
-![Entity Diagram](docs/entity-diagram.png)
+The movement system is normalized around this entity chain:
 
-### Master / Lookup Tabloları
-
-| Tablo | İşlev |
-|-------|-------|
-| **Product** | Stok kalemi tanımları. Her ürün bir kategoriye, birim tipine ve seri numaralanabilirlik bilgisine sahiptir. |
-| **ProductCategory** | Ürün kategori hiyerarşisi. `ParentId` ile çok seviyeli kategori yapısı desteklenir. |
-| **Warehouse** | Depo lokasyonları. Her deponun bir sorumlu yöneticisi (`ManagerWorkerId`) vardır. |
-| **Vehicle** | Araç kaydı. Tip bilgisi ve aktiflik durumu tutulur; stok taşıyıcı olarak hareket akışına dahil olur. |
-| **Worker** | Personel kaydı. ABP Identity kullanıcısına (`UserId`) bağlıdır; rol, departman, varsayılan depo ve yönetici ilişkilerini taşır. |
-| **Department** | Organizasyon birimi. Worker'a atanır. |
-
-### Stok Tabloları
-
-| Tablo | İşlev |
-|-------|-------|
-| **StockLocation** | Anlık stok bakiyesi. Her kayıt bir ürünün belirli bir lokasyondaki (depo veya araç) mevcut ve rezerve miktarını tutar. Doğrudan güncellenmez; yalnızca `InventoryTransaction` üzerinden değişir. |
-| **InventoryTransaction** | Değiştirilemez stok defteri. Her stok hareketi (depodan araca, araçtan depoya, düzeltme) burada bir satır olarak kayıt altına alınır. Kaynak ve hedef lokasyon tipi + ID çifti ile tam izlenebilirlik sağlanır. |
-
-### Hareket Tabloları
-
-| Tablo | İşlev |
-|-------|-------|
-| **MovementRequest** | Stok transfer talebi. Üç tipi vardır: `WarehouseToWarehouse`, `WarehouseToTask`, `TaskReturnToWarehouse`. Kendi yaşam döngüsü (`Pending → Approved → Shipped → Completed`) ve bağlı bir workflow instance'ı vardır. |
-| **MovementRequestLine** | Talep kalemleri. Her ürün için istenilen miktar, teslim alınan/hasarlı/kayıp/tüketilen miktarlar ayrı ayrı tutulur. İade akışında kalem bazlı kalite doğrulaması buradan yapılır. |
-| **MovementApproval** | Onay adımı kayıtları. Hangi onaylayıcının hangi adımda ne zaman ne kararı verdiğini saklar. |
-
-### Operasyon Tabloları
-
-| Tablo | İşlev |
-|-------|-------|
-| **InventoryTask** | Saha görevi. Başlangıç/bitiş tarihi, bölge ve iade deposu bilgisini taşır. Tamamlandığında veya iptal edildiğinde otomatik olarak `TaskReturnToWarehouse` talebi oluşturulur. |
-| **VehicleTask** | Göreve araç ve sürücü ataması. Bir göreve birden fazla araç atanabilir. |
-
----
-
-## Dinamik Workflow Motoru
-
-![Workflow Diagram](docs/workflow-diagram.png)
-
-Sistemin en kritik bileşeni: **kod değişikliği gerektirmeden yeni onay akışı tanımlanabilen** dinamik bir workflow motorudur.
-
-### Nasıl Çalışır?
-
-```
-WorkflowDefinition          →  "Bu tip talep için N adımlı onay gerekir"
-  └── WorkflowStepDefinition  →  "Adım 2'yi kim onaylayacak?" (ResolverKey)
-        ↓  tetiklenince
-WorkflowInstance            →  Belirli bir talebin aktif onay süreci
-  └── WorkflowInstanceStep    →  Adım bazında kimin, ne zaman, ne kararı verdiği
+```text
+InventoryTask
+  -> VehicleTask
+      -> MovementRequest
+          -> MovementRequestLine
+              -> InventoryTransaction
 ```
 
-### WorkflowDefinition & WorkflowStepDefinition
+| Entity | Purpose |
+| --- | --- |
+| `InventoryTask` | Operation/job. Owns process type and warehouse route. |
+| `VehicleTask` | Vehicle-to-task assignment. Owns active vehicle context. |
+| `MovementRequest` | Approval, dispatch and receive ticket. |
+| `MovementRequestLine` | Requested product quantities and return reconciliation. |
+| `InventoryTransaction` | Immutable stock ledger. |
+| `StockLocation` | Current product balance by warehouse or vehicle. |
 
-Onay akışının şablonu. Veritabanında saklandığı için **deploy olmadan** değiştirilebilir.
+## Core Rules
 
-- `Version` ile birden fazla aktif versiyon yan yana çalışabilir.
-- Her adım (`WorkflowStepDefinition`) bir `ResolverKey` taşır. Bu key, o adımı kimin onaylayacağını belirleyen **Strategy**'yi işaret eder.
+- `InventoryTask.Type` selects the process family.
+- `InventoryTask.SourceWarehouseId` and `InventoryTask.TargetWarehouseId` own the route.
+- `MovementRequest.VehicleTaskId -> VehicleTask.TaskId` resolves task context.
+- `MovementRequest.VehicleTaskId -> VehicleTask.VehicleId` resolves vehicle context.
+- `MovementRequest.ParentMovementRequestId` identifies return flow.
+- `InventoryTransaction.RelatedMovementRequestId` links ledger rows to movement requests.
 
-### Strategy Pattern ile Onaylayıcı Çözümleme
+Removed fields must stay removed:
 
-`ResolverKey` değerine göre runtime'da doğru onaylayıcı bulunur:
+- `MovementRequest.Type`
+- `MovementRequest.RequestedVehicleId`
+- `MovementRequest.AssignedTaskId`
+- `MovementRequest.TaskId`
+- `MovementRequest.SourceWarehouseId`
+- `MovementRequest.TargetWarehouseId`
+- `InventoryTransaction.RelatedTaskId`
+- `MovementRequestTypeEnum`
 
-| ResolverKey | Kim onaylar |
-|-------------|-------------|
-| `InitiatorManager` | Talebi açan kişinin yöneticisi |
-| `SourceWarehouseManager` | Kaynak depo sorumlusu |
-| `TargetWarehouseManager` | Hedef depo sorumlusu |
-| `LogisticsManager` | Lojistik yöneticisi |
+## Movement Lifecycles
 
-Yeni bir onaylayıcı tipi eklemek için **sadece yeni bir `IApproverStrategy` implementasyonu** yazmak yeterlidir. Mevcut koda dokunulmaz.
+### Warehouse Transfer
 
-### WorkflowInstance & WorkflowInstanceStep
+1. Create `InventoryTask` with `type = WarehouseTransfer`, source warehouse and target warehouse.
+2. Create movement with `taskId`, `vehicleId` and lines.
+3. Workflow approves the movement.
+4. Dispatch moves stock `Warehouse -> Vehicle`.
+5. Receive moves stock `Vehicle -> TargetWarehouse`.
+6. Movement and task complete; vehicle assignment is released.
 
-Bir talep onaya girdiğinde şablon'dan türetilen runtime kaydı oluşur:
+### Field Operation
 
-- `EntityType` + `EntityId` ile workflow hangi talebe bağlı olduğunu bilir — aynı motor farklı entity tipleri için kullanılabilir.
-- `State`: `Pending`, `InProgress`, `Approved`, `Rejected`
-- Her adım tamamlandığında `WorkflowActionType` (Approve/Reject) ve karar tarihi kayıt altına alınır.
-- Tüm adımlar onaylandığında `WorkflowInstance.State = Approved` olur ve talep `MovementRequest.Status = Approved`'a geçer. **Stok bu noktada hareket etmez.**
+1. Create `InventoryTask` with `type = FieldOperation`, source warehouse and return warehouse.
+2. Create movement with `taskId`, `vehicleId` and lines.
+3. Workflow approves the movement.
+4. Dispatch moves stock `Warehouse -> Vehicle`.
+5. Main receive completes the movement, while stock remains on the vehicle.
+6. Completing the task creates return request(s) for remaining vehicle stock.
+7. Return receive moves good stock back to warehouse and adjusts damaged/lost/consumed quantities.
 
-### Stok Ne Zaman Hareket Eder?
+## Architecture
 
-```
-Approved → [Dispatch endpoint] → Shipped    : Stok kaynaktan araca geçer
-Shipped  → [Receive endpoint]  → Completed  : Stok araçtan hedefe geçer
-```
-
-Onay ve stok transferi birbirinden tam anlamıyla ayrılmıştır. Onay iş akışını yönetir; fiziksel teslimat ayrı bir adımdır.
-
----
-
-## Hareket Tipleri ve Tam Akış
-
-### 1. WarehouseToWarehouse — Depolar Arası Transfer
-
-```
-1. Talep oluşturulur (Pending)
-2. Workflow başlar → onaylayıcılar sırayla bildirim alır (InReview)
-3a. Reddedilirse → Rejected (stok hiç hareket etmez)
-3b. Onaylanırsa → Approved (stok hâlâ hareket etmez)
-4. Sevkiyat başlatılır [Dispatch] → stok kaynak depodan araca geçer (Shipped)
-5. Araç hedefe ulaşır, teslim alınır [Receive] → stok araçtan hedef depoya geçer (Completed)
-```
-
-### 2. WarehouseToTask — Sahaya Malzeme Çıkışı
-
-```
-1. Saha görevi (InventoryTask) açılır, araca şoför atanır (VehicleTask)
-2. Depodan göreve malzeme talebi oluşturulur (Pending)
-3. Workflow onay süreci işler (InReview)
-3a. Reddedilirse → Rejected
-3b. Onaylanırsa → Approved
-4. [Dispatch] → stok depodan araca yüklenir (Shipped)
-5. [Receive] → görev lokasyonuna teslim edilir (Completed)
+```text
+Domain.Shared          Enums, constants, error codes, events, localization
+Domain                 Entities, managers, repository interfaces, event handlers
+Application.Contracts  DTOs, service interfaces, validators, permissions
+Application            AppServices and AutoMapper profiles
+EntityFrameworkCore    DbContext, configurations, repositories, migrations
+HttpApi                REST controllers
+HttpApi.Host           Startup, middleware, Swagger, OpenIddict, SignalR
 ```
 
-### 3. TaskReturnToWarehouse — Görev Sonu İade
+Business logic belongs in domain managers. AppServices resolve current user/worker, map DTOs, coordinate managers and publish application events.
 
-```
-1. Görev tamamlandı veya iptal edildi
-   → Sistem otomatik olarak TaskReturnToWarehouse talebi açar
-   → ReturnWarehouseId göreve önceden tanımlanmış olmalıdır
-2. Her kalem için iade miktarları girilir:
-   ├── ReceivedQuantity   → depoya geri dönen sağlam miktar
-   ├── DamagedQuantity    → hasarlı (stok düşümü yapılır)
-   ├── LostQuantity       → kayıp (stok düşümü yapılır)
-   └── ConsumedQuantity   → sahada kullanılan (stok düşümü yapılır)
-3. Workflow onay süreci işler
-4. [Dispatch] → araçtan iade yüklenir
-5. [Receive] → depo teslim alır, stok güncellenir (Completed)
-```
+## Database Schemas
 
-**Genel durum makinesi:**
-```
-Pending → InReview → Approved → Shipped → Completed
-                 ↘ Rejected     ↘ Cancelled
-```
+| Schema | Contains |
+| --- | --- |
+| `abp` | ABP identity, permissions, audit and settings |
+| `openiddict` | OAuth2/OIDC tables |
+| `lookup` | Department, ProductCategory |
+| `master` | Product, Warehouse, Vehicle, Worker |
+| `stock` | StockLocation, InventoryTransaction |
+| `operation` | InventoryTask, VehicleTask |
+| `movement` | MovementRequest, MovementRequestLine, MovementApproval |
 
-> Stok hiçbir zaman onay adımında hareket etmez. Fiziksel hareket yalnızca Dispatch ve Receive adımlarında gerçekleşir.
+Latest route normalization migration:
 
----
+`src/InventoryTrackingAutomation.EntityFrameworkCore/Migrations/20260430110525_MoveMovementRouteToTask.cs`
 
-## Mimari
+## Setup
 
-```
-Domain.Shared       Enum, hata kodları, ETO event'leri
-Domain              Entity'ler, Manager'lar, repository interface'leri, event handler'lar
-Application.Contracts  DTO'lar, IAppService interface'leri, FluentValidation kuralları
-Application         AppService implementasyonları, AutoMapper profilleri
-EntityFrameworkCore DbContext, Fluent API konfigürasyonları, migration'lar
-HttpApi             REST controller'lar
-HttpApi.Host        Startup, middleware pipeline, SignalR hub, Swagger
-```
+Create `appsettings.secrets.json` files for local secrets. Do not commit secrets.
 
-**Temel kurallar:**
-- İş mantığı `Manager` sınıflarındadır. `AppService` sadece orkestrasyon yapar.
-- Entity'ler arasında navigation property yoktur; yalnızca `XxxId` FK referansı kullanılır.
-- Tüm stok hareketleri `InventoryTransaction` üzerinden geçer — `StockLocation` doğrudan güncellenmez.
-- Controller'lar `Result<T>` döner, ham DTO dönmez.
-
----
-
-## Kurulum
-
-### Gereksinimler
-- .NET 10 SDK
-- Docker (PostgreSQL için)
-- Node.js 18+
-
-### Environment Variables
-
-`appsettings.secrets.json` dosyası oluşturulmalıdır (git'e dahil değildir):
-
-```json
-{
-  "ConnectionStrings": {
-    "Default": "Host=localhost;Port=5432;Database=InventoryTracking;Username=postgres;Password=postgres"
-  },
-  "AuthServer": {
-    "Authority": "https://localhost:44322"
-  }
-}
-```
-
-### Ayağa Kaldırma
+Start PostgreSQL:
 
 ```bash
-# 1. PostgreSQL başlat
 docker-compose up -d
+```
 
-# 2. Migration + seed data uygula (ilk çalıştırmada otomatik)
+Run the API host:
+
+```bash
 dotnet run --project host/InventoryTrackingAutomation.HttpApi.Host
+```
 
-# 3. Auth server (ayrı terminal)
+Run the auth server:
+
+```bash
 dotnet run --project host/InventoryTrackingAutomation.AuthServer
 ```
 
-Swagger UI: `https://localhost:44300/swagger`
+Build and test:
 
-**Hazır gelen seed kullanıcılar** (şifre: `123456aA@`):
+```bash
+dotnet build InventoryTrackingAutomation.sln
+dotnet test
+```
 
-| Kullanıcı | Rol |
-|-----------|-----|
-| `admin` | Admin |
-| `warehouse.manager` | WarehouseManager |
-| `logistics` | LogisticsSupervisor |
-| `driver1` | Driver |
+## External Wiki
 
----
+The operational wiki lives at:
 
-## Teknik Tercihler
+`C:\Users\mertb\OneDrive\Belgeler\InventoryWiki\wiki`
 
-### ABP Framework
-Kimlik yönetimi, yetkilendirme, multi-tenancy, audit logging ve modüler yapı için tercih edildi. Sıfırdan yazmak yerine kanıtlanmış altyapı üzerine iş mantığına odaklanmayı sağlar.
-
-### Dinamik Workflow — Neden Custom?
-Piyasadaki workflow motorları (Elsa, Hangfire vb.) genel amaçlıdır. Bu projede onaylayıcının **iş rolüne ve organizasyon yapısına** göre çözülmesi gerekiyordu. Strategy Pattern ile `ResolverKey` tabanlı custom motor, bu ihtiyacı deploy gerektirmeden karşılar.
-
-### OpenIddict
-ASP.NET Core ile native entegrasyon, ayrı bir auth servisi çalıştırabilme ve OAuth2/OIDC standartlarına tam uyum için seçildi.
-
-### Navigation Property Yok
-Entity'ler arası navigation property kullanılmadı. Sadece `XxxId` FK referansları var. Bu sayede N+1 sorgu riski ortadan kalkar, aggregate boundary'ler net tutulur.
-
-### InventoryTransaction — Append-Only Ledger
-`StockLocation` hiçbir zaman doğrudan güncellenmez. Her hareket `InventoryTransaction`'a yeni satır ekler, bakiye bundan türetilir. Bu sayede tam stok geçmişi ve audit trail korunur.
-
-### SignalR
-Onay adımı atandığında ilgili kullanıcıya gerçek zamanlı bildirim gönderilir. Polling yerine push-based yapı tercih edildi.
-
----
-
-## CI/CD
-
-| Workflow | Tetikleyici | Görev |
-|----------|-------------|-------|
-| .NET CI | push / PR | Build + test |
-| CodeQL | push / PR / haftalık | C# güvenlik analizi |
-| Docker Build | push | GHCR'a image push |
+Start with `current-system-state-for-claude.md`.

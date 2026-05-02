@@ -13,7 +13,9 @@ public class InventoryTaskMappingProfile : Profile
 {
     public InventoryTaskMappingProfile()
     {
-        CreateMap<InventoryTask, InventoryTaskDto>().ReverseMap();
+        CreateMap<InventoryTask, InventoryTaskDto>()
+            .ForMember(dest => dest.Lines, opt => opt.Ignore())
+            .ReverseMap();
         CreateMap<CreateInventoryTaskDto, CreateInventoryTaskModel>();
         CreateMap<UpdateInventoryTaskDto, UpdateInventoryTaskModel>();
         CreateMap<CreateInventoryTaskModel, InventoryTask>()

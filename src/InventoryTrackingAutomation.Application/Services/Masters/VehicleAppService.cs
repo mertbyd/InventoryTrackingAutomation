@@ -1,10 +1,12 @@
 using AutoMapper;
 using System;
 using System.Collections.Generic;
+using System.Text.Json;
 using System.Threading.Tasks;
 using InventoryTrackingAutomation.Dtos.Masters;
 using InventoryTrackingAutomation.Dtos.Inventory;
 using InventoryTrackingAutomation.Entities.Masters;
+using InventoryTrackingAutomation.Events.Cache;
 using InventoryTrackingAutomation.Interface.Masters;
 using InventoryTrackingAutomation.Managers.Masters;
 using InventoryTrackingAutomation.Managers.Inventory;
@@ -12,8 +14,10 @@ using InventoryTrackingAutomation.Models.Masters;
 using InventoryTrackingAutomation.Models.Inventory;
 using InventoryTrackingAutomation.Services.Masters;
 using FluentValidation;
+using Microsoft.Extensions.Caching.Distributed;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Uow;
+using Volo.Abp.DependencyInjection;
 
 namespace InventoryTrackingAutomation.Application.Services.Masters;
 
@@ -22,32 +26,24 @@ namespace InventoryTrackingAutomation.Application.Services.Masters;
 //sistemdeki görevi: Uygulama katmanındaki kullanım senaryolarını (use-case) gerçekleştiren ana servis birimidir.
 public class VehicleAppService : InventoryTrackingAutomationAppService, IVehicleAppService
 {
+    public VehicleAppService(IAbpLazyServiceProvider abpLazyServiceProvider)
+        : base(abpLazyServiceProvider)
+    {
+    }
+
     // Read/list/persist için ana repository.
-    private readonly IVehicleRepository _repository;
+    private IVehicleRepository _repository => LazyGetRequiredService<IVehicleRepository>();
     // Domain manager — PlateNumber uniqueness ve VehicleType enum validasyonu.
-    private readonly VehicleManager _manager;
+    private VehicleManager _manager => LazyGetRequiredService<VehicleManager>();
     // PITON arac stok gorunurlugu okuma kurallari.
-    private readonly InventoryQueryManager _inventoryQueryManager;
-    private readonly IValidator<CreateVehicleDto> _createValidator;
-    private readonly IValidator<UpdateVehicleDto> _updateValidator;
+    private InventoryQueryManager _inventoryQueryManager => LazyGetRequiredService<InventoryQueryManager>();
+    private IValidator<CreateVehicleDto> _createValidator => LazyGetRequiredService<IValidator<CreateVehicleDto>>();
+    private IValidator<UpdateVehicleDto> _updateValidator => LazyGetRequiredService<IValidator<UpdateVehicleDto>>();
+    private IDistributedCache _cache => LazyGetRequiredService<IDistributedCache>();
 
     // Tüm bağımlılıkları DI ile alır.
-    private readonly IMapper _mapper;
-    public VehicleAppService(
-        IVehicleRepository repository,
-        VehicleManager manager,
-        InventoryQueryManager inventoryQueryManager,
-        IValidator<CreateVehicleDto> createValidator,
-        IValidator<UpdateVehicleDto> updateValidator,
-        IMapper mapper)
-    {
-        _mapper = mapper;
-        _repository = repository;
-        _manager = manager;
-        _inventoryQueryManager = inventoryQueryManager;
-        _createValidator = createValidator;
-        _updateValidator = updateValidator;
-    }
+    private IMapper _mapper => LazyGetRequiredService<IMapper>();
+
 
     // Id ile aracı getirir; yoksa EntityNotFoundException.
 //işlevi: İlgili iş senaryosunu (use-case) yürütür.
@@ -71,13 +67,23 @@ public class VehicleAppService : InventoryTrackingAutomationAppService, IVehicle
             _mapper.Map<List<Vehicle>, List<VehicleDto>>(entities));
     }
 
-    // Arac uzerindeki envanterleri getirir; aktif gorev baglami manager tarafinda cozulur.
+    // Arac uzerindeki envanterleri getirir; cache-aside ile Redis'ten okur, yoksa DB'den ceker.
 //işlevi: İlgili iş senaryosunu (use-case) yürütür.
 //sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<List<VehicleInventoryDto>> GetInventoriesAsync(Guid id)
     {
+        var cacheKey = CacheKeys.VehicleInventories(id);
+        var cached = await _cache.GetStringAsync(cacheKey);
+        if (cached is not null)
+            return JsonSerializer.Deserialize<List<VehicleInventoryDto>>(cached)!;
+
         var inventories = await _inventoryQueryManager.GetVehicleInventoriesAsync(id);
-        return _mapper.Map<List<VehicleInventoryModel>, List<VehicleInventoryDto>>(inventories);
+        var dto = _mapper.Map<List<VehicleInventoryModel>, List<VehicleInventoryDto>>(inventories);
+
+        await _cache.SetStringAsync(cacheKey, JsonSerializer.Serialize(dto),
+            new DistributedCacheEntryOptions { AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10) });
+
+        return dto;
     }
 
     // Yeni araç oluşturur — manager iş kurallarını uygular, repository persist eder.

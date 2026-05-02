@@ -11,6 +11,7 @@ using InventoryTrackingAutomation.Interface.Masters;
 using InventoryTrackingAutomation.Interface.Inventory;
 using InventoryTrackingAutomation.Models.Inventory;
 using Volo.Abp;
+using Volo.Abp.DependencyInjection;
 
 namespace InventoryTrackingAutomation.Managers.Inventory;
 
@@ -23,23 +24,15 @@ namespace InventoryTrackingAutomation.Managers.Inventory;
 //sistemdeki görevi: Domain katmanındaki iş kurallarının merkezi yönetimini ve validasyonunu sağlar.
 public class StockLocationManager : BaseManager<StockLocation>
 {
-    private readonly IProductRepository _productRepository;
-    private readonly IWarehouseRepository _warehouseRepository;
-    private readonly IVehicleRepository _vehicleRepository;
-    private readonly IMapper _mapper;
+    private IProductRepository _productRepository => LazyGetRequiredService<IProductRepository>();
+    private IWarehouseRepository _warehouseRepository => LazyGetRequiredService<IWarehouseRepository>();
+    private IVehicleRepository _vehicleRepository => LazyGetRequiredService<IVehicleRepository>();
+    private IMapper _mapper => LazyGetRequiredService<IMapper>();
 
-    public StockLocationManager(
-        IStockLocationRepository repository,
-        IProductRepository productRepository,
-        IWarehouseRepository warehouseRepository,
-        IVehicleRepository vehicleRepository,
-        IMapper mapper)
-        : base(repository)
+    public StockLocationManager(IStockLocationRepository repository,
+        IAbpLazyServiceProvider abpLazyServiceProvider)
+        : base(repository, abpLazyServiceProvider)
     {
-        _productRepository = productRepository;
-        _warehouseRepository = warehouseRepository;
-        _vehicleRepository = vehicleRepository;
-        _mapper = mapper;
     }
 
     /// Yeni bir stok lokasyon kaydı oluşturmak için kullanılır.

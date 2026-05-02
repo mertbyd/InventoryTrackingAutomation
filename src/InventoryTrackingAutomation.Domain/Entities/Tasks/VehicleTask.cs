@@ -9,12 +9,11 @@ namespace InventoryTrackingAutomation.Entities.Tasks;
 /// </summary>
 public class VehicleTask : FullAuditedEntity<Guid>
 {
-    public Guid VehicleId { get; set; } // Goreve atanan arac baglamini tasir.
-    public Guid InventoryTaskId { get; set; } // Aracin bagli oldugu gorev baglamini tasir.
-    public Guid DriverWorkerId { get; set; } // Gorev sirasinda araci kullanan calisan baglamini tasir.
-    public DateTime AssignedAt { get; set; } // Aracin goreve dahil edildigi zamani tasir.
-    public DateTime? ReleasedAt { get; set; } // Aracin gorevden ayrildigi zamani tasir.
-    public bool IsActive { get; set; } // Atamanin halen aktif olup olmadigini belirler.
+    public Guid VehicleId { get; set; } // Operasyona atanan arac baglamini tasir.
+    public Guid TaskId { get; set; } // Aracin bagli oldugu operasyon isi baglamini tasir.
+    public Guid ResponsibleWorkerId { get; set; } // Arac atamasindan sorumlu calisan baglamini tasir.
+    public DateTime AssignedAt { get; set; } // Aracin operasyona dahil edildigi zamani tasir.
+    public DateTime? ReleasedAt { get; set; } // Aracin operasyondan ayrildigi zamani tasir.
 
     protected VehicleTask() { }
     public VehicleTask(Guid id) : base(id) { }

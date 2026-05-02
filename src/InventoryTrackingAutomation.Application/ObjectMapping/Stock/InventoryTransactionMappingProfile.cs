@@ -14,8 +14,10 @@ public class InventoryTransactionMappingProfile : Profile
     public InventoryTransactionMappingProfile()
     {
         CreateMap<InventoryTransaction, InventoryTransactionDto>().ReverseMap();
-        CreateMap<CreateInventoryTransactionDto, CreateInventoryTransactionModel>();
-        CreateMap<UpdateInventoryTransactionDto, UpdateInventoryTransactionModel>();
+        CreateMap<CreateInventoryTransactionDto, CreateInventoryTransactionModel>()
+            .ForMember(dest => dest.PerformedByUserId, opt => opt.Ignore());
+        CreateMap<UpdateInventoryTransactionDto, UpdateInventoryTransactionModel>()
+            .ForMember(dest => dest.PerformedByUserId, opt => opt.Ignore());
         CreateMap<CreateInventoryTransactionModel, InventoryTransaction>()
             .IgnoreFullAuditedObjectProperties()
             .ForMember(dest => dest.Id, opt => opt.Ignore());

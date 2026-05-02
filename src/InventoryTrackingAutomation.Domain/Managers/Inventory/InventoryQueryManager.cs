@@ -1,4 +1,5 @@
 using System;
+using InventoryTrackingAutomation.Managers;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -20,27 +21,20 @@ namespace InventoryTrackingAutomation.Managers.Inventory;
 /// </summary>
 //işlevi: InventoryQuery etki alanı (domain) kurallarını ve karmaşık veri bütünlüğünü sağlar.
 //sistemdeki görevi: Domain katmanındaki iş kurallarının merkezi yönetimini ve validasyonunu sağlar.
-public class InventoryQueryManager : ITransientDependency
+public class InventoryQueryManager : InventoryTrackingAutomationLazyService, ITransientDependency
 {
-    private readonly IStockLocationRepository _stockLocationRepository;
-    private readonly IVehicleTaskRepository _vehicleTaskRepository;
-    private readonly ProductManager _productManager;
-    private readonly VehicleManager _vehicleManager;
-    private readonly InventoryTaskManager _inventoryTaskManager;
-
-    public InventoryQueryManager(
-        IStockLocationRepository stockLocationRepository,
-        IVehicleTaskRepository vehicleTaskRepository,
-        ProductManager productManager,
-        VehicleManager vehicleManager,
-        InventoryTaskManager inventoryTaskManager)
+    public InventoryQueryManager(IAbpLazyServiceProvider abpLazyServiceProvider)
+        : base(abpLazyServiceProvider)
     {
-        _stockLocationRepository = stockLocationRepository;
-        _vehicleTaskRepository = vehicleTaskRepository;
-        _productManager = productManager;
-        _vehicleManager = vehicleManager;
-        _inventoryTaskManager = inventoryTaskManager;
     }
+
+    private IStockLocationRepository _stockLocationRepository => LazyGetRequiredService<IStockLocationRepository>();
+    private IVehicleTaskRepository _vehicleTaskRepository => LazyGetRequiredService<IVehicleTaskRepository>();
+    private ProductManager _productManager => LazyGetRequiredService<ProductManager>();
+    private VehicleManager _vehicleManager => LazyGetRequiredService<VehicleManager>();
+    private InventoryTaskManager _inventoryTaskManager => LazyGetRequiredService<InventoryTaskManager>();
+
+
 
     /// Ürün stok özetini getirmek için kullanılır.
     public async Task<ProductStockSummaryModel> GetProductStockSummaryAsync(Guid productId)
@@ -67,7 +61,7 @@ public class InventoryQueryManager : ITransientDependency
                 .Where(x => x.LocationType == StockLocationTypeEnum.Vehicle)
                 .Sum(x => x.Quantity),
             ActiveTaskQuantity = locationSummaries
-                .Where(x => x.InventoryTaskId.HasValue)
+                .Where(x => x.TaskId.HasValue)
                 .Sum(x => x.Quantity),
             Locations = locationSummaries
         };
@@ -83,18 +77,18 @@ public class InventoryQueryManager : ITransientDependency
             x.LocationId == vehicleId);
         var activeVehicleTask = (await _vehicleTaskRepository.GetListAsync(x =>
                 x.VehicleId == vehicleId &&
-                x.IsActive))
+                !x.ReleasedAt.HasValue))
             .FirstOrDefault();
 
         return locations
             .Select(location => new VehicleInventoryModel
             {
-                VehicleId = vehicleId,
-                ProductId = location.ProductId,
-                VehicleTaskId = activeVehicleTask?.Id,
-                InventoryTaskId = activeVehicleTask?.InventoryTaskId,
-                Quantity = location.Quantity,
-                ReservedQuantity = location.ReservedQuantity
+            VehicleId = vehicleId,
+            ProductId = location.ProductId,
+            VehicleTaskId = activeVehicleTask?.Id,
+            TaskId = activeVehicleTask?.TaskId,
+            Quantity = location.Quantity,
+            ReservedQuantity = location.ReservedQuantity
             })
             .ToList();
     }
@@ -104,16 +98,15 @@ public class InventoryQueryManager : ITransientDependency
     {
         await _inventoryTaskManager.EnsureExistsAsync(inventoryTaskId);
 
-        var vehicleTasks = await _vehicleTaskRepository.GetListAsync(x => x.InventoryTaskId == inventoryTaskId);
+        var vehicleTasks = await _vehicleTaskRepository.GetListAsync(x => x.TaskId == inventoryTaskId);
         return vehicleTasks
             .Select(x => new TaskVehicleModel
             {
                 VehicleTaskId = x.Id,
-                InventoryTaskId = x.InventoryTaskId,
+                TaskId = x.TaskId,
                 VehicleId = x.VehicleId,
                 AssignedAt = x.AssignedAt,
-                ReleasedAt = x.ReleasedAt,
-                IsActive = x.IsActive
+                ReleasedAt = x.ReleasedAt
             })
             .ToList();
     }
@@ -124,8 +117,8 @@ public class InventoryQueryManager : ITransientDependency
         await _inventoryTaskManager.EnsureExistsAsync(inventoryTaskId);
 
         var vehicleTasks = await _vehicleTaskRepository.GetListAsync(x =>
-            x.InventoryTaskId == inventoryTaskId &&
-            x.IsActive);
+            x.TaskId == inventoryTaskId &&
+            !x.ReleasedAt.HasValue);
         var vehicleIds = vehicleTasks.Select(x => x.VehicleId).Distinct().ToList();
         var locations = await _stockLocationRepository.GetListAsync(x =>
             x.LocationType == StockLocationTypeEnum.Vehicle &&
@@ -137,7 +130,7 @@ public class InventoryQueryManager : ITransientDependency
                 var vehicleTask = vehicleTasks.First(x => x.VehicleId == location.LocationId);
                 return new TaskInventoryModel
                 {
-                    InventoryTaskId = inventoryTaskId,
+                    TaskId = inventoryTaskId,
                     VehicleTaskId = vehicleTask.Id,
                     VehicleId = vehicleTask.VehicleId,
                     ProductId = location.ProductId,
@@ -162,7 +155,7 @@ public class InventoryQueryManager : ITransientDependency
             return new List<Entities.Tasks.VehicleTask>();
         }
 
-        return await _vehicleTaskRepository.GetListAsync(x => ids.Contains(x.VehicleId) && x.IsActive);
+        return await _vehicleTaskRepository.GetListAsync(x => ids.Contains(x.VehicleId) && !x.ReleasedAt.HasValue);
     }
 
     /// Lokasyon özeti oluşturmak için kullanılır.
@@ -181,7 +174,7 @@ public class InventoryQueryManager : ITransientDependency
             WarehouseId = location.LocationType == StockLocationTypeEnum.Warehouse ? location.LocationId : null,
             VehicleId = location.LocationType == StockLocationTypeEnum.Vehicle ? location.LocationId : null,
             VehicleTaskId = vehicleTask?.Id,
-            InventoryTaskId = vehicleTask?.InventoryTaskId,
+            TaskId = vehicleTask?.TaskId,
             Quantity = location.Quantity,
             ReservedQuantity = location.ReservedQuantity
         };

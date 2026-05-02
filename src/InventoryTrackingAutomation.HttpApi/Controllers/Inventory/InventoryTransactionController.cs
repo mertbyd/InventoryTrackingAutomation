@@ -1,4 +1,3 @@
-using Asp.Versioning;
 using InventoryTrackingAutomation.Permissions;
 using Microsoft.AspNetCore.Authorization;
 using System;
@@ -10,28 +9,44 @@ using SystemStandards.Results;
 using InventoryTrackingAutomation.Dtos.Inventory;
 using InventoryTrackingAutomation.Services.Inventory;
 using Volo.Abp.Application.Dtos;
+using Volo.Abp.DependencyInjection;
 
 namespace InventoryTrackingAutomation.Controllers.Stock;
 
 /// <summary>
 /// Envanter hareketleri CRUD endpoint'leri.
 /// </summary>
-[Route("api/v{version:apiVersion}/inventory-transactions")]
-[ApiVersion("1.0")]
+[Route("api/inventory-transactions")]
 [ApiExplorerSettings(GroupName = "Stock")]
 [Tags("InventoryTransactions")]
-//işlevi: InventoryTransaction modülü için HTTP isteklerini karşılar.
-//sistemdeki görevi: Dış dünya ile sistem arasındaki iletişimi sağlayan API uç noktasıdır.
 public class InventoryTransactionController : InventoryTrackingAutomationController
 {
-    private readonly IInventoryTransactionAppService _appService;
-
-    public InventoryTransactionController(IInventoryTransactionAppService appService)
+    public InventoryTransactionController(IAbpLazyServiceProvider abpLazyServiceProvider)
+        : base(abpLazyServiceProvider)
     {
-        _appService = appService;
     }
 
-    /// Stok hareket verisini getirmek için kullanılır.
+    private IInventoryTransactionAppService _appService => LazyGetRequiredService<IInventoryTransactionAppService>();
+
+    /// <summary>
+    /// Envanter hareketi kaydını Id ile getirir.
+    /// </summary>
+    /// <param name="id">Kaydın benzersiz Id'si.</param>
+    /// <remarks>
+    /// Response {
+    ///   ProductId                 (Guid)                         → Ürün Id'si
+    ///   TransactionType           (InventoryTransactionTypeEnum) → İşlem tipi
+    ///   Quantity                  (int)                          → Miktar
+    ///   SourceLocationType        (StockLocationTypeEnum?)       → Kaynak lokasyon tipi
+    ///   SourceLocationId          (Guid?)                        → Kaynak depo veya araç Id'si
+    ///   TargetLocationType        (StockLocationTypeEnum?)       → Hedef lokasyon tipi
+    ///   TargetLocationId          (Guid?)                        → Hedef depo veya araç Id'si
+    ///   RelatedMovementRequestId  (Guid?)                        → Bağlı talep Id'si
+    ///   PerformedByUserId         (Guid?)                        → İşlemi başlatan kullanıcı Id'si
+    ///   OccurredAt                (DateTime)                     → Hareket zamanı
+    ///   Note                      (string?)                      → İşlem notu
+    /// }
+    /// </remarks>
     [HttpGet("{id}")]
     [Authorize(InventoryTrackingAutomationPermissions.Inventory.View)]
     public async Task<Result<InventoryTransactionDto>> Get(Guid id)
@@ -40,7 +55,25 @@ public class InventoryTransactionController : InventoryTrackingAutomationControl
         return result;
     }
 
-    /// Stok hareket listesini getirmek için kullanılır.
+    /// <summary>
+    /// Envanter hareketi kayıtlarını sayfalı liste olarak getirir.
+    /// </summary>
+    /// <param name="input">Sayfalama parametreleri.</param>
+    /// <remarks>
+    /// Response {
+    ///   ProductId                 (Guid)                         → Ürün Id'si
+    ///   TransactionType           (InventoryTransactionTypeEnum) → İşlem tipi
+    ///   Quantity                  (int)                          → Miktar
+    ///   SourceLocationType        (StockLocationTypeEnum?)       → Kaynak lokasyon tipi
+    ///   SourceLocationId          (Guid?)                        → Kaynak depo veya araç Id'si
+    ///   TargetLocationType        (StockLocationTypeEnum?)       → Hedef lokasyon tipi
+    ///   TargetLocationId          (Guid?)                        → Hedef depo veya araç Id'si
+    ///   RelatedMovementRequestId  (Guid?)                        → Bağlı talep Id'si
+    ///   PerformedByUserId         (Guid?)                        → İşlemi başlatan kullanıcı Id'si
+    ///   OccurredAt                (DateTime)                     → Hareket zamanı
+    ///   Note                      (string?)                      → İşlem notu
+    /// }
+    /// </remarks>
     [HttpGet]
     [Authorize(InventoryTrackingAutomationPermissions.Inventory.View)]
     public async Task<Result<PagedResultDto<InventoryTransactionDto>>> GetList([FromQuery] PagedResultRequestDto input)
@@ -49,7 +82,37 @@ public class InventoryTransactionController : InventoryTrackingAutomationControl
         return result;
     }
 
-    /// Yeni bir stok hareket kaydı oluşturmak için kullanılır.
+    /// <summary>
+    /// Yeni envanter hareketi kaydı oluşturur.
+    /// </summary>
+    /// <param name="input">Hareket bilgileri.</param>
+    /// <remarks>
+    /// Request {
+    ///   ProductId                (Guid)                         → Ürün Id'si
+    ///   TransactionType          (InventoryTransactionTypeEnum) → İşlem tipi
+    ///   Quantity                 (int)                          → Miktar
+    ///   SourceLocationType       (StockLocationTypeEnum?)       → Kaynak lokasyon tipi
+    ///   SourceLocationId         (Guid?)                        → Kaynak depo veya araç Id'si
+    ///   TargetLocationType       (StockLocationTypeEnum?)       → Hedef lokasyon tipi
+    ///   TargetLocationId         (Guid?)                        → Hedef depo veya araç Id'si
+    ///   RelatedMovementRequestId (Guid?)                        → Bağlı talep Id'si
+    ///   OccurredAt               (DateTime)                     → Hareket zamanı
+    ///   Note                     (string?)                      → İşlem notu
+    /// }
+    /// Response {
+    ///   ProductId                 (Guid)                         → Ürün Id'si
+    ///   TransactionType           (InventoryTransactionTypeEnum) → İşlem tipi
+    ///   Quantity                  (int)                          → Miktar
+    ///   SourceLocationType        (StockLocationTypeEnum?)       → Kaynak lokasyon tipi
+    ///   SourceLocationId          (Guid?)                        → Kaynak depo veya araç Id'si
+    ///   TargetLocationType        (StockLocationTypeEnum?)       → Hedef lokasyon tipi
+    ///   TargetLocationId          (Guid?)                        → Hedef depo veya araç Id'si
+    ///   RelatedMovementRequestId  (Guid?)                        → Bağlı talep Id'si
+    ///   PerformedByUserId         (Guid?)                        → İşlemi başlatan kullanıcı Id'si
+    ///   OccurredAt                (DateTime)                     → Hareket zamanı
+    ///   Note                      (string?)                      → İşlem notu
+    /// }
+    /// </remarks>
     [HttpPost]
     [Authorize(InventoryTrackingAutomationPermissions.Inventory.Manage)]
     public async Task<Result<InventoryTransactionDto>> Create([FromBody] CreateInventoryTransactionDto input)
@@ -58,7 +121,37 @@ public class InventoryTransactionController : InventoryTrackingAutomationControl
         return result;
     }
 
-    /// Birden fazla stok hareket kaydını toplu olarak oluşturmak için kullanılır.
+    /// <summary>
+    /// Birden fazla envanter hareketi kaydını toplu oluşturur.
+    /// </summary>
+    /// <param name="inputs">Hareket bilgileri listesi.</param>
+    /// <remarks>
+    /// Request {
+    ///   ProductId                (Guid)                         → Ürün Id'si
+    ///   TransactionType          (InventoryTransactionTypeEnum) → İşlem tipi
+    ///   Quantity                 (int)                          → Miktar
+    ///   SourceLocationType       (StockLocationTypeEnum?)       → Kaynak lokasyon tipi
+    ///   SourceLocationId         (Guid?)                        → Kaynak depo veya araç Id'si
+    ///   TargetLocationType       (StockLocationTypeEnum?)       → Hedef lokasyon tipi
+    ///   TargetLocationId         (Guid?)                        → Hedef depo veya araç Id'si
+    ///   RelatedMovementRequestId (Guid?)                        → Bağlı talep Id'si
+    ///   OccurredAt               (DateTime)                     → Hareket zamanı
+    ///   Note                     (string?)                      → İşlem notu
+    /// }
+    /// Response {
+    ///   ProductId                 (Guid)                         → Ürün Id'si
+    ///   TransactionType           (InventoryTransactionTypeEnum) → İşlem tipi
+    ///   Quantity                  (int)                          → Miktar
+    ///   SourceLocationType        (StockLocationTypeEnum?)       → Kaynak lokasyon tipi
+    ///   SourceLocationId          (Guid?)                        → Kaynak depo veya araç Id'si
+    ///   TargetLocationType        (StockLocationTypeEnum?)       → Hedef lokasyon tipi
+    ///   TargetLocationId          (Guid?)                        → Hedef depo veya araç Id'si
+    ///   RelatedMovementRequestId  (Guid?)                        → Bağlı talep Id'si
+    ///   PerformedByUserId         (Guid?)                        → İşlemi başlatan kullanıcı Id'si
+    ///   OccurredAt                (DateTime)                     → Hareket zamanı
+    ///   Note                      (string?)                      → İşlem notu
+    /// }
+    /// </remarks>
     [HttpPost("bulk")]
     [Authorize(InventoryTrackingAutomationPermissions.Inventory.Manage)]
     public async Task<Result<List<InventoryTransactionDto>>> CreateMany([FromBody] List<CreateInventoryTransactionDto> inputs)
@@ -67,7 +160,38 @@ public class InventoryTransactionController : InventoryTrackingAutomationControl
         return result;
     }
 
-    /// Mevcut bir stok hareket kaydını güncellemek için kullanılır.
+    /// <summary>
+    /// Envanter hareketi kaydını günceller.
+    /// </summary>
+    /// <param name="id">Kaydın benzersiz Id'si.</param>
+    /// <param name="input">Güncel hareket bilgileri.</param>
+    /// <remarks>
+    /// Request {
+    ///   ProductId                (Guid)                         → Ürün Id'si
+    ///   TransactionType          (InventoryTransactionTypeEnum) → İşlem tipi
+    ///   Quantity                 (int)                          → Miktar
+    ///   SourceLocationType       (StockLocationTypeEnum?)       → Kaynak lokasyon tipi
+    ///   SourceLocationId         (Guid?)                        → Kaynak depo veya araç Id'si
+    ///   TargetLocationType       (StockLocationTypeEnum?)       → Hedef lokasyon tipi
+    ///   TargetLocationId         (Guid?)                        → Hedef depo veya araç Id'si
+    ///   RelatedMovementRequestId (Guid?)                        → Bağlı talep Id'si
+    ///   OccurredAt               (DateTime)                     → Hareket zamanı
+    ///   Note                     (string?)                      → İşlem notu
+    /// }
+    /// Response {
+    ///   ProductId                 (Guid)                         → Ürün Id'si
+    ///   TransactionType           (InventoryTransactionTypeEnum) → İşlem tipi
+    ///   Quantity                  (int)                          → Miktar
+    ///   SourceLocationType        (StockLocationTypeEnum?)       → Kaynak lokasyon tipi
+    ///   SourceLocationId          (Guid?)                        → Kaynak depo veya araç Id'si
+    ///   TargetLocationType        (StockLocationTypeEnum?)       → Hedef lokasyon tipi
+    ///   TargetLocationId          (Guid?)                        → Hedef depo veya araç Id'si
+    ///   RelatedMovementRequestId  (Guid?)                        → Bağlı talep Id'si
+    ///   PerformedByUserId         (Guid?)                        → İşlemi başlatan kullanıcı Id'si
+    ///   OccurredAt                (DateTime)                     → Hareket zamanı
+    ///   Note                      (string?)                      → İşlem notu
+    /// }
+    /// </remarks>
     [HttpPut("{id}")]
     [Authorize(InventoryTrackingAutomationPermissions.Inventory.Manage)]
     public async Task<Result<InventoryTransactionDto>> Update(Guid id, [FromBody] UpdateInventoryTransactionDto input)
@@ -76,7 +200,10 @@ public class InventoryTransactionController : InventoryTrackingAutomationControl
         return result;
     }
 
-    /// Stok hareket kaydını silmek için kullanılır.
+    /// <summary>
+    /// Envanter hareketi kaydını siler.
+    /// </summary>
+    /// <param name="id">Kaydın benzersiz Id'si.</param>
     [HttpDelete("{id}")]
     [Authorize(InventoryTrackingAutomationPermissions.Inventory.Manage)]
     public async Task<Result> Delete(Guid id)

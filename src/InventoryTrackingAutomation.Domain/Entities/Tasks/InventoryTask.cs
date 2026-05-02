@@ -12,15 +12,17 @@ namespace InventoryTrackingAutomation.Entities.Tasks;
 /// </summary>
 public class InventoryTask : FullAuditedEntity<Guid>
 {
+    public InventoryTaskTypeEnum Type { get; set; } // Gorevin depo transferi mi saha operasyonu mu oldugunu belirler.
     public string Code { get; set; } = default!; // Gorevin kurumsal kodunu tasir.
     public string Name { get; set; } = default!; // Gorevin kullaniciya gorunen adini tasir.
-    public string Region { get; set; } = default!; // Gorevin saha bolgesi baglamini tasir.
+    public string? Region { get; set; } // Saha gorevlerinde bolge bilgisini tasir; depo transferinde bos kalabilir.
     public DateTime StartDate { get; set; } // Gorevin planlanan baslangic zamanini tasir.
     public DateTime? EndDate { get; set; } // Gorevin planlanan veya gercek bitis zamanini tasir.
     public TaskStatusEnum Status { get; set; } // Gorevin yasam dongusu durumunu belirler.
     public string? Description { get; set; } // Gorevin operasyonel aciklama baglamini tasir.
-    public Guid? ReturnWarehouseId { get; set; } // Gorev bitince stoklarin donecegi depo baglamini tasir.
-    public bool IsActive { get; set; } // Gorevin operasyonel olarak aktif kabul edilip edilmedigini belirler.
+    public Guid SourceWarehouseId { get; set; } // Operasyon icin malzemenin cikacagi ana depo baglamini tasir.
+    public Guid? TargetWarehouseId { get; set; } // Depo transferi operasyonunda malzemenin gidecegi hedef depo baglamini tasir.
+    public Guid? ReturnWarehouseId { get; set; } // Saha gorevi bitince stoklarin donecegi depo baglamini tasir.
 
     protected InventoryTask() { }
     public InventoryTask(Guid id) : base(id) { }

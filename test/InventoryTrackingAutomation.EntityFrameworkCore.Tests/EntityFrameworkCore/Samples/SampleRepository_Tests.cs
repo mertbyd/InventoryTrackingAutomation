@@ -1,4 +1,5 @@
-﻿using InventoryTrackingAutomation.Samples;
+using InventoryTrackingAutomation.EntityFrameworkCore;
+using InventoryTrackingAutomation.Samples;
 
 namespace InventoryTrackingAutomation.EntityFrameworkCore.Samples;
 

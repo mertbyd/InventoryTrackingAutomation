@@ -9,9 +9,9 @@ using InventoryTrackingAutomation.Managers.Inventory;
 using InventoryTrackingAutomation.Models.Inventory;
 using InventoryTrackingAutomation.Services.Inventory;
 using FluentValidation;
-using InventoryTrackingAutomation.Managers.Inventory;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Uow;
+using Volo.Abp.DependencyInjection;
 
 namespace InventoryTrackingAutomation.Application.Services.Stock;
 
@@ -20,25 +20,18 @@ namespace InventoryTrackingAutomation.Application.Services.Stock;
 //sistemdeki görevi: Uygulama katmanındaki kullanım senaryolarını (use-case) gerçekleştiren ana servis birimidir.
 public class InventoryTransactionAppService : InventoryTrackingAutomationAppService, IInventoryTransactionAppService
 {
-    private readonly IInventoryTransactionRepository _repository;
-    private readonly InventoryTransactionManager _manager;
-    private readonly IValidator<CreateInventoryTransactionDto> _createValidator;
-    private readonly IValidator<UpdateInventoryTransactionDto> _updateValidator;
-    private readonly IMapper _mapper;
-
-    public InventoryTransactionAppService(
-        IInventoryTransactionRepository repository,
-        InventoryTransactionManager manager,
-        IValidator<CreateInventoryTransactionDto> createValidator,
-        IValidator<UpdateInventoryTransactionDto> updateValidator,
-        IMapper mapper)
+    public InventoryTransactionAppService(IAbpLazyServiceProvider abpLazyServiceProvider)
+        : base(abpLazyServiceProvider)
     {
-        _repository = repository;
-        _manager = manager;
-        _createValidator = createValidator;
-        _updateValidator = updateValidator;
-        _mapper = mapper;
     }
+
+    private IInventoryTransactionRepository _repository => LazyGetRequiredService<IInventoryTransactionRepository>();
+    private InventoryTransactionManager _manager => LazyGetRequiredService<InventoryTransactionManager>();
+    private IValidator<CreateInventoryTransactionDto> _createValidator => LazyGetRequiredService<IValidator<CreateInventoryTransactionDto>>();
+    private IValidator<UpdateInventoryTransactionDto> _updateValidator => LazyGetRequiredService<IValidator<UpdateInventoryTransactionDto>>();
+    private IMapper _mapper => LazyGetRequiredService<IMapper>();
+
+
 
 //işlevi: İlgili iş senaryosunu (use-case) yürütür.
 //sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.

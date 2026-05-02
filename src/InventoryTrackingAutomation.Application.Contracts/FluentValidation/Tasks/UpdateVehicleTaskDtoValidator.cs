@@ -11,7 +11,8 @@ public class UpdateVehicleTaskDtoValidator : AbstractValidator<UpdateVehicleTask
     public UpdateVehicleTaskDtoValidator()
     {
         RuleFor(x => x.VehicleId).NotEmpty();
-        RuleFor(x => x.InventoryTaskId).NotEmpty();
+        RuleFor(x => x.TaskId).NotEmpty();
+        RuleFor(x => x.ResponsibleWorkerId).NotEmpty();
         RuleFor(x => x.AssignedAt).NotEmpty();
     }
 }

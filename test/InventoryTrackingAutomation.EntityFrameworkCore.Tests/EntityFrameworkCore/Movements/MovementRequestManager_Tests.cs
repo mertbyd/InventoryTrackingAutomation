@@ -1,0 +1,8 @@
+using InventoryTrackingAutomation.Movements;
+using InventoryTrackingAutomation.EntityFrameworkCore;
+
+namespace InventoryTrackingAutomation.EntityFrameworkCore.Movements;
+
+public class MovementRequestManager_Tests : InventoryTrackingAutomation.Movements.MovementRequestManager_Tests<InventoryTrackingAutomationEntityFrameworkCoreTestModule>
+{
+}

@@ -1,10 +1,12 @@
 using AutoMapper;
 using System;
 using System.Collections.Generic;
+using System.Text.Json;
 using System.Threading.Tasks;
 using InventoryTrackingAutomation.Dtos.Masters;
 using InventoryTrackingAutomation.Dtos.Inventory;
 using InventoryTrackingAutomation.Entities.Masters;
+using InventoryTrackingAutomation.Events.Cache;
 using InventoryTrackingAutomation.Interface.Masters;
 using InventoryTrackingAutomation.Managers.Masters;
 using InventoryTrackingAutomation.Managers.Inventory;
@@ -12,8 +14,10 @@ using InventoryTrackingAutomation.Models.Masters;
 using InventoryTrackingAutomation.Models.Inventory;
 using InventoryTrackingAutomation.Services.Masters;
 using FluentValidation;
+using Microsoft.Extensions.Caching.Distributed;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Uow;
+using Volo.Abp.DependencyInjection;
 
 namespace InventoryTrackingAutomation.Application.Services.Masters;
 
@@ -22,32 +26,24 @@ namespace InventoryTrackingAutomation.Application.Services.Masters;
 //sistemdeki görevi: Uygulama katmanındaki kullanım senaryolarını (use-case) gerçekleştiren ana servis birimidir.
 public class ProductAppService : InventoryTrackingAutomationAppService, IProductAppService
 {
+    public ProductAppService(IAbpLazyServiceProvider abpLazyServiceProvider)
+        : base(abpLazyServiceProvider)
+    {
+    }
+
     // Read/list/persist için ana repository.
-    private readonly IProductRepository _repository;
+    private IProductRepository _repository => LazyGetRequiredService<IProductRepository>();
     // Domain manager — Code uniqueness, CategoryId FK ve BaseUnit enum validasyonu.
-    private readonly ProductManager _manager;
+    private ProductManager _manager => LazyGetRequiredService<ProductManager>();
     // PITON stok gorunurlugu okuma kurallari.
-    private readonly InventoryQueryManager _inventoryQueryManager;
-    private readonly IValidator<CreateProductDto> _createValidator;
-    private readonly IValidator<UpdateProductDto> _updateValidator;
+    private InventoryQueryManager _inventoryQueryManager => LazyGetRequiredService<InventoryQueryManager>();
+    private IValidator<CreateProductDto> _createValidator => LazyGetRequiredService<IValidator<CreateProductDto>>();
+    private IValidator<UpdateProductDto> _updateValidator => LazyGetRequiredService<IValidator<UpdateProductDto>>();
+    private IDistributedCache _cache => LazyGetRequiredService<IDistributedCache>();
 
     // Tüm bağımlılıkları DI ile alır.
-    private readonly IMapper _mapper;
-    public ProductAppService(
-        IProductRepository repository,
-        ProductManager manager,
-        InventoryQueryManager inventoryQueryManager,
-        IValidator<CreateProductDto> createValidator,
-        IValidator<UpdateProductDto> updateValidator,
-        IMapper mapper)
-    {
-        _mapper = mapper;
-        _repository = repository;
-        _manager = manager;
-        _inventoryQueryManager = inventoryQueryManager;
-        _createValidator = createValidator;
-        _updateValidator = updateValidator;
-    }
+    private IMapper _mapper => LazyGetRequiredService<IMapper>();
+
 
     // Id ile ürünü getirir; yoksa EntityNotFoundException.
 //işlevi: İlgili iş senaryosunu (use-case) yürütür.
@@ -71,13 +67,23 @@ public class ProductAppService : InventoryTrackingAutomationAppService, IProduct
             _mapper.Map<List<Product>, List<ProductDto>>(entities));
     }
 
-    // Urunun lokasyon bazli stok ozetini getirir; okuma kurallari manager tarafinda kalir.
+    // Urunun lokasyon bazli stok ozetini getirir; cache-aside ile Redis'ten okur, yoksa DB'den ceker.
 //işlevi: İlgili iş senaryosunu (use-case) yürütür.
 //sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<ProductStockSummaryDto> GetStockSummaryAsync(Guid id)
     {
+        var cacheKey = CacheKeys.ProductStockSummary(id);
+        var cached = await _cache.GetStringAsync(cacheKey);
+        if (cached is not null)
+            return JsonSerializer.Deserialize<ProductStockSummaryDto>(cached)!;
+
         var summary = await _inventoryQueryManager.GetProductStockSummaryAsync(id);
-        return _mapper.Map<ProductStockSummaryModel, ProductStockSummaryDto>(summary);
+        var dto = _mapper.Map<ProductStockSummaryModel, ProductStockSummaryDto>(summary);
+
+        await _cache.SetStringAsync(cacheKey, JsonSerializer.Serialize(dto),
+            new DistributedCacheEntryOptions { AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10) });
+
+        return dto;
     }
 
     // Yeni ürün oluşturur — manager iş kurallarını uygular, repository persist eder.

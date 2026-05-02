@@ -1,24 +1,27 @@
 using System;
+using InventoryTrackingAutomation.Managers;
 using System.Threading.Tasks;
 using InventoryTrackingAutomation.Enums;
 using InventoryTrackingAutomation.Enums.Workflows;
 using InventoryTrackingAutomation.Interface.Movements;
 using Volo.Abp.Domain.Services;
+using Volo.Abp.DependencyInjection;
 
 namespace InventoryTrackingAutomation.Managers.Movements;
 
 /// <summary>
 /// Workflow sonucu MovementRequest aggregate'ine uygulanacak nihai onay durumunu yoneten manager.
 /// </summary>
-public class MovementRequestWorkflowCompletionManager : DomainService
+public class MovementRequestWorkflowCompletionManager : InventoryTrackingAutomationDomainService
 {
-    private readonly IMovementRequestRepository _movementRequestRepository;
-
-    public MovementRequestWorkflowCompletionManager(
-        IMovementRequestRepository movementRequestRepository)
+    public MovementRequestWorkflowCompletionManager(IAbpLazyServiceProvider abpLazyServiceProvider)
+        : base(abpLazyServiceProvider)
     {
-        _movementRequestRepository = movementRequestRepository;
     }
+
+    private IMovementRequestRepository _movementRequestRepository => LazyGetRequiredService<IMovementRequestRepository>();
+
+
 
     /// Workflow sonucunu hareket talebine uygulamak için kullanılır.
     public async Task ApplyWorkflowResultAsync(Guid movementRequestId, WorkflowState finalState)

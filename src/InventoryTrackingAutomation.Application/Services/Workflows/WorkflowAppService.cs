@@ -16,6 +16,7 @@ using Volo.Abp.Domain.Entities;
 using Volo.Abp.Domain.Repositories;
 using Volo.Abp.Identity;
 using Microsoft.AspNetCore.Authorization;
+using Volo.Abp.DependencyInjection;
 
 namespace InventoryTrackingAutomation.Services.Workflows;
 
@@ -24,36 +25,25 @@ namespace InventoryTrackingAutomation.Services.Workflows;
 //sistemdeki görevi: Uygulama katmanındaki kullanım senaryolarını (use-case) gerçekleştiren ana servis birimidir.
 public class WorkflowAppService : InventoryTrackingAutomationAppService, IWorkflowAppService
 {
+    public WorkflowAppService(IAbpLazyServiceProvider abpLazyServiceProvider)
+        : base(abpLazyServiceProvider)
+    {
+    }
+
     // Domain manager — iş akışı state machine ve onaycı çözümleme.
-    private readonly WorkflowManager _workflowManager;
+    private WorkflowManager _workflowManager => LazyGetRequiredService<WorkflowManager>();
     // Yeni instance persist için repository.
-    private readonly IWorkflowInstanceRepository _workflowInstanceRepository;
+    private IWorkflowInstanceRepository _workflowInstanceRepository => LazyGetRequiredService<IWorkflowInstanceRepository>();
     // Onay/red sonrası adım güncellemesi için repository.
-    private readonly IWorkflowInstanceStepRepository _workflowInstanceStepRepository;
+    private IWorkflowInstanceStepRepository _workflowInstanceStepRepository => LazyGetRequiredService<IWorkflowInstanceStepRepository>();
     // Step definition bilgilerini okumak için repository.
-    private readonly IRepository<WorkflowStepDefinition, Guid> _stepDefinitionRepository;
-    private readonly IRepository<WorkflowDefinition, Guid> _workflowDefinitionRepository;
-    private readonly IIdentityUserRepository _identityUserRepository;
+    private IRepository<WorkflowStepDefinition, Guid> _stepDefinitionRepository => LazyGetRequiredService<IRepository<WorkflowStepDefinition, Guid>>();
+    private IRepository<WorkflowDefinition, Guid> _workflowDefinitionRepository => LazyGetRequiredService<IRepository<WorkflowDefinition, Guid>>();
+    private IIdentityUserRepository _identityUserRepository => LazyGetRequiredService<IIdentityUserRepository>();
 
     // Tüm bağımlılıkları DI ile alır.
-    private readonly IMapper _mapper;
-    public WorkflowAppService(
-        WorkflowManager workflowManager,
-        IWorkflowInstanceRepository workflowInstanceRepository,
-        IWorkflowInstanceStepRepository workflowInstanceStepRepository,
-        IRepository<WorkflowStepDefinition, Guid> stepDefinitionRepository,
-        IRepository<WorkflowDefinition, Guid> workflowDefinitionRepository,
-        IIdentityUserRepository identityUserRepository,
-        IMapper mapper)
-    {
-        _mapper = mapper;
-        _workflowManager = workflowManager;
-        _workflowInstanceRepository = workflowInstanceRepository;
-        _workflowInstanceStepRepository = workflowInstanceStepRepository;
-        _stepDefinitionRepository = stepDefinitionRepository;
-        _workflowDefinitionRepository = workflowDefinitionRepository;
-        _identityUserRepository = identityUserRepository;
-    }
+    private IMapper _mapper => LazyGetRequiredService<IMapper>();
+
 
     // Yeni iş akışı süreci başlatır — initiator CurrentUser'dan çözülür, manager state machine'i kurar, instance persist edilir.
     [UnitOfWork]

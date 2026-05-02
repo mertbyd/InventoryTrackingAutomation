@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Volo.Abp;
+using Volo.Abp.DependencyInjection;
 
 namespace InventoryTrackingAutomation.Controllers.Workflows;
 
@@ -17,49 +18,89 @@ namespace InventoryTrackingAutomation.Controllers.Workflows;
 [Route("api/workflows")]
 [ApiExplorerSettings(GroupName = "Workflows")]
 [Tags("Workflows")]
-[Authorize] // İşlemlerin tümünde giriş yapmış kullanıcı kimliği (CurrentUser.Id) gerekir.
-//işlevi: Workflow modülü için HTTP isteklerini karşılar.
-//sistemdeki görevi: Dış dünya ile sistem arasındaki iletişimi sağlayan API uç noktasıdır.
+[Authorize]
 public class WorkflowController : InventoryTrackingAutomationController, IWorkflowAppService
 {
-    private readonly IWorkflowAppService _workflowAppService;
-
-    public WorkflowController(IWorkflowAppService workflowAppService)
+    public WorkflowController(IAbpLazyServiceProvider abpLazyServiceProvider)
+        : base(abpLazyServiceProvider)
     {
-        _workflowAppService = workflowAppService;
     }
 
+    private IWorkflowAppService _workflowAppService => LazyGetRequiredService<IWorkflowAppService>();
+
     /// <summary>
-    /// Yeni bir iş akışı süreci başlatır.
+    /// Tanımlı iş akışını ilgili entity için başlatır.
     /// </summary>
+    /// <param name="input">İş akışı başlatma bilgileri.</param>
+    /// <remarks>
+    /// Request {
+    ///   EntityId              (Guid) → İş akışına bağlanacak entity Id'si
+    ///   WorkflowDefinitionId  (Guid) → Başlatılacak iş akışı tanımı Id'si
+    /// }
+    /// Response {
+    ///   Id                    (Guid)          → İş akışı süreci Id'si
+    ///   WorkflowDefinitionId  (Guid)          → Tanım Id'si
+    ///   EntityId              (Guid)          → Bağlı entity Id'si
+    ///   State                 (WorkflowState) → Süreç durumu
+    ///   InitiatorUserId       (Guid)          → Başlatan kullanıcı Id'si
+    /// }
+    /// </remarks>
     [HttpPost("start")]
     [Authorize(InventoryTrackingAutomationPermissions.Workflows.Approve)]
-//işlevi: İlgili HTTP isteğini işler ve servis katmanına yönlendirir.
-//sistemdeki görevi: Belirli bir API aksiyonunun giriş noktasını tanımlar.
     public async Task<WorkflowInstanceDto> StartAsync([FromBody] StartWorkflowDto input)
     {
         return await _workflowAppService.StartAsync(input);
     }
 
     /// <summary>
-    /// Belirtilen iş akışı adımında onay veya ret aksiyonunu işler.
+    /// İş akışı adımı için onay veya red kararını işler.
     /// </summary>
+    /// <param name="input">Onay kararı bilgileri.</param>
+    /// <remarks>
+    /// Request {
+    ///   InstanceStepId  (Guid)    → İşlenecek adım Id'si
+    ///   IsApproved      (bool)    → Onay kararı (true: onay, false: red)
+    ///   Note            (string?) → Karar notu
+    /// }
+    /// Response {
+    ///   Id                        (Guid)               → Adım Id'si
+    ///   WorkflowInstanceId        (Guid)               → Bağlı iş akışı süreci Id'si
+    ///   WorkflowStepDefinitionId  (Guid)               → Adım tanımı Id'si
+    ///   AssignedUserId            (Guid?)              → Atanan kullanıcı Id'si
+    ///   ActionTaken               (WorkflowActionType) → Alınan karar
+    ///   Note                      (string?)            → Karar notu
+    ///   ActionDate                (DateTime?)          → Karar tarihi
+    /// }
+    /// </remarks>
     [HttpPost("process-approval")]
     [Authorize(InventoryTrackingAutomationPermissions.Workflows.Approve)]
-//işlevi: İlgili HTTP isteğini işler ve servis katmanına yönlendirir.
-//sistemdeki görevi: Belirli bir API aksiyonunun giriş noktasını tanımlar.
     public async Task<WorkflowInstanceStepDto> ProcessApprovalAsync([FromBody] ProcessApprovalDto input)
     {
         return await _workflowAppService.ProcessApprovalAsync(input);
     }
 
     /// <summary>
-    /// Belirtilen iş akışı sürecindeki mevcut bekleyen adımı onaylar veya reddeder.
+    /// Belirli workflow instance üzerinde onay veya red kararını işler.
     /// </summary>
+    /// <param name="instanceId">Workflow instance Id'si.</param>
+    /// <param name="input">Onay kararı bilgileri.</param>
+    /// <remarks>
+    /// Request {
+    ///   IsApproved (bool)    → Onay kararı (true: onay, false: red)
+    ///   Note       (string?) → Karar notu
+    /// }
+    /// Response {
+    ///   Id                        (Guid)               → Adım Id'si
+    ///   WorkflowInstanceId        (Guid)               → Bağlı iş akışı süreci Id'si
+    ///   WorkflowStepDefinitionId  (Guid)               → Adım tanımı Id'si
+    ///   AssignedUserId            (Guid?)              → Atanan kullanıcı Id'si
+    ///   ActionTaken               (WorkflowActionType) → Alınan karar
+    ///   Note                      (string?)            → Karar notu
+    ///   ActionDate                (DateTime?)          → Karar tarihi
+    /// }
+    /// </remarks>
     [HttpPost("{instanceId}/process-approval")]
     [Authorize(InventoryTrackingAutomationPermissions.Workflows.Approve)]
-//işlevi: İlgili HTTP isteğini işler ve servis katmanına yönlendirir.
-//sistemdeki görevi: Belirli bir API aksiyonunun giriş noktasını tanımlar.
     public async Task<WorkflowInstanceStepDto> ProcessInstanceApprovalAsync(
         Guid instanceId,
         [FromBody] ProcessWorkflowInstanceApprovalDto input)
@@ -68,24 +109,44 @@ public class WorkflowController : InventoryTrackingAutomationController, IWorkfl
     }
 
     /// <summary>
-    /// Mevcut kullanıcının onaylaması bekleyen tüm iş akışı adımlarını döner.
+    /// Oturumdaki kullanıcının bekleyen workflow onay adımlarını getirir.
     /// </summary>
+    /// <remarks>
+    /// Response {
+    ///   WorkflowInstanceStepId  (Guid)     → İş akışı adım Id'si
+    ///   WorkflowInstanceId      (Guid)     → Bağlı iş akışı süreci Id'si
+    ///   EntityType              (string)   → Bağlı entity türü
+    ///   EntityId                (Guid)     → Bağlı entity Id'si
+    ///   StepOrder               (int)      → Adım sırası
+    ///   StepName                (string)   → Adım adı
+    ///   InitiatorUserId         (Guid)     → Süreci başlatan kullanıcı Id'si
+    ///   CreatedAt               (DateTime) → Adımın oluşturulma zamanı
+    /// }
+    /// </remarks>
     [HttpGet("my-pending-approvals")]
     [Authorize(InventoryTrackingAutomationPermissions.Workflows.View)]
-//işlevi: İlgili HTTP isteğini işler ve servis katmanına yönlendirir.
-//sistemdeki görevi: Belirli bir API aksiyonunun giriş noktasını tanımlar.
     public async Task<List<PendingWorkflowStepDto>> GetMyPendingApprovalsAsync()
     {
         return await _workflowAppService.GetMyPendingApprovalsAsync();
     }
 
     /// <summary>
-    /// Belirtilen iş akışı süreci için tam tarihçeyi döner (kim başlattı, hangi adım onaylandı/bekliyor/kaldı).
+    /// Workflow instance geçmişini ve adım kararlarını getirir.
     /// </summary>
+    /// <param name="instanceId">Workflow instance Id'si.</param>
+    /// <remarks>
+    /// Response {
+    ///   WorkflowInstanceId    (Guid)     → İş akışı süreci Id'si
+    ///   WorkflowDescription   (string?)  → İş akışı açıklaması
+    ///   EntityId              (Guid)     → Bağlı entity Id'si
+    ///   InitiatorUserId       (Guid)     → Süreci başlatan kullanıcı Id'si
+    ///   InitiatorUserName     (string?)  → Başlatan kullanıcı adı
+    ///   InitiatorFullName     (string?)  → Başlatan kullanıcı ad-soyad
+    ///   CreatedDate           (DateTime) → Sürecin oluşturulma tarihi
+    /// }
+    /// </remarks>
     [HttpGet("{instanceId}/history")]
     [Authorize(InventoryTrackingAutomationPermissions.Workflows.View)]
-//işlevi: İlgili HTTP isteğini işler ve servis katmanına yönlendirir.
-//sistemdeki görevi: Belirli bir API aksiyonunun giriş noktasını tanımlar.
     public async Task<WorkflowHistoryDto> GetHistoryAsync(Guid instanceId)
     {
         return await _workflowAppService.GetHistoryAsync(instanceId);

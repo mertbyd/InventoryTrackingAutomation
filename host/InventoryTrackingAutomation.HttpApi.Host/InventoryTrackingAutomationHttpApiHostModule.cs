@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Asp.Versioning;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.DataProtection;
@@ -20,6 +19,7 @@ using Microsoft.AspNetCore.Extensions.DependencyInjection;
 using SystemStandards.Extensions;
 using SystemStandards.Abp;
 using SystemStandards.Abp.Extensions;
+using StackExchange.Redis;
 using Volo.Abp;
 using Volo.Abp.Account;
 using Volo.Abp.Account.Web;
@@ -34,6 +34,7 @@ using Volo.Abp.Auditing;
 using Volo.Abp.AuditLogging.EntityFrameworkCore;
 using Volo.Abp.Autofac;
 using Volo.Abp.Caching;
+using Volo.Abp.Caching.StackExchangeRedis;
 using Volo.Abp.Data;
 using Volo.Abp.EntityFrameworkCore;
 using Volo.Abp.EntityFrameworkCore.PostgreSql;
@@ -75,6 +76,7 @@ namespace InventoryTrackingAutomation;
     typeof(AbpAspNetCoreSerilogModule),
     typeof(AbpAspNetCoreSignalRModule),
     typeof(AbpSwashbuckleModule),
+    typeof(AbpCachingStackExchangeRedisModule),
    
     // Database
     typeof(AbpEntityFrameworkCorePostgreSqlModule),
@@ -148,13 +150,6 @@ public class InventoryTrackingAutomationHttpApiHostModule : AbpModule
 
         context.Services.AddSingleton<InventorySignalRDebugNotificationStore>();
 
-        context.Services.AddApiVersioning(options =>
-        {
-            options.DefaultApiVersion = new ApiVersion(1, 0);
-            options.AssumeDefaultVersionWhenUnspecified = true;
-            options.ReportApiVersions = true;
-        });
-
         // CRITICAL: API isteklerinde Bearer kullanıldığı için CSRF/Antiforgery filtresini kapatıyoruz
         Configure<AbpAntiForgeryOptions>(options =>
         {
@@ -226,6 +221,21 @@ public class InventoryTrackingAutomationHttpApiHostModule : AbpModule
                 options.SwaggerDoc("v1", new OpenApiInfo() { Title = "InventoryTrackingAutomation API", Version = "v1" });
                 options.DocInclusionPredicate((docName, description) => true);
                 options.CustomSchemaIds(type => type.FullName);
+
+                var xmlDocumentationFiles = new[]
+                {
+                    "InventoryTrackingAutomation.HttpApi.xml",
+                    "InventoryTrackingAutomation.Application.Contracts.xml"
+                };
+
+                foreach (var xmlDocumentationFile in xmlDocumentationFiles)
+                {
+                    var xmlDocumentationPath = Path.Combine(AppContext.BaseDirectory, xmlDocumentationFile);
+                    if (File.Exists(xmlDocumentationPath))
+                    {
+                        options.IncludeXmlComments(xmlDocumentationPath, includeControllerXmlComments: true);
+                    }
+                }
                 
                 // HTTP/Bearer scheme — Swagger UI 'Bearer ' prefix'ini OTOMATİK ekler
                 // Kullanıcı sadece access_token'ı yapıştırır, "Bearer" yazmasına gerek yok
@@ -277,8 +287,13 @@ public class InventoryTrackingAutomationHttpApiHostModule : AbpModule
             options.KeyPrefix = "InventoryTrackingAutomation:";
         });
         
-        // Data Protection — Redis yok, sadece local
-        context.Services.AddDataProtection().SetApplicationName("InventoryTrackingAutomation");
+        var dataProtectionBuilder = context.Services.AddDataProtection().SetApplicationName("InventoryTrackingAutomation");
+        var redisConfiguration = configuration["Redis:Configuration"];
+        if (!string.IsNullOrWhiteSpace(redisConfiguration))
+        {
+            var redis = ConnectionMultiplexer.Connect(redisConfiguration);
+            dataProtectionBuilder.PersistKeysToStackExchangeRedis(redis, "InventoryTrackingAutomation-Protection-Keys");
+        }
         
         context.Services.AddCors(options =>
         {

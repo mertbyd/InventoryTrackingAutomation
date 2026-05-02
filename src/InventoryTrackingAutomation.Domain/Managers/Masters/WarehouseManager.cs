@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using InventoryTrackingAutomation.Entities.Masters;
 using InventoryTrackingAutomation.Interface.Masters;
 using InventoryTrackingAutomation.Models.Masters;
+using Volo.Abp.DependencyInjection;
 
 namespace InventoryTrackingAutomation.Managers.Masters;
 
@@ -13,20 +14,16 @@ namespace InventoryTrackingAutomation.Managers.Masters;
 //sistemdeki görevi: Domain katmanındaki iş kurallarının merkezi yönetimini ve validasyonunu sağlar.
 public class WarehouseManager : BaseManager<Warehouse>
 {
-    private readonly IWorkerRepository _workerRepository;    // Depo sorumlusu FK kontrolu icin.
-    private readonly IMapper _mapper;                        // Model verisini entity uzerine tasir.
+    private IWorkerRepository _workerRepository => LazyGetRequiredService<IWorkerRepository>();    // Depo sorumlusu FK kontrolu icin.
+    private IMapper _mapper => LazyGetRequiredService<IMapper>();                        // Model verisini entity uzerine tasir.
 
     /// <summary>
     /// WarehouseManager bagimliliklarini alir.
     /// </summary>
-    public WarehouseManager(
-        IWarehouseRepository repository,
-        IWorkerRepository workerRepository,
-        IMapper mapper)
-        : base(repository)
+    public WarehouseManager(IWarehouseRepository repository,
+        IAbpLazyServiceProvider abpLazyServiceProvider)
+        : base(repository, abpLazyServiceProvider)
     {
-        _workerRepository = workerRepository;
-        _mapper = mapper;
     }
 
     /// <summary>

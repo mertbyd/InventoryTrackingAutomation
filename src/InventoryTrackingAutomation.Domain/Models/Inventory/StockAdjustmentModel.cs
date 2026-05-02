@@ -13,7 +13,6 @@ public class StockAdjustmentModel
     public StockLocationTypeEnum SourceLocationType { get; set; }
     public Guid SourceLocationId { get; set; }
     public Guid? RelatedMovementRequestId { get; set; }
-    public Guid? RelatedTaskId { get; set; }
     public Guid? PerformedByUserId { get; set; }
     public string? Note { get; set; }
 }

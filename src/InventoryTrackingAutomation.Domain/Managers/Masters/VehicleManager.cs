@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using InventoryTrackingAutomation.Entities.Masters;
 using InventoryTrackingAutomation.Interface.Masters;
 using InventoryTrackingAutomation.Models.Masters;
+using Volo.Abp.DependencyInjection;
 
 namespace InventoryTrackingAutomation.Managers.Masters;
 
@@ -16,13 +17,11 @@ public class VehicleManager : BaseManager<Vehicle>
     /// <summary>
     /// VehicleManager constructor'ı.
     /// </summary>
-    private readonly IMapper _mapper;
-    public VehicleManager(
-        IVehicleRepository repository,
-        IMapper mapper)
-        : base(repository)
+    private IMapper _mapper => LazyGetRequiredService<IMapper>();
+    public VehicleManager(IVehicleRepository repository,
+        IAbpLazyServiceProvider abpLazyServiceProvider)
+        : base(repository, abpLazyServiceProvider)
     {
-        _mapper = mapper;
     }
 
     /// <summary>

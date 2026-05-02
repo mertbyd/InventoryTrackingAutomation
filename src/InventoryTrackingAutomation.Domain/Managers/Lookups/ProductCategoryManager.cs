@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using InventoryTrackingAutomation.Entities.Lookups;
 using InventoryTrackingAutomation.Interface.Lookups;
 using InventoryTrackingAutomation.Models.Lookups;
+using Volo.Abp.DependencyInjection;
 
 namespace InventoryTrackingAutomation.Managers.Lookups;
 
@@ -16,13 +17,11 @@ public class ProductCategoryManager : BaseManager<ProductCategory>
     /// <summary>
     /// ProductCategoryManager constructor'ı.
     /// </summary>
-    private readonly IMapper _mapper;
-    public ProductCategoryManager(
-        IProductCategoryRepository repository,
-        IMapper mapper)
-        : base(repository)
+    private IMapper _mapper => LazyGetRequiredService<IMapper>();
+    public ProductCategoryManager(IProductCategoryRepository repository,
+        IAbpLazyServiceProvider abpLazyServiceProvider)
+        : base(repository, abpLazyServiceProvider)
     {
-        _mapper = mapper;
     }
 
     /// <summary>

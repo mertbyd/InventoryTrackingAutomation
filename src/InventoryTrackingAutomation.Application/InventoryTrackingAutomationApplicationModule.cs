@@ -19,7 +19,6 @@ public class InventoryTrackingAutomationApplicationModule : AbpModule
 {
     public override void ConfigureServices(ServiceConfigurationContext context)
     {
-        context.Services.AddAutoMapper(typeof(InventoryTrackingAutomationApplicationModule).Assembly);
         context.Services.AddAutoMapperObjectMapper<InventoryTrackingAutomationApplicationModule>();
         Configure<AbpAutoMapperOptions>(options =>
         {

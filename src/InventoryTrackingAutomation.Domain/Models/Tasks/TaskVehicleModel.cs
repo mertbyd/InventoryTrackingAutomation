@@ -8,9 +8,8 @@ namespace InventoryTrackingAutomation.Models.Tasks;
 public class TaskVehicleModel
 {
     public Guid VehicleTaskId { get; set; }    // Gorev-arac atama Id'si.
-    public Guid InventoryTaskId { get; set; }  // Gorev Id'si.
+    public Guid TaskId { get; set; }  // Operasyon isi Id'si.
     public Guid VehicleId { get; set; }        // Arac Id'si.
     public DateTime AssignedAt { get; set; }   // Atama zamani.
     public DateTime? ReleasedAt { get; set; }  // Ayrilma zamani.
-    public bool IsActive { get; set; }         // Atama aktif mi.
 }

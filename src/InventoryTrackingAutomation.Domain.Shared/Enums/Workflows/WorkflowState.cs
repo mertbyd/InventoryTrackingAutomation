@@ -1,22 +1,22 @@
 namespace InventoryTrackingAutomation.Enums.Workflows;
 
 /// <summary>
-/// İş akışı durumunu temsil eden enum.
+/// Is akisi durumunu temsil eden enum.
 /// </summary>
 public enum WorkflowState : byte
 {
     /// <summary>
-    /// İş akışı devam ediyor.
+    /// Is akisi devam ediyor.
     /// </summary>
     Active = 1,
-    
+
     /// <summary>
-    /// İş akışı başarıyla tamamlandı.
+    /// Is akisi basariyla tamamlandi.
     /// </summary>
     Completed = 2,
-    
+
     /// <summary>
-    /// İş akışı reddedildi.
+    /// Is akisi reddedildi.
     /// </summary>
     Rejected = 3
 }

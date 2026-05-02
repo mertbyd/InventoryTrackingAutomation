@@ -1,0 +1,8 @@
+using InventoryTrackingAutomation.Validations.Tasks;
+using InventoryTrackingAutomation.EntityFrameworkCore;
+
+namespace InventoryTrackingAutomation.EntityFrameworkCore.Validations.Tasks;
+
+public class InventoryTaskValidation_Tests : InventoryTrackingAutomation.Validations.Tasks.InventoryTaskValidation_Tests<InventoryTrackingAutomationEntityFrameworkCoreTestModule>
+{
+}

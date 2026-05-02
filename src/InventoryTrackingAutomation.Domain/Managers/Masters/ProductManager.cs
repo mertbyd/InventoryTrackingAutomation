@@ -4,6 +4,7 @@ using InventoryTrackingAutomation.Entities.Masters;
 using InventoryTrackingAutomation.Interface.Lookups;
 using InventoryTrackingAutomation.Interface.Masters;
 using InventoryTrackingAutomation.Models.Masters;
+using Volo.Abp.DependencyInjection;
 
 namespace InventoryTrackingAutomation.Managers.Masters;
 
@@ -14,20 +15,16 @@ namespace InventoryTrackingAutomation.Managers.Masters;
 //sistemdeki görevi: Domain katmanındaki iş kurallarının merkezi yönetimini ve validasyonunu sağlar.
 public class ProductManager : BaseManager<Product>
 {
-    private readonly IProductCategoryRepository _categoryRepository;  // CategoryId FK validasyonu için
+    private IProductCategoryRepository _categoryRepository => LazyGetRequiredService<IProductCategoryRepository>();  // CategoryId FK validasyonu için
 
     /// <summary>
     /// ProductManager constructor'ı.
     /// </summary>
-    private readonly IMapper _mapper;
-    public ProductManager(
-        IProductRepository repository,
-        IProductCategoryRepository categoryRepository,
-        IMapper mapper)
-        : base(repository)
+    private IMapper _mapper => LazyGetRequiredService<IMapper>();
+    public ProductManager(IProductRepository repository,
+        IAbpLazyServiceProvider abpLazyServiceProvider)
+        : base(repository, abpLazyServiceProvider)
     {
-        _mapper = mapper;
-        _categoryRepository = categoryRepository;
     }
 
     /// <summary>

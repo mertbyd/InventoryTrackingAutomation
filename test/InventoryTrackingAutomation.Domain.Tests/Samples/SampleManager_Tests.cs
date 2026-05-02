@@ -1,9 +1,9 @@
-﻿using System.Threading.Tasks;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace InventoryTrackingAutomation.Samples;
 
-public class SampleManager_Tests : InventoryTrackingAutomationDomainTestBase
+public class SampleManager_Tests
 {
     //private readonly SampleManager _sampleManager;
 
@@ -15,6 +15,6 @@ public class SampleManager_Tests : InventoryTrackingAutomationDomainTestBase
     [Fact]
     public async Task Method1Async()
     {
-
+        await Task.CompletedTask;
     }
 }

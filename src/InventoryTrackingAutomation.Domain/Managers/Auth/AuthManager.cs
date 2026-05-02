@@ -1,45 +1,39 @@
 using AutoMapper;
+using InventoryTrackingAutomation.Managers;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using Volo.Abp.Domain.Services;
 using Volo.Abp.Identity;
 using Volo.Abp;
 using InventoryTrackingAutomation.Models.Auth;
 using InventoryTrackingAutomation.Roles;
+using Volo.Abp.DependencyInjection;
 
 namespace InventoryTrackingAutomation.Managers.Auth;
 
 // Kimlik doğrulama domain servisi — kullanıcı oluşturma ve giriş doğrulama iş kurallarını yönetir.
 //işlevi: Auth etki alanı (domain) kurallarını ve karmaşık veri bütünlüğünü sağlar.
 //sistemdeki görevi: Domain katmanındaki iş kurallarının merkezi yönetimini ve validasyonunu sağlar.
-public class AuthManager : DomainService
+public class AuthManager : InventoryTrackingAutomationDomainService
 {
+    public AuthManager(IAbpLazyServiceProvider abpLazyServiceProvider)
+        : base(abpLazyServiceProvider)
+    {
+    }
+
     // ABP Identity user manager — CRUD ve şifre işlemleri için.
-    private readonly IdentityUserManager _identityUserManager;
+    private IdentityUserManager _identityUserManager => LazyGetRequiredService<IdentityUserManager>();
     // Identity user repository — direkt query için.
-    private readonly IIdentityUserRepository _identityUserRepository;
+    private IIdentityUserRepository _identityUserRepository => LazyGetRequiredService<IIdentityUserRepository>();
     // Identity role manager — rol atama işlemleri için.
-    private readonly IdentityRoleManager _identityRoleManager;
+    private IdentityRoleManager _identityRoleManager => LazyGetRequiredService<IdentityRoleManager>();
     // Operasyonel log için.
-    private readonly ILogger<AuthManager> _logger;
+    private ILogger<AuthManager> _logger => LazyGetRequiredService<ILogger<AuthManager>>();
 
     // Tüm bağımlılıkları DI ile alır.
-    private readonly IMapper _mapper;
-    public AuthManager(
-        IdentityUserManager identityUserManager,
-        IIdentityUserRepository identityUserRepository,
-        IdentityRoleManager identityRoleManager,
-        ILogger<AuthManager> logger,
-        IMapper mapper)
-    {
-        _mapper = mapper;
-        _identityUserManager = identityUserManager;
-        _identityUserRepository = identityUserRepository;
-        _identityRoleManager = identityRoleManager;
-        _logger = logger;
-    }
+    private IMapper _mapper => LazyGetRequiredService<IMapper>();
+
     // Yeni kullanıcı oluşturur — email/username uniqueness kontrolü, şifre eşleşme doğrulaması ve varsayılan rol ataması yapar.
 //işlevi: Etki alanı kuralını veya validasyonunu işletir.
 //sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.

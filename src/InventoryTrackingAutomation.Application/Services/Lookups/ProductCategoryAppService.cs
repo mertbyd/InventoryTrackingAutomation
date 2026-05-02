@@ -11,6 +11,7 @@ using InventoryTrackingAutomation.Services.Lookups;
 using FluentValidation;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Uow;
+using Volo.Abp.DependencyInjection;
 
 namespace InventoryTrackingAutomation.Application.Services.Lookups;
 
@@ -19,28 +20,21 @@ namespace InventoryTrackingAutomation.Application.Services.Lookups;
 //sistemdeki görevi: Uygulama katmanındaki kullanım senaryolarını (use-case) gerçekleştiren ana servis birimidir.
 public class ProductCategoryAppService : InventoryTrackingAutomationAppService, IProductCategoryAppService
 {
+    public ProductCategoryAppService(IAbpLazyServiceProvider abpLazyServiceProvider)
+        : base(abpLazyServiceProvider)
+    {
+    }
+
     // Read/list/persist için ana repository.
-    private readonly IProductCategoryRepository _repository;
+    private IProductCategoryRepository _repository => LazyGetRequiredService<IProductCategoryRepository>();
     // Domain manager — Code uniqueness ve ParentId varlık kontrolü.
-    private readonly ProductCategoryManager _manager;
-    private readonly IValidator<CreateProductCategoryDto> _createValidator;
-    private readonly IValidator<UpdateProductCategoryDto> _updateValidator;
+    private ProductCategoryManager _manager => LazyGetRequiredService<ProductCategoryManager>();
+    private IValidator<CreateProductCategoryDto> _createValidator => LazyGetRequiredService<IValidator<CreateProductCategoryDto>>();
+    private IValidator<UpdateProductCategoryDto> _updateValidator => LazyGetRequiredService<IValidator<UpdateProductCategoryDto>>();
 
     // Tüm bağımlılıkları DI ile alır.
-    private readonly IMapper _mapper;
-    public ProductCategoryAppService(
-        IProductCategoryRepository repository,
-        ProductCategoryManager manager,
-        IValidator<CreateProductCategoryDto> createValidator,
-        IValidator<UpdateProductCategoryDto> updateValidator,
-        IMapper mapper)
-    {
-        _mapper = mapper;
-        _repository = repository;
-        _manager = manager;
-        _createValidator = createValidator;
-        _updateValidator = updateValidator;
-    }
+    private IMapper _mapper => LazyGetRequiredService<IMapper>();
+
 
     // Id ile ürün kategorisini getirir; yoksa EntityNotFoundException.
 //işlevi: İlgili iş senaryosunu (use-case) yürütür.

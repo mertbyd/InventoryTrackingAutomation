@@ -1,26 +1,27 @@
 using System.Threading.Tasks;
+using InventoryTrackingAutomation.Managers;
 using InventoryTrackingAutomation.Entities.Inventory;
 using InventoryTrackingAutomation.Models.Inventory;
 using Volo.Abp;
 using Volo.Abp.Domain.Services;
+using Volo.Abp.DependencyInjection;
 
 namespace InventoryTrackingAutomation.Managers.Inventory;
 
 /// <summary>
 /// Hedef lokasyona girmeyen hasar, kayip veya tuketim stok duzeltmelerini yonetir.
 /// </summary>
-public class StockAdjustmentManager : DomainService
+public class StockAdjustmentManager : InventoryTrackingAutomationDomainService
 {
-    private readonly StockLocationManager _stockLocationManager;
-    private readonly InventoryTransactionManager _transactionManager;
-
-    public StockAdjustmentManager(
-        StockLocationManager stockLocationManager,
-        InventoryTransactionManager transactionManager)
+    public StockAdjustmentManager(IAbpLazyServiceProvider abpLazyServiceProvider)
+        : base(abpLazyServiceProvider)
     {
-        _stockLocationManager = stockLocationManager;
-        _transactionManager = transactionManager;
     }
+
+    private StockLocationManager _stockLocationManager => LazyGetRequiredService<StockLocationManager>();
+    private InventoryTransactionManager _transactionManager => LazyGetRequiredService<InventoryTransactionManager>();
+
+
 
     /// Stok miktarını azaltmak (düzeltme) için kullanılır.
     public async Task<InventoryTransaction> DecreaseAsync(StockAdjustmentModel model)

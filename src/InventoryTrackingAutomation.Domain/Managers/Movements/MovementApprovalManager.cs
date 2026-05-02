@@ -1,4 +1,5 @@
 using AutoMapper;
+using InventoryTrackingAutomation.Managers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,6 +11,7 @@ using InventoryTrackingAutomation.Enums.Tasks;
 using InventoryTrackingAutomation.Enums.Inventory;
 using InventoryTrackingAutomation.Enums;
 using InventoryTrackingAutomation.Enums.Workflows;
+using InventoryTrackingAutomation.Interface.Movements;
 using InventoryTrackingAutomation.Managers.Workflows;
 using InventoryTrackingAutomation.Models.Movements;
 using InventoryTrackingAutomation.Models.Workflows;
@@ -18,61 +20,43 @@ using Volo.Abp.Domain.Repositories;
 using Volo.Abp.Domain.Services;
 using Volo.Abp.Guids;
 using Volo.Abp.Identity;
+using Volo.Abp.DependencyInjection;
 
 namespace InventoryTrackingAutomation.Managers.Movements;
 
 // Hareket talebi onay süreci domain manager'ı — onay/red iş kuralları, validasyon ve state machine.
 //işlevi: MovementApproval etki alanı (domain) kurallarını ve karmaşık veri bütünlüğünü sağlar.
 //sistemdeki görevi: Domain katmanındaki iş kurallarının merkezi yönetimini ve validasyonunu sağlar.
-public class MovementApprovalManager : DomainService
+public class MovementApprovalManager : InventoryTrackingAutomationDomainService
 {
+    public MovementApprovalManager(IAbpLazyServiceProvider abpLazyServiceProvider)
+        : base(abpLazyServiceProvider)
+    {
+    }
+
     // MovementRequest okuma/yazma için repository.
-    private readonly IRepository<MovementRequest, Guid> _movementRequestRepository;
+    private IMovementRequestRepository _movementRequestRepository => LazyGetRequiredService<IMovementRequestRepository>();
     // Onay/red kararlarını saklayan repository.
-    private readonly IRepository<MovementApproval, Guid> _movementApprovalRepository;
+    private IRepository<MovementApproval, Guid> _movementApprovalRepository => LazyGetRequiredService<IRepository<MovementApproval, Guid>>();
     // İş akışı instance adımları repository'si.
-    private readonly IRepository<WorkflowInstanceStep, Guid> _workflowInstanceStepRepository;
+    private IRepository<WorkflowInstanceStep, Guid> _workflowInstanceStepRepository => LazyGetRequiredService<IRepository<WorkflowInstanceStep, Guid>>();
     // İş akışı instance'ları repository'si.
-    private readonly IRepository<WorkflowInstance, Guid> _workflowInstanceRepository;
+    private IRepository<WorkflowInstance, Guid> _workflowInstanceRepository => LazyGetRequiredService<IRepository<WorkflowInstance, Guid>>();
     // Adım sırası (StepOrder) gibi tanım bilgileri için.
-    private readonly IRepository<WorkflowStepDefinition, Guid> _workflowStepDefinitionRepository;
+    private IRepository<WorkflowStepDefinition, Guid> _workflowStepDefinitionRepository => LazyGetRequiredService<IRepository<WorkflowStepDefinition, Guid>>();
     // Onaylayan kullanıcının Worker kaydını çözmek için.
-    private readonly IRepository<Worker, Guid> _workerRepository;
+    private IRepository<Worker, Guid> _workerRepository => LazyGetRequiredService<IRepository<Worker, Guid>>();
     // Pending listesinde Warehouse adlarını çözmek için.
-    private readonly IRepository<Warehouse, Guid> _warehouseRepository;
+    private IRepository<Warehouse, Guid> _warehouseRepository => LazyGetRequiredService<IRepository<Warehouse, Guid>>();
     // Rol bazlı yetki kontrolü için.
-    private readonly IdentityUserManager _identityUserManager;
+    private IdentityUserManager _identityUserManager => LazyGetRequiredService<IdentityUserManager>();
     // Yeni MovementApproval kayıtlarına Id atamak için.
-    private readonly IGuidGenerator _guidGenerator;
-    private readonly WorkflowManager _workflowManager;
+    private IGuidGenerator _guidGenerator => LazyGetRequiredService<IGuidGenerator>();
+    private WorkflowManager _workflowManager => LazyGetRequiredService<WorkflowManager>();
 
     // Tüm bağımlılıkları DI ile alır.
-    private readonly IMapper _mapper;
-    public MovementApprovalManager(
-        IRepository<MovementRequest, Guid> movementRequestRepository,
-        IRepository<MovementApproval, Guid> movementApprovalRepository,
-        IRepository<WorkflowInstanceStep, Guid> workflowInstanceStepRepository,
-        IRepository<WorkflowInstance, Guid> workflowInstanceRepository,
-        IRepository<WorkflowStepDefinition, Guid> workflowStepDefinitionRepository,
-        IRepository<Worker, Guid> workerRepository,
-        IRepository<Warehouse, Guid> warehouseRepository,
-        IdentityUserManager identityUserManager,
-        IGuidGenerator guidGenerator,
-        WorkflowManager workflowManager,
-        IMapper mapper)
-    {
-        _mapper = mapper;
-        _movementRequestRepository = movementRequestRepository;
-        _movementApprovalRepository = movementApprovalRepository;
-        _workflowInstanceStepRepository = workflowInstanceStepRepository;
-        _workflowInstanceRepository = workflowInstanceRepository;
-        _workflowStepDefinitionRepository = workflowStepDefinitionRepository;
-        _workerRepository = workerRepository;
-        _warehouseRepository = warehouseRepository;
-        _identityUserManager = identityUserManager;
-        _guidGenerator = guidGenerator;
-        _workflowManager = workflowManager;
-    }
+    private IMapper _mapper => LazyGetRequiredService<IMapper>();
+
 
     /// Hareket talebini onaylamak için kullanılır.
     public async Task<MovementApproval> ApproveAsync(Guid movementRequestId, Guid approvingUserId, string comment)
@@ -152,9 +136,12 @@ public class MovementApprovalManager : DomainService
         var stepDefinition = await _workflowStepDefinitionRepository.FindAsync(step.WorkflowStepDefinitionId);
 
         // Kaynak ve hedef lokasyon adlarını çöz
-        var sourceWarehouse = await _warehouseRepository.FindAsync(movementRequest.SourceWarehouseId);
-        var targetWarehouse = movementRequest.TargetWarehouseId.HasValue 
-            ? await _warehouseRepository.FindAsync(movementRequest.TargetWarehouseId.Value) 
+        var movementContext = await _movementRequestRepository.GetOperationalContextAsync(movementRequest.Id);
+        var sourceWarehouse = movementContext == null
+            ? null
+            : await _warehouseRepository.FindAsync(movementContext.SourceWarehouseId);
+        var targetWarehouse = movementContext?.TargetWarehouseId.HasValue == true
+            ? await _warehouseRepository.FindAsync(movementContext.TargetWarehouseId.Value)
             : null;
 
         return new PendingApprovalModel

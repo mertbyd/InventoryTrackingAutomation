@@ -2,45 +2,36 @@ using System;
 
 namespace InventoryTrackingAutomation.Dtos.Movements;
 
-/// <summary>
-/// Hareket talebinin bir onay adımının detayları.
-/// </summary>
 //işlevi: MovementApproval verisinin transferi sırasında taşınacak olan yapıyı tanımlar.
 //sistemdeki görevi: Katmanlar arası veri alışverişini standartlaştırır.
 public class MovementApprovalDto
 {
     /// <summary>
-    /// Onay kaydının benzersiz kimliği.
+    /// Id alanı.
     /// </summary>
     public Guid Id { get; set; }
-
     /// <summary>
-    /// İlişkili hareket talebinin kimliği.
+    /// MovementRequestId alanı.
     /// </summary>
     public Guid MovementRequestId { get; set; }
-
     /// <summary>
-    /// Onay kararını veren çalışanın kimliği.
+    /// ApproverWorkerId alanı.
     /// </summary>
     public Guid ApproverWorkerId { get; set; }
-
     /// <summary>
-    /// Onay işlemi sırasındaki adım numarası (1, 2, 3...).
+    /// StepOrder alanı.
     /// </summary>
     public int StepOrder { get; set; }
-
     /// <summary>
-    /// Onay durumu: Approved, Rejected.
+    /// Status alanı.
     /// </summary>
     public string Status { get; set; }
-
     /// <summary>
-    /// Karar verilme tarihi/saati.
+    /// DecidedAt alanı.
     /// </summary>
     public DateTime? DecidedAt { get; set; }
-
     /// <summary>
-    /// Onaylayan kişinin yorumu veya reddetme nedeni.
+    /// Note alanı.
     /// </summary>
     public string Note { get; set; }
 }

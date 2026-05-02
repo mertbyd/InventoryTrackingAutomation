@@ -1,16 +1,16 @@
-﻿using System.Threading.Tasks;
+using System.Threading.Tasks;
 using Shouldly;
 using Xunit;
 
 namespace InventoryTrackingAutomation.Samples;
 
-public class SampleAppService_Tests : InventoryTrackingAutomationApplicationTestBase
+public class SampleAppService_Tests
 {
     private readonly ISampleAppService _sampleAppService;
 
     public SampleAppService_Tests()
     {
-        _sampleAppService = GetRequiredService<ISampleAppService>();
+        _sampleAppService = new SampleAppService();
     }
 
     [Fact]

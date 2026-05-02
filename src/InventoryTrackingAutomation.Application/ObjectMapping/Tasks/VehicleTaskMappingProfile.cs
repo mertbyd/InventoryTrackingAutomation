@@ -13,7 +13,9 @@ public class VehicleTaskMappingProfile : Profile
 {
     public VehicleTaskMappingProfile()
     {
-        CreateMap<VehicleTask, VehicleTaskDto>().ReverseMap();
+        CreateMap<VehicleTask, VehicleTaskDto>()
+            .ForMember(dest => dest.Lines, opt => opt.Ignore())
+            .ReverseMap();
         CreateMap<CreateVehicleTaskDto, CreateVehicleTaskModel>();
         CreateMap<UpdateVehicleTaskDto, UpdateVehicleTaskModel>();
         CreateMap<CreateVehicleTaskModel, VehicleTask>()
