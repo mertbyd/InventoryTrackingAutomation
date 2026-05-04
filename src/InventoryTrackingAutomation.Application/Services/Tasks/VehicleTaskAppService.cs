@@ -40,7 +40,7 @@ public class VehicleTaskAppService : InventoryTrackingAutomationAppService, IVeh
     public async Task<VehicleTaskDto> GetAsync(Guid id)
     {
         var entity = await _manager.EnsureExistsAsync(id);
-        return _mapper.Map<VehicleTask, VehicleTaskDto>(entity);
+        return await MapVehicleTaskWithLinesAsync(entity);
     }
 
     public async Task<PagedResultDto<VehicleTaskDto>> GetListAsync(PagedResultRequestDto input)
@@ -66,7 +66,7 @@ public class VehicleTaskAppService : InventoryTrackingAutomationAppService, IVeh
         }
 
         await _localEventBus.PublishAsync(CacheInvalidationEto.ForKeys(CacheKeys.TaskVehicles(inserted.TaskId)));
-        return _mapper.Map<VehicleTask, VehicleTaskDto>(inserted);
+        return await MapVehicleTaskWithLinesAsync(inserted);
     }
 
     [UnitOfWork]
@@ -146,5 +146,12 @@ public class VehicleTaskAppService : InventoryTrackingAutomationAppService, IVeh
     public async Task DeleteLineAsync(Guid vehicleTaskId, Guid lineId)
     {
         await _vehicleTaskLineAppService.DeleteAsync(vehicleTaskId, lineId);
+    }
+
+    private async Task<VehicleTaskDto> MapVehicleTaskWithLinesAsync(VehicleTask entity)
+    {
+        var dto = _mapper.Map<VehicleTask, VehicleTaskDto>(entity);
+        dto.Lines = await _vehicleTaskLineAppService.GetByVehicleTaskAsync(entity.Id);
+        return dto;
     }
 }

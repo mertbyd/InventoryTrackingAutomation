@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -119,6 +120,17 @@ namespace InventoryTrackingAutomation;
 )]
 public class InventoryTrackingAutomationHttpApiHostModule : AbpModule
 {
+    private static readonly HashSet<(string Method, string Path)> HiddenInventoryTaskSwaggerEndpoints = new()
+    {
+        ("POST", "api/tasks/bulk"),
+        ("PUT", "api/tasks/{id}"),
+        ("POST", "api/tasks/{id}/cancel"),
+        ("DELETE", "api/tasks/{id}"),
+        ("POST", "api/tasks/{id}/lines"),
+        ("PUT", "api/tasks/{id}/lines/{lineId}"),
+        ("DELETE", "api/tasks/{id}/lines/{lineId}")
+    };
+
     public override void PreConfigureServices(ServiceConfigurationContext context)
     {
         AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
@@ -149,6 +161,7 @@ public class InventoryTrackingAutomationHttpApiHostModule : AbpModule
         // SystemStandards services are now registered via SystemStandardsAbpModule
 
         context.Services.AddSingleton<InventorySignalRDebugNotificationStore>();
+        context.Services.AddTransient<InventoryTrackingAutomation.OpenIddict.OpenIddictDataSeedContributor>();
 
         // CRITICAL: API isteklerinde Bearer kullanıldığı için CSRF/Antiforgery filtresini kapatıyoruz
         Configure<AbpAntiForgeryOptions>(options =>
@@ -219,7 +232,7 @@ public class InventoryTrackingAutomationHttpApiHostModule : AbpModule
             options =>
             {
                 options.SwaggerDoc("v1", new OpenApiInfo() { Title = "InventoryTrackingAutomation API", Version = "v1" });
-                options.DocInclusionPredicate((docName, description) => true);
+                options.DocInclusionPredicate((docName, description) => ShouldIncludeSwaggerEndpoint(description));
                 options.CustomSchemaIds(type => type.FullName);
 
                 var xmlDocumentationFiles = new[]
@@ -380,8 +393,33 @@ public class InventoryTrackingAutomationHttpApiHostModule : AbpModule
         using (var scope = context.ServiceProvider.CreateScope())
         {
             await scope.ServiceProvider
+                .GetRequiredService<InventoryTrackingAutomation.OpenIddict.OpenIddictDataSeedContributor>()
+                .SeedAsync(new DataSeedContext());
+
+            await scope.ServiceProvider
                 .GetRequiredService<IDataSeeder>()
                 .SeedAsync();
         }
+    }
+
+    private static bool ShouldIncludeSwaggerEndpoint(ApiDescription description)
+    {
+        var method = description.HttpMethod?.ToUpperInvariant();
+        var path = description.RelativePath?
+            .Split('?', StringSplitOptions.RemoveEmptyEntries)[0]
+            .Trim('/')
+            .ToLowerInvariant();
+
+        if (method is null || path is null)
+        {
+            return true;
+        }
+
+        if (path.StartsWith("api/inventory-tasks", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        return !HiddenInventoryTaskSwaggerEndpoints.Contains((method, path));
     }
 }

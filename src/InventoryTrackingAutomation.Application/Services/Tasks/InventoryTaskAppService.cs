@@ -49,7 +49,7 @@ public class InventoryTaskAppService : InventoryTrackingAutomationAppService, II
     public async Task<InventoryTaskDto> GetAsync(Guid id)
     {
         var entity = await _manager.EnsureExistsAsync(id);
-        return _mapper.Map<InventoryTask, InventoryTaskDto>(entity);
+        return await MapTaskWithLinesAsync(entity);
     }
 
     /// <summary>
@@ -109,10 +109,10 @@ public class InventoryTaskAppService : InventoryTrackingAutomationAppService, II
         await _createValidator.ValidateAndThrowAsync(input);
         
         var model = _mapper.Map<CreateInventoryTaskDto, CreateInventoryTaskModel>(input);
-        var lines = _mapper.Map<List<CreateTaskLineDto>, List<CreateTaskLineModel>>(input.Lines);
+        var lines = _mapper.Map<List<CreateTaskLineDto>, List<CreateTaskLineModel>>(input.Lines ?? new List<CreateTaskLineDto>());
 
         var inserted = await _manager.CreateWithLinesAsync(model, lines);
-        return _mapper.Map<InventoryTask, InventoryTaskDto>(inserted);
+        return await MapTaskWithLinesAsync(inserted);
     }
 
     /// <summary>
@@ -127,7 +127,7 @@ public class InventoryTaskAppService : InventoryTrackingAutomationAppService, II
             await _createValidator.ValidateAndThrowAsync(dto);
             
             var model = _mapper.Map<CreateInventoryTaskDto, CreateInventoryTaskModel>(dto);
-            var lines = _mapper.Map<List<CreateTaskLineDto>, List<CreateTaskLineModel>>(dto.Lines);
+            var lines = _mapper.Map<List<CreateTaskLineDto>, List<CreateTaskLineModel>>(dto.Lines ?? new List<CreateTaskLineDto>());
             
             result.Add(await _manager.CreateWithLinesAsync(model, lines));
         }
@@ -162,11 +162,11 @@ public class InventoryTaskAppService : InventoryTrackingAutomationAppService, II
     public async Task<InventoryTaskDto> CompleteAsync(Guid id)
     {
         var updated = await _manager.UpdateWithStatusAsync(
-            id, 
-            new UpdateInventoryTaskModel(), // Sadece statu degisimi icin bos model
-            TaskStatusEnum.Completed, 
-            _localEventBus, 
-            CurrentUser.GetId(), 
+            id,
+            await BuildCurrentModelAsync(id),
+            TaskStatusEnum.Completed,
+            _localEventBus,
+            CurrentUser.GetId(),
             await ResolveCurrentWorkerIdAsync());
 
         await InvalidateTaskCachesAsync(id);
@@ -180,11 +180,11 @@ public class InventoryTaskAppService : InventoryTrackingAutomationAppService, II
     public async Task<InventoryTaskDto> CancelAsync(Guid id)
     {
         var updated = await _manager.UpdateWithStatusAsync(
-            id, 
-            new UpdateInventoryTaskModel(), 
-            TaskStatusEnum.Cancelled, 
-            _localEventBus, 
-            CurrentUser.GetId(), 
+            id,
+            await BuildCurrentModelAsync(id),
+            TaskStatusEnum.Cancelled,
+            _localEventBus,
+            CurrentUser.GetId(),
             await ResolveCurrentWorkerIdAsync());
 
         await InvalidateTaskCachesAsync(id);
@@ -246,5 +246,18 @@ public class InventoryTaskAppService : InventoryTrackingAutomationAppService, II
         return _localEventBus.PublishAsync(CacheInvalidationEto.ForKeys(
             CacheKeys.TaskInventory(taskId), 
             CacheKeys.TaskVehicles(taskId)));
+    }
+
+    private async Task<InventoryTaskDto> MapTaskWithLinesAsync(InventoryTask entity)
+    {
+        var dto = _mapper.Map<InventoryTask, InventoryTaskDto>(entity);
+        dto.Lines = await _taskLineAppService.GetByTaskAsync(entity.Id);
+        return dto;
+    }
+
+    private async Task<UpdateInventoryTaskModel> BuildCurrentModelAsync(Guid id)
+    {
+        var entity = await _repository.GetAsync(id);
+        return _mapper.Map<InventoryTask, UpdateInventoryTaskModel>(entity);
     }
 }

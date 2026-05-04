@@ -270,5 +270,9 @@ host/InventoryTrackingAutomation.Blazor.Server.Host/Logs/logs.txt
 .codex-build/
 .dotnet-cli-home/
 
+# Redis runtime files
+tools/redis/**/*.rdb
+tools/redis/**/*.txt
+
 # Temp files
 scratch.cs

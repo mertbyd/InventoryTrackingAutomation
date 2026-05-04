@@ -25,5 +25,6 @@ public class InventoryTaskMappingProfile : Profile
             .IgnoreFullAuditedObjectProperties()
             .ForMember(dest => dest.Id, opt => opt.Ignore())
             .ForMember(dest => dest.Status, opt => opt.Ignore());
+        CreateMap<InventoryTask, UpdateInventoryTaskModel>();
     }
 }

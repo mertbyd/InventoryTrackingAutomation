@@ -59,7 +59,8 @@ namespace InventoryTrackingAutomation.Migrations
                 """
                 DO $$
                 BEGIN
-                    IF NOT EXISTS (SELECT 1 FROM master.warehouses) THEN
+                    IF EXISTS (SELECT 1 FROM operation.tasks)
+                       AND NOT EXISTS (SELECT 1 FROM master.warehouses) THEN
                         RAISE EXCEPTION 'MoveMovementRouteToTask: SourceWarehouseId icin master.warehouses tablosunda kayit bulunamadi.';
                     END IF;
                 END $$;

@@ -1,4 +1,6 @@
 using System;
+using InventoryTrackingAutomation.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -6,6 +8,8 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace InventoryTrackingAutomation.Migrations
 {
     /// <inheritdoc />
+    [DbContext(typeof(InventoryTrackingAutomationDbContext))]
+    [Migration("20260501142000_NormalizeTaskLineVehicleTaskLine")]
     public partial class NormalizeTaskLineVehicleTaskLine : Migration
     {
         /// <inheritdoc />

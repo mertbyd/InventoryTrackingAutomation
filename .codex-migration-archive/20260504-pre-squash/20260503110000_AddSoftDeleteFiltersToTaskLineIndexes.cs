@@ -1,3 +1,5 @@
+using InventoryTrackingAutomation.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -5,6 +7,8 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace InventoryTrackingAutomation.Migrations
 {
     /// <inheritdoc />
+    [DbContext(typeof(InventoryTrackingAutomationDbContext))]
+    [Migration("20260503110000_AddSoftDeleteFiltersToTaskLineIndexes")]
     public partial class AddSoftDeleteFiltersToTaskLineIndexes : Migration
     {
         /// <inheritdoc />
