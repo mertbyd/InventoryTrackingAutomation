@@ -210,7 +210,7 @@ Bilgisayarda sunlar kurulu olmalidir:
 | Gereksinim | Neden gerekli |
 | --- | --- |
 | .NET destekleyen IDE veya terminal | Solution'i acmak veya `dotnet` komutlarini calistirmak icin |
-| .NET 10 SDK | `dotnet restore`, `dotnet build`, `dotnet run`, EF migration komutlari icin |
+| .NET 10 SDK (`10.0.203` veya uyumlu patch) | `dotnet restore`, `dotnet build`, `dotnet run`, EF migration komutlari icin |
 | Docker Desktop | PostgreSQL ve Redis'i tek komutla baslatmak icin |
 | Git | Repo klonlamak icin |
 
@@ -222,6 +222,21 @@ docker --version
 docker compose version
 git --version
 ```
+
+#### .NET SDK Versiyonu
+
+Repo kokunde `global.json` dosyasi SDK versiyonunu pinler:
+
+```json
+{
+  "sdk": {
+    "version": "10.0.203",
+    "rollForward": "latestFeature"
+  }
+}
+```
+
+`rollForward: latestFeature` sayesinde `10.0.x` patch versiyonlari (`10.0.203`, `10.0.204`, ...) kabul edilir; ancak `10.1+` veya `9.x` SDK'lar **reddedilir** ve `dotnet restore` patlar. `dotnet --version` ciktisi `10.0.203` veya daha buyuk bir `10.0.x` olmalidir. Daha yuksek surum kuruluysa istenen surumu yaninda ek olarak yuklemek yeterlidir; `global.json` zaten dogru SDK'yi secer.
 
 `dotnet ef` yuklu degilse:
 
@@ -270,6 +285,35 @@ Veritabanini tamamen sifirlamak gerekirse:
 ```powershell
 docker compose down -v
 docker compose up -d
+```
+
+#### Redis Olmadan Calistirma (Fallback)
+
+Redis zorunlu degildir. `host/InventoryTrackingAutomation.HttpApi.Host/InventoryTrackingAutomationHttpApiHostModule.cs` icindeki module configuration, Redis baglantisi basarisiz olursa exception'i yakalar ve **otomatik olarak in-memory distributed cache + in-memory data protection key store'a fallback** eder. Connection string `abortConnect=false` ile gonderildigi icin uygulama Redis erisilemese de baslar.
+
+Pratik anlami:
+
+- Lokal demo veya inceleme icin Redis kurmak istemiyorsan, sadece PostgreSQL'i ayaga kaldirip API'yi calistirmak yeterlidir.
+- Bu durumda log'larda su uyari gorulur:
+  ```text
+  Redis connection failed, falling back to in-memory data protection and cache.
+  ```
+- Cache/data protection in-memory'e dustugu icin **process restart oldugunda anti-forgery token'lar ve cache invalidate olur**. Production icin Redis tavsiye edilir; tek instance lokal demo icin sorun degildir.
+
+#### Port Cakismasi
+
+Default portlar lokalde meşgulse:
+
+| Servis | Default Port | Cakisirsa Yapilacak |
+| --- | --- | --- |
+| HTTP API | `5000` | `--urls http://localhost:<yeni-port>` parametresi ile farkli port ver. `appsettings.json -> App:SelfUrl` ve `OpenIddict:Applications.*.RootUrl` da ayni adrese guncellenmeli (token issuer ile redirect URI eslesmeli). |
+| PostgreSQL | `5432` | `docker-compose.yml` icinde `ports: "5432:5432"` satirini `"<yeni-port>:5432"` yap, ardindan `appsettings.json -> ConnectionStrings:Default` icindeki `Port=` degerini guncelle (veya `$env:ConnectionStrings__Default` ile override et). |
+| Redis | `6379` | `docker-compose.yml` icinde `"<yeni-port>:6379"` ve `appsettings.json -> Redis:Configuration` degerini `127.0.0.1:<yeni-port>` yap. Alternatif: Redis'i hic kaldirma, yukaridaki fallback devreye girer. |
+
+Hangi port'larin meşgul oldugunu kontrol etmek icin (Windows):
+
+```powershell
+netstat -ano | findstr ":5000 :5432 :6379"
 ```
 
 ### 4. Connection String ve Environment
