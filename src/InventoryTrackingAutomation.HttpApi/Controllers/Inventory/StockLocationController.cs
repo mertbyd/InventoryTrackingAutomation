@@ -14,7 +14,7 @@ using Volo.Abp.DependencyInjection;
 namespace InventoryTrackingAutomation.Controllers.Stock;
 
 /// <summary>
-/// Lokasyon bazlı stok CRUD endpoint'leri.
+/// Lokasyon bazli stok bakiye endpoint'leri.
 /// </summary>
 [Route("api/stock-locations")]
 [ApiExplorerSettings(GroupName = "Stock")]
@@ -156,9 +156,14 @@ public class StockLocationController : InventoryTrackingAutomationController
     }
 
     /// <summary>
-    /// Stok lokasyonu kaydını siler.
+    /// Stok lokasyonu silme istegini reddeder.
     /// </summary>
     /// <param name="id">Kaydın benzersiz Id'si.</param>
+    /// <remarks>
+    /// StockLocation mevcut stok bakiyesi kaydidir; kayit soft/hard delete ile silinmez.
+    /// Miktar degisikligi stok hareketi veya guncelleme akislariyla yapilir.
+    /// Bu endpoint geriye donuk API uyumlulugu icin durur ve StockLocation.DeleteNotSupported hatasi dondurur.
+    /// </remarks>
     [HttpDelete("{id}")]
     [Authorize(InventoryTrackingAutomationPermissions.Inventory.Manage)]
     public async Task<Result> Delete(Guid id)

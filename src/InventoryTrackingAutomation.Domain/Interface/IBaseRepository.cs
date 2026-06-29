@@ -26,3 +26,4 @@ public interface IBaseRepository<T> : IRepository<T, Guid> where T : class, IEnt
     /// </summary>
     Task SoftDeleteManyAsync(IEnumerable<Guid> ids);
 }
+

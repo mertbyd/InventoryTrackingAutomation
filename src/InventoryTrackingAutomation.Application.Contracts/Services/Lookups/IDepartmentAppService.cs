@@ -13,20 +13,39 @@ namespace InventoryTrackingAutomation.Services.Lookups;
 public interface IDepartmentAppService : IApplicationService
 {
     /// <summary> Id'ye gÃ¶re tek departman getirir. </summary>
+    /// <summary>
+    /// Id'ye göre tekil kaydı getirir.
+    /// </summary>
     Task<DepartmentDto> GetAsync(Guid id);
 
     /// <summary> DepartmanlarÄ± sayfalÄ± listeler. </summary>
+    /// <summary>
+    /// Sayfalamalı listeleme yapar.
+    /// </summary>
     Task<PagedResultDto<DepartmentDto>> GetListAsync(PagedResultRequestDto input);
 
     /// <summary> Yeni departman oluÅŸturur. </summary>
+    /// <summary>
+    /// Yeni kayıt oluşturur.
+    /// </summary>
     Task<DepartmentDto> CreateAsync(CreateDepartmentDto input);
 
     /// <summary> Birden fazla departmanÄ± toplu oluÅŸturur. </summary>
+    /// <summary>
+    /// Toplu yeni kayıtlar oluşturur.
+    /// </summary>
     Task<List<DepartmentDto>> CreateManyAsync(List<CreateDepartmentDto> inputs);
 
     /// <summary> DepartmanÄ± gÃ¼nceller. </summary>
+    /// <summary>
+    /// İlgili kaydı günceller.
+    /// </summary>
     Task<DepartmentDto> UpdateAsync(Guid id, UpdateDepartmentDto input);
 
     /// <summary> DepartmanÄ± soft delete ile siler. </summary>
+    /// <summary>
+    /// İlgili kaydı siler.
+    /// </summary>
     Task DeleteAsync(Guid id);
 }
+

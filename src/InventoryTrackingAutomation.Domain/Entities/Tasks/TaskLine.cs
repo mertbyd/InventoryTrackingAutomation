@@ -6,7 +6,9 @@ namespace InventoryTrackingAutomation.Entities.Tasks;
 /// <summary>
 /// Bir envanter gorevinin talep ettigi urun kalemini temsil eden child entity.
 /// </summary>
-public class TaskLine : FullAuditedEntity<Guid>
+// islevi: InventoryTask icindeki urun ve talep miktari satirini tasir.
+// sistemdeki gorevi: VehicleTaskLine tahsislerinin kapasite kaynagi olan operasyonel child kayittir.
+public class TaskLine : AuditedEntity<Guid>
 {
     public Guid TaskId { get; set; }        // Bagli oldugu envanter gorevi baglami.
     public Guid ProductId { get; set; }     // Talep edilen urun baglami.

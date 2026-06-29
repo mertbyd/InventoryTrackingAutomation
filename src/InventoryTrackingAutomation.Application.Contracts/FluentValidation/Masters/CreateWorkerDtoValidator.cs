@@ -13,7 +13,8 @@ public class CreateWorkerDtoValidator : AbstractValidator<CreateWorkerDto>
         RuleFor(x => x.RegistrationNumber)
             .MaximumLength(50);
 
-        RuleFor(x => x.WorkerType)
-            .IsInEnum();
+        // islevi: WorkerType artik lookup FK oldugu icin bos Guid gonderilmesini engeller.
+        RuleFor(x => x.WorkerTypeId)
+            .NotEmpty();
     }
 }

@@ -142,7 +142,7 @@ public class MovementRequestAppService : InventoryTrackingAutomationAppService, 
                 .WithData("AllowedStatus", MovementStatusEnum.Pending);
         }
 
-        await _repository.SoftDeleteAsync(id);
+        await _repository.DeleteAsync(id);
     }
 
     private async Task InvalidateMovementCacheAsync(MovementRequest request)
@@ -196,3 +196,4 @@ public class MovementRequestAppService : InventoryTrackingAutomationAppService, 
         return result;
     }
 }
+

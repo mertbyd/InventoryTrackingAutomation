@@ -22,8 +22,7 @@ public class VehicleTaskLineConfiguration : IEntityTypeConfiguration<VehicleTask
         builder.Property(x => x.ReceiveNote).HasMaxLength(500);
 
         builder.HasIndex(x => new { x.VehicleTaskId, x.TaskLineId })
-            .IsUnique()
-            .HasFilter("\"IsDeleted\" = FALSE");
+            .IsUnique();
 
         builder.HasOne<VehicleTask>()
             .WithMany()

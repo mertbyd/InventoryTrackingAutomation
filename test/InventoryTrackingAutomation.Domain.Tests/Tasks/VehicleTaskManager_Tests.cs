@@ -60,7 +60,7 @@ public abstract class VehicleTaskManager_Tests<TStartupModule> : InventoryTracki
         var vehicle = await _vehicleRepository.InsertAsync(new Vehicle(Guid.NewGuid())
         {
             PlateNumber = "34-VT-001",
-            VehicleType = VehicleTypeEnum.Van,
+            VehicleTypeId = System.Guid.NewGuid(),
             IsActive = true
         }, autoSave: true);
 
@@ -68,7 +68,7 @@ public abstract class VehicleTaskManager_Tests<TStartupModule> : InventoryTracki
         {
             UserId = Guid.NewGuid(),
             RegistrationNumber = "VT-WRK-001",
-            WorkerType = WorkerTypeEnum.WhiteCollar,
+            WorkerTypeId = System.Guid.NewGuid(),
             DefaultWarehouseId = sourceWarehouse.Id,
             IsActive = true
         }, autoSave: true);
@@ -120,7 +120,7 @@ public abstract class VehicleTaskManager_Tests<TStartupModule> : InventoryTracki
         var vehicle = await _vehicleRepository.InsertAsync(new Vehicle(Guid.NewGuid())
         {
             PlateNumber = "34-VT-002",
-            VehicleType = VehicleTypeEnum.Truck,
+            VehicleTypeId = System.Guid.NewGuid(),
             IsActive = true
         }, autoSave: true);
 
@@ -128,7 +128,7 @@ public abstract class VehicleTaskManager_Tests<TStartupModule> : InventoryTracki
         {
             UserId = Guid.NewGuid(),
             RegistrationNumber = "VT-WRK-002",
-            WorkerType = WorkerTypeEnum.BlueCollar,
+            WorkerTypeId = System.Guid.NewGuid(),
             DefaultWarehouseId = sourceWarehouse.Id,
             IsActive = true
         }, autoSave: true);
@@ -177,3 +177,4 @@ public abstract class VehicleTaskManager_Tests<TStartupModule> : InventoryTracki
         }, autoSave: true);
     }
 }
+

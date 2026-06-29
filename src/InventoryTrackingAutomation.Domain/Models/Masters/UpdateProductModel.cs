@@ -1,7 +1,7 @@
 using System;
 using InventoryTrackingAutomation.Enums.Tasks;
 using InventoryTrackingAutomation.Enums.Inventory;
-using InventoryTrackingAutomation.Enums;
+using System;
 
 namespace InventoryTrackingAutomation.Models.Masters;
 
@@ -13,8 +13,9 @@ public class UpdateProductModel
     public string Code { get; set; }                // Ürün kodu. Örnek: "PRD-001"
     public string Name { get; set; }                // Ürün adı. Örnek: "Vida M8x20"
     public Guid? CategoryId { get; set; }           // Bağlı kategori Id. Örnek: Guid
-    public UnitTypeEnum BaseUnit { get; set; }      // Ölçü birimi. Örnek: UnitTypeEnum.Piece
+    public Guid UnitTypeId { get; set; }      // Ölçü birimi. Örnek: (Lookup)
     public bool IsActive { get; set; }              // Aktif mi. Örnek: true
     public bool IsSerializable { get; set; }        // Seri numaralı mı. Örnek: false
     public int? MinimumStockLevel { get; set; }     // Minimum stok seviyesi. Örnek: 100
 }
+

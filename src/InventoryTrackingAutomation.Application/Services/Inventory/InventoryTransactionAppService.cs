@@ -28,7 +28,6 @@ public class InventoryTransactionAppService : InventoryTrackingAutomationAppServ
     private IInventoryTransactionRepository _repository => LazyGetRequiredService<IInventoryTransactionRepository>();
     private InventoryTransactionManager _manager => LazyGetRequiredService<InventoryTransactionManager>();
     private IValidator<CreateInventoryTransactionDto> _createValidator => LazyGetRequiredService<IValidator<CreateInventoryTransactionDto>>();
-    private IValidator<UpdateInventoryTransactionDto> _updateValidator => LazyGetRequiredService<IValidator<UpdateInventoryTransactionDto>>();
     private IMapper _mapper => LazyGetRequiredService<IMapper>();
 
 
@@ -84,12 +83,9 @@ public class InventoryTransactionAppService : InventoryTrackingAutomationAppServ
 //sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<InventoryTransactionDto> UpdateAsync(Guid id, UpdateInventoryTransactionDto input)
     {
-        await _updateValidator.ValidateAndThrowAsync(input);
-        var existing = await _manager.EnsureExistsAsync(id);
-        var model = _mapper.Map<UpdateInventoryTransactionDto, UpdateInventoryTransactionModel>(input);
-        var updated = await _manager.UpdateAsync(existing, model);
-        var saved = await _repository.UpdateAsync(updated, autoSave: true);
-        return _mapper.Map<InventoryTransaction, InventoryTransactionDto>(saved);
+        // InventoryTransaction append-only defter oldugu icin AppService sadece domain kuralini calistirir.
+        var rejected = await _manager.RejectUpdateAsync(id);
+        return _mapper.Map<InventoryTransaction, InventoryTransactionDto>(rejected);
     }
 
     [UnitOfWork]
@@ -97,7 +93,7 @@ public class InventoryTransactionAppService : InventoryTrackingAutomationAppServ
 //sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task DeleteAsync(Guid id)
     {
-        await _manager.EnsureExistsAsync(id);
-        await _repository.SoftDeleteAsync(id);
+        // Soft delete kapatildigi icin silme istegi domain manager'da is kurali olarak reddedilir.
+        await _manager.DeleteAsync(id);
     }
 }

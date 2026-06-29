@@ -2,7 +2,6 @@ using AutoMapper;
 using InventoryTrackingAutomation.Dtos.Inventory;
 using InventoryTrackingAutomation.Entities.Inventory;
 using InventoryTrackingAutomation.Models.Inventory;
-using Volo.Abp.AutoMapper;
 
 namespace InventoryTrackingAutomation.ObjectMapping.Stock;
 
@@ -16,13 +15,9 @@ public class InventoryTransactionMappingProfile : Profile
         CreateMap<InventoryTransaction, InventoryTransactionDto>().ReverseMap();
         CreateMap<CreateInventoryTransactionDto, CreateInventoryTransactionModel>()
             .ForMember(dest => dest.PerformedByUserId, opt => opt.Ignore());
-        CreateMap<UpdateInventoryTransactionDto, UpdateInventoryTransactionModel>()
-            .ForMember(dest => dest.PerformedByUserId, opt => opt.Ignore());
         CreateMap<CreateInventoryTransactionModel, InventoryTransaction>()
-            .IgnoreFullAuditedObjectProperties()
-            .ForMember(dest => dest.Id, opt => opt.Ignore());
-        CreateMap<UpdateInventoryTransactionModel, InventoryTransaction>()
-            .IgnoreFullAuditedObjectProperties()
+            .ForMember(dest => dest.CreationTime, opt => opt.Ignore())
+            .ForMember(dest => dest.CreatorId, opt => opt.Ignore())
             .ForMember(dest => dest.Id, opt => opt.Ignore());
     }
 }

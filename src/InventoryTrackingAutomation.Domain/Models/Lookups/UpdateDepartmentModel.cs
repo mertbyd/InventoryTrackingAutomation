@@ -8,3 +8,4 @@ public class UpdateDepartmentModel
     public string Code { get; set; }        // Departman kodu. Örnek: "DEP-IT"
     public string Name { get; set; }        // Departman adı. Örnek: "Bilgi Teknolojileri"
 }
+

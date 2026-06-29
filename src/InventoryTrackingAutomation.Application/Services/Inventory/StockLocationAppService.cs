@@ -106,9 +106,8 @@ public class StockLocationAppService : InventoryTrackingAutomationAppService, IS
 //sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task DeleteAsync(Guid id)
     {
-        var existing = await _manager.EnsureExistsAsync(id);
-        await _repository.SoftDeleteAsync(id);
-        await InvalidateStockCacheAsync(existing.ProductId, existing.LocationType, existing.LocationId);
+        // StockLocation silinmez; miktar degisiklikleri stok hareketi ve update akislariyla yonetilir.
+        await _manager.RejectDeleteAsync(id);
     }
 
     private async Task InvalidateStockCacheAsync(Guid productId, StockLocationTypeEnum locationType, Guid locationId)

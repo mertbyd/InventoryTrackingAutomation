@@ -6,7 +6,9 @@ namespace InventoryTrackingAutomation.Entities.Tasks;
 /// <summary>
 /// Bir arac-gorev atamasindaki urun tahsisini ve iade uzlasmasini temsil eden child entity.
 /// </summary>
-public class VehicleTaskLine : FullAuditedEntity<Guid>
+// islevi: Arac-gorev atamasindaki urun tahsisini ve iade teslim miktarlarini tasir.
+// sistemdeki gorevi: TaskLine talebinin hangi araca ne kadar tahsis edildigini ve iade uzlasmasini belirler.
+public class VehicleTaskLine : AuditedEntity<Guid>
 {
     public Guid VehicleTaskId { get; set; }     // Bagli oldugu arac-gorev atamasi baglami.
     public Guid TaskLineId { get; set; }        // Kaynak gorev kalemi baglami.

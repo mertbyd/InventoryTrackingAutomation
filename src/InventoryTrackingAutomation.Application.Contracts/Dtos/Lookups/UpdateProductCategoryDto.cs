@@ -19,3 +19,4 @@ public class UpdateProductCategoryDto
     /// </summary>
     public Guid? ParentId { get; set; }    // Üst kategori kimliği. Örnek: Ana Kategori Id'si
 }
+

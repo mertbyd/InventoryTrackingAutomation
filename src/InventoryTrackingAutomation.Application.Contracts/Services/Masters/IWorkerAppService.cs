@@ -27,6 +27,6 @@ public interface IWorkerAppService : IApplicationService
     /// <summary> Çalışanı günceller. </summary>
     Task<WorkerDto> UpdateAsync(Guid id, UpdateWorkerDto input);
 
-    /// <summary> Çalışanı soft delete ile siler. </summary>
+    /// <summary> Calisani silmek yerine pasife alir. </summary>
     Task DeleteAsync(Guid id);
 }

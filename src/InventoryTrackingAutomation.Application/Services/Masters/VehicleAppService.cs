@@ -1,8 +1,8 @@
 using AutoMapper;
 using System;
 using System.Collections.Generic;
-using System.Text.Json;
 using System.Threading.Tasks;
+using InventoryTrackingAutomation.Application.Caching;
 using InventoryTrackingAutomation.Dtos.Masters;
 using InventoryTrackingAutomation.Dtos.Inventory;
 using InventoryTrackingAutomation.Entities.Masters;
@@ -14,7 +14,6 @@ using InventoryTrackingAutomation.Models.Masters;
 using InventoryTrackingAutomation.Models.Inventory;
 using InventoryTrackingAutomation.Services.Masters;
 using FluentValidation;
-using Microsoft.Extensions.Caching.Distributed;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Uow;
 using Volo.Abp.DependencyInjection;
@@ -39,7 +38,6 @@ public class VehicleAppService : InventoryTrackingAutomationAppService, IVehicle
     private InventoryQueryManager _inventoryQueryManager => LazyGetRequiredService<InventoryQueryManager>();
     private IValidator<CreateVehicleDto> _createValidator => LazyGetRequiredService<IValidator<CreateVehicleDto>>();
     private IValidator<UpdateVehicleDto> _updateValidator => LazyGetRequiredService<IValidator<UpdateVehicleDto>>();
-    private IDistributedCache _cache => LazyGetRequiredService<IDistributedCache>();
 
     // Tüm bağımlılıkları DI ile alır.
     private IMapper _mapper => LazyGetRequiredService<IMapper>();
@@ -67,23 +65,15 @@ public class VehicleAppService : InventoryTrackingAutomationAppService, IVehicle
             _mapper.Map<List<Vehicle>, List<VehicleDto>>(entities));
     }
 
-    // Arac uzerindeki envanterleri getirir; cache-aside ile Redis'ten okur, yoksa DB'den ceker.
+    // Arac uzerindeki envanterleri getirir; cache okuma/yazma InventoryCacheInterceptor tarafindan yapilir.
 //işlevi: İlgili iş senaryosunu (use-case) yürütür.
 //sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
+    // CacheKeys.VehicleInventoriesTemplate invalidation tarafindaki VehicleInventories key'i ile ayni sozlesmeyi kullanir.
+    [InventoryCache(CacheKeys.VehicleInventoriesTemplate, 10)]
     public async Task<List<VehicleInventoryDto>> GetInventoriesAsync(Guid id)
     {
-        var cacheKey = CacheKeys.VehicleInventories(id);
-        var cached = await _cache.GetStringAsync(cacheKey);
-        if (cached is not null)
-            return JsonSerializer.Deserialize<List<VehicleInventoryDto>>(cached)!;
-
         var inventories = await _inventoryQueryManager.GetVehicleInventoriesAsync(id);
-        var dto = _mapper.Map<List<VehicleInventoryModel>, List<VehicleInventoryDto>>(inventories);
-
-        await _cache.SetStringAsync(cacheKey, JsonSerializer.Serialize(dto),
-            new DistributedCacheEntryOptions { AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10) });
-
-        return dto;
+        return _mapper.Map<List<VehicleInventoryModel>, List<VehicleInventoryDto>>(inventories);
     }
 
     // Yeni araç oluşturur — manager iş kurallarını uygular, repository persist eder.
@@ -131,13 +121,14 @@ public class VehicleAppService : InventoryTrackingAutomationAppService, IVehicle
         return _mapper.Map<Vehicle, VehicleDto>(saved);
     }
 
-    // Aracı soft delete ile siler.
+    // Araci silmek yerine pasife alir; arac-gorev ve stok gecmisi korunur.
     [UnitOfWork]
 //işlevi: İlgili iş senaryosunu (use-case) yürütür.
 //sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task DeleteAsync(Guid id)
     {
-        await _manager.EnsureExistsAsync(id);
-        await _repository.SoftDeleteAsync(id);
+        var existing = await _manager.EnsureExistsAsync(id);
+        var passivated = await _manager.PassivateAsync(existing);
+        await _repository.UpdateAsync(passivated, autoSave: true);
     }
 }
