@@ -103,13 +103,14 @@ public class WarehouseAppService : InventoryTrackingAutomationAppService, IWareh
         return _mapper.Map<Warehouse, WarehouseDto>(saved);
     }
 
-    // Lokasyonu soft delete ile siler.
+    // Depoyu silmek yerine pasife alir; stok, gorev ve hareket gecmisi korunur.
     [UnitOfWork]
 //işlevi: İlgili iş senaryosunu (use-case) yürütür.
 //sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task DeleteAsync(Guid id)
     {
-        await _manager.EnsureExistsAsync(id);
-        await _repository.SoftDeleteAsync(id);
+        var existing = await _manager.EnsureExistsAsync(id);
+        var passivated = await _manager.PassivateAsync(existing);
+        await _repository.UpdateAsync(passivated, autoSave: true);
     }
 }

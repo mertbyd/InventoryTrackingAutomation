@@ -24,6 +24,9 @@ public class InventoryTrackingAutomationDbContext : AbpDbContext<InventoryTracki
 {
     public DbSet<ProductCategory> ProductCategories { get; set; }
     public DbSet<Department> Departments { get; set; }
+    public DbSet<VehicleType> VehicleTypes { get; set; }
+    public DbSet<WorkerType> WorkerTypes { get; set; }
+    public DbSet<UnitType> UnitTypes { get; set; }
 
     public DbSet<Product> Products { get; set; }
     public DbSet<Warehouse> Warehouses { get; set; }

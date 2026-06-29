@@ -8,5 +8,6 @@ public static partial class InventoryTrackingAutomationErrorCodes
         public const string InvalidTransfer = Prefix + ":InventoryTransaction.InvalidTransfer";
         public const string QuantityMustBePositive = Prefix + ":InventoryTransaction.QuantityMustBePositive";
         public const string InvalidLocationPair = Prefix + ":InventoryTransaction.InvalidLocationPair";
+        public const string ImmutableLedger = Prefix + ":InventoryTransaction.ImmutableLedger";
     }
 }

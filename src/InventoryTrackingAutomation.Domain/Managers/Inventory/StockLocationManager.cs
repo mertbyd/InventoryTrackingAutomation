@@ -58,6 +58,18 @@ public class StockLocationManager : BaseManager<StockLocation>
         return existing;
     }
 
+    /// <summary>
+    /// Stok bakiyesi silme istegini reddeder.
+    /// </summary>
+    // islevi: StockLocation kaydinin soft/hard delete ile kaybolmasini engeller.
+    // sistemdeki gorevi: Stok bakiyesi degisikliklerinin silme yerine stok hareketi ve miktar guncellemesiyle yonetilmesini saglar.
+    public async Task RejectDeleteAsync(Guid id)
+    {
+        await EnsureExistsAsync(id);
+        throw new BusinessException(InventoryTrackingAutomationErrorCodes.StockLocations.DeleteNotSupported)
+            .WithData("StockLocationId", id);
+    }
+
     /// Lokasyon referanslarını doğrulamak için kullanılır.
     private async Task ValidateReferencesAsync(
         Guid productId,

@@ -11,6 +11,7 @@ using InventoryTrackingAutomation.Managers.Tasks;
 using InventoryTrackingAutomation.Models.Tasks;
 using InventoryTrackingAutomation.Services.Tasks;
 using FluentValidation;
+using Volo.Abp;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.EventBus.Local;
 using Volo.Abp.Uow;
@@ -115,7 +116,16 @@ public class VehicleTaskAppService : InventoryTrackingAutomationAppService, IVeh
     public async Task DeleteAsync(Guid id)
     {
         var existing = await _manager.EnsureExistsAsync(id);
-        await _repository.SoftDeleteAsync(id);
+        // islevi: Satir baglanmis arac-gorev atamasini fiziksel silmeye izin vermez.
+        // sistemdeki gorevi: VehicleTaskLine ve MovementRequest gecmisini korurken soft-delete kolonlarina olan ihtiyaci kaldirir.
+        var hasLines = (await _vehicleTaskLineRepository.GetByVehicleTaskIdAsync(id)).Any();
+        if (hasLines)
+        {
+            throw new BusinessException(InventoryTrackingAutomationErrorCodes.VehicleTasks.CannotDeleteWithLines)
+                .WithData("VehicleTaskId", id);
+        }
+
+        await _repository.DeleteAsync(existing, autoSave: true);
         await _localEventBus.PublishAsync(CacheInvalidationEto.ForKeys(CacheKeys.TaskVehicles(existing.TaskId)));
     }
 

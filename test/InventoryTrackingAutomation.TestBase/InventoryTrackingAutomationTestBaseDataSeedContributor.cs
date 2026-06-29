@@ -20,15 +20,18 @@ public class InventoryTrackingAutomationTestBaseDataSeedContributor : IDataSeedC
     private readonly IGuidGenerator _guidGenerator;
     private readonly ICurrentTenant _currentTenant;
     private readonly IRepository<Worker, Guid> _workerRepository;
+    private readonly InventoryTrackingAutomation.Interface.Lookups.IWorkerTypeRepository _workerTypeRepository;
 
     public InventoryTrackingAutomationTestBaseDataSeedContributor(
         IGuidGenerator guidGenerator,
         ICurrentTenant currentTenant,
+        InventoryTrackingAutomation.Interface.Lookups.IWorkerTypeRepository workerTypeRepository,
         IRepository<Worker, Guid> workerRepository)
     {
         _guidGenerator = guidGenerator;
         _currentTenant = currentTenant;
         _workerRepository = workerRepository;
+        _workerTypeRepository = workerTypeRepository;
     }
 
     public async Task SeedAsync(DataSeedContext context)
@@ -44,6 +47,13 @@ public class InventoryTrackingAutomationTestBaseDataSeedContributor : IDataSeedC
                 return;
             }
 
+            var whiteCollar = await _workerTypeRepository.FirstOrDefaultAsync(x => x.Code == "WHITE_COLLAR");
+            if (whiteCollar == null)
+            {
+                whiteCollar = await _workerTypeRepository.InsertAsync(
+                    new InventoryTrackingAutomation.Entities.Lookups.WorkerType(_guidGenerator.Create(), "WHITE_COLLAR", "Beyaz Yaka"), autoSave: true);
+            }
+
             // Departman, depo ve yonetici baglantilari opsiyonel oldugu icin testin ihtiyac duymadigi
             // FK kayitlarini burada uretmiyoruz. Boylece seed sadece kimlik -> calisan eslesmesini saglar.
             await _workerRepository.InsertAsync(
@@ -51,7 +61,7 @@ public class InventoryTrackingAutomationTestBaseDataSeedContributor : IDataSeedC
                 {
                     UserId = TestAdminUserId,
                     RegistrationNumber = "TEST-ADMIN",
-                    WorkerType = WorkerTypeEnum.WhiteCollar,
+                    WorkerTypeId = whiteCollar.Id,
                     IsActive = true
                 },
                 autoSave: true

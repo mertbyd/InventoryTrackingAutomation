@@ -1,8 +1,8 @@
 using AutoMapper;
 using System;
 using System.Collections.Generic;
-using System.Text.Json;
 using System.Threading.Tasks;
+using InventoryTrackingAutomation.Application.Caching;
 using InventoryTrackingAutomation.Dtos.Tasks;
 using InventoryTrackingAutomation.Entities.Tasks;
 using InventoryTrackingAutomation.Enums.Tasks;
@@ -13,7 +13,6 @@ using InventoryTrackingAutomation.Managers.Tasks;
 using InventoryTrackingAutomation.Models.Tasks;
 using InventoryTrackingAutomation.Services.Tasks;
 using FluentValidation;
-using Microsoft.Extensions.Caching.Distributed;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.EventBus.Local;
 using Volo.Abp.Uow;
@@ -40,7 +39,6 @@ public class InventoryTaskAppService : InventoryTrackingAutomationAppService, II
     private ILocalEventBus _localEventBus => LazyGetRequiredService<ILocalEventBus>();
     private IValidator<CreateInventoryTaskDto> _createValidator => LazyGetRequiredService<IValidator<CreateInventoryTaskDto>>();
     private IValidator<UpdateInventoryTaskDto> _updateValidator => LazyGetRequiredService<IValidator<UpdateInventoryTaskDto>>();
-    private IDistributedCache _cache => LazyGetRequiredService<IDistributedCache>();
     private IMapper _mapper => LazyGetRequiredService<IMapper>();
 
     /// <summary>
@@ -63,41 +61,25 @@ public class InventoryTaskAppService : InventoryTrackingAutomationAppService, II
     }
 
     /// <summary>
-    /// Göreve atanmış araçları getirir (Cache destekli).
+    /// Göreve atanmış araçları getirir (attribute cache destekli).
     /// </summary>
+    // CacheKeys.TaskVehiclesTemplate invalidation tarafindaki TaskVehicles key'i ile ayni sozlesmeyi kullanir.
+    [InventoryCache(CacheKeys.TaskVehiclesTemplate, 10)]
     public async Task<List<TaskVehicleDto>> GetVehiclesAsync(Guid id)
     {
-        var cacheKey = CacheKeys.TaskVehicles(id);
-        var cached = await _cache.GetStringAsync(cacheKey);
-        if (cached is not null)
-            return JsonSerializer.Deserialize<List<TaskVehicleDto>>(cached)!;
-
         var vehicles = await _inventoryQueryManager.GetTaskVehiclesAsync(id);
-        var dto = _mapper.Map<List<TaskVehicleModel>, List<TaskVehicleDto>>(vehicles);
-
-        await _cache.SetStringAsync(cacheKey, JsonSerializer.Serialize(dto),
-            new DistributedCacheEntryOptions { AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10) });
-
-        return dto;
+        return _mapper.Map<List<TaskVehicleModel>, List<TaskVehicleDto>>(vehicles);
     }
 
     /// <summary>
-    /// Görevin mevcut envanter durumunu getirir (Cache destekli).
+    /// Görevin mevcut envanter durumunu getirir (attribute cache destekli).
     /// </summary>
+    // CacheKeys.TaskInventoryTemplate invalidation tarafindaki TaskInventory key'i ile ayni sozlesmeyi kullanir.
+    [InventoryCache(CacheKeys.TaskInventoryTemplate, 10)]
     public async Task<List<TaskInventoryDto>> GetInventoryAsync(Guid id)
     {
-        var cacheKey = CacheKeys.TaskInventory(id);
-        var cached = await _cache.GetStringAsync(cacheKey);
-        if (cached is not null)
-            return JsonSerializer.Deserialize<List<TaskInventoryDto>>(cached)!;
-
         var inventory = await _inventoryQueryManager.GetTaskInventoryAsync(id);
-        var dto = _mapper.Map<List<TaskInventoryModel>, List<TaskInventoryDto>>(inventory);
-
-        await _cache.SetStringAsync(cacheKey, JsonSerializer.Serialize(dto),
-            new DistributedCacheEntryOptions { AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10) });
-
-        return dto;
+        return _mapper.Map<List<TaskInventoryModel>, List<TaskInventoryDto>>(inventory);
     }
 
     /// <summary>
@@ -194,11 +176,10 @@ public class InventoryTaskAppService : InventoryTrackingAutomationAppService, II
     /// <summary>
     /// Envanter görevini siler (Soft Delete).
     /// </summary>
-    [UnitOfWork]
     public async Task DeleteAsync(Guid id)
     {
         await _manager.EnsureExistsAsync(id);
-        await _repository.SoftDeleteAsync(id);
+        await _repository.DeleteAsync(id);
     }
 
     // ────────────────────── Lines (Koordinasyon) ──────────────────────
@@ -261,3 +242,4 @@ public class InventoryTaskAppService : InventoryTrackingAutomationAppService, II
         return _mapper.Map<InventoryTask, UpdateInventoryTaskModel>(entity);
     }
 }
+

@@ -8,7 +8,12 @@
       "Bash(dotnet ef migrations *)",
       "Bash(xargs grep *)",
       "Bash(dotnet ef database *)",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Bash(git checkout *)",
+      "Bash(git merge *)",
+      "Bash(git push *)",
+      "Bash(echo \"exit: $?\")",
+      "Bash(git branch *)"
     ]
   }
 }

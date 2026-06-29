@@ -36,7 +36,7 @@ public class ProductController : InventoryTrackingAutomationController
     ///   Code           (string)       → Ürün kodu
     ///   Name           (string)       → Ürün adı
     ///   CategoryId     (Guid?)        → Bağlı kategori Id'si
-    ///   BaseUnit       (UnitTypeEnum) → Ölçü birimi
+    ///   UnitTypeId     (Guid)  → Olcu birimi lookup Id'si
     ///   IsActive       (bool)         → Aktif mi
     ///   IsSerializable (bool)         → Seri numaralı mı
     /// }
@@ -79,7 +79,7 @@ public class ProductController : InventoryTrackingAutomationController
     ///   Code           (string)       → Ürün kodu
     ///   Name           (string)       → Ürün adı
     ///   CategoryId     (Guid?)        → Bağlı kategori Id'si
-    ///   BaseUnit       (UnitTypeEnum) → Ölçü birimi
+    ///   UnitTypeId     (Guid)  → Olcu birimi lookup Id'si
     ///   IsActive       (bool)         → Aktif mi
     ///   IsSerializable (bool)         → Seri numaralı mı
     /// }
@@ -101,7 +101,7 @@ public class ProductController : InventoryTrackingAutomationController
     ///   Code           (string)       → Ürün kodu
     ///   Name           (string)       → Ürün adı
     ///   CategoryId     (Guid?)        → Bağlı kategori Id'si
-    ///   BaseUnit       (UnitTypeEnum) → Ölçü birimi
+    ///   UnitTypeId     (Guid)  → Olcu birimi lookup Id'si
     ///   IsActive       (bool)         → Aktif mi
     ///   IsSerializable (bool)         → Seri numaralı mı
     /// }
@@ -109,7 +109,7 @@ public class ProductController : InventoryTrackingAutomationController
     ///   Code           (string)       → Ürün kodu
     ///   Name           (string)       → Ürün adı
     ///   CategoryId     (Guid?)        → Bağlı kategori Id'si
-    ///   BaseUnit       (UnitTypeEnum) → Ölçü birimi
+    ///   UnitTypeId     (Guid)  → Olcu birimi lookup Id'si
     ///   IsActive       (bool)         → Aktif mi
     ///   IsSerializable (bool)         → Seri numaralı mı
     /// }
@@ -131,7 +131,7 @@ public class ProductController : InventoryTrackingAutomationController
     ///   Code           (string)       → Ürün kodu
     ///   Name           (string)       → Ürün adı
     ///   CategoryId     (Guid?)        → Bağlı kategori Id'si
-    ///   BaseUnit       (UnitTypeEnum) → Ölçü birimi
+    ///   UnitTypeId     (Guid)  → Olcu birimi lookup Id'si
     ///   IsActive       (bool)         → Aktif mi
     ///   IsSerializable (bool)         → Seri numaralı mı
     /// }
@@ -139,7 +139,7 @@ public class ProductController : InventoryTrackingAutomationController
     ///   Code           (string)       → Ürün kodu
     ///   Name           (string)       → Ürün adı
     ///   CategoryId     (Guid?)        → Bağlı kategori Id'si
-    ///   BaseUnit       (UnitTypeEnum) → Ölçü birimi
+    ///   UnitTypeId     (Guid)  → Olcu birimi lookup Id'si
     ///   IsActive       (bool)         → Aktif mi
     ///   IsSerializable (bool)         → Seri numaralı mı
     /// }
@@ -162,7 +162,7 @@ public class ProductController : InventoryTrackingAutomationController
     ///   Code           (string)       → Ürün kodu
     ///   Name           (string)       → Ürün adı
     ///   CategoryId     (Guid?)        → Bağlı kategori Id'si
-    ///   BaseUnit       (UnitTypeEnum) → Ölçü birimi
+    ///   UnitTypeId     (Guid)  → Olcu birimi lookup Id'si
     ///   IsActive       (bool)         → Aktif mi
     ///   IsSerializable (bool)         → Seri numaralı mı
     /// }
@@ -170,7 +170,7 @@ public class ProductController : InventoryTrackingAutomationController
     ///   Code           (string)       → Ürün kodu
     ///   Name           (string)       → Ürün adı
     ///   CategoryId     (Guid?)        → Bağlı kategori Id'si
-    ///   BaseUnit       (UnitTypeEnum) → Ölçü birimi
+    ///   UnitTypeId     (Guid)  → Olcu birimi lookup Id'si
     ///   IsActive       (bool)         → Aktif mi
     ///   IsSerializable (bool)         → Seri numaralı mı
     /// }
@@ -184,7 +184,7 @@ public class ProductController : InventoryTrackingAutomationController
     }
 
     /// <summary>
-    /// Ürün kaydını siler.
+    /// Urun kaydini silmek yerine pasife alir.
     /// </summary>
     /// <param name="id">Kaydın benzersiz Id'si.</param>
     [HttpDelete("{id}")]

@@ -1,8 +1,8 @@
 using AutoMapper;
 using System;
 using System.Collections.Generic;
-using System.Text.Json;
 using System.Threading.Tasks;
+using InventoryTrackingAutomation.Application.Caching;
 using InventoryTrackingAutomation.Dtos.Masters;
 using InventoryTrackingAutomation.Dtos.Inventory;
 using InventoryTrackingAutomation.Entities.Masters;
@@ -14,7 +14,6 @@ using InventoryTrackingAutomation.Models.Masters;
 using InventoryTrackingAutomation.Models.Inventory;
 using InventoryTrackingAutomation.Services.Masters;
 using FluentValidation;
-using Microsoft.Extensions.Caching.Distributed;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Uow;
 using Volo.Abp.DependencyInjection;
@@ -39,7 +38,6 @@ public class ProductAppService : InventoryTrackingAutomationAppService, IProduct
     private InventoryQueryManager _inventoryQueryManager => LazyGetRequiredService<InventoryQueryManager>();
     private IValidator<CreateProductDto> _createValidator => LazyGetRequiredService<IValidator<CreateProductDto>>();
     private IValidator<UpdateProductDto> _updateValidator => LazyGetRequiredService<IValidator<UpdateProductDto>>();
-    private IDistributedCache _cache => LazyGetRequiredService<IDistributedCache>();
 
     // Tüm bağımlılıkları DI ile alır.
     private IMapper _mapper => LazyGetRequiredService<IMapper>();
@@ -67,23 +65,15 @@ public class ProductAppService : InventoryTrackingAutomationAppService, IProduct
             _mapper.Map<List<Product>, List<ProductDto>>(entities));
     }
 
-    // Urunun lokasyon bazli stok ozetini getirir; cache-aside ile Redis'ten okur, yoksa DB'den ceker.
+    // Urunun lokasyon bazli stok ozetini getirir; cache okuma/yazma InventoryCacheInterceptor tarafindan yapilir.
 //işlevi: İlgili iş senaryosunu (use-case) yürütür.
 //sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
+    // CacheKeys.ProductStockSummaryTemplate invalidation tarafindaki ProductStockSummary key'i ile ayni sozlesmeyi kullanir.
+    [InventoryCache(CacheKeys.ProductStockSummaryTemplate, 10)]
     public async Task<ProductStockSummaryDto> GetStockSummaryAsync(Guid id)
     {
-        var cacheKey = CacheKeys.ProductStockSummary(id);
-        var cached = await _cache.GetStringAsync(cacheKey);
-        if (cached is not null)
-            return JsonSerializer.Deserialize<ProductStockSummaryDto>(cached)!;
-
         var summary = await _inventoryQueryManager.GetProductStockSummaryAsync(id);
-        var dto = _mapper.Map<ProductStockSummaryModel, ProductStockSummaryDto>(summary);
-
-        await _cache.SetStringAsync(cacheKey, JsonSerializer.Serialize(dto),
-            new DistributedCacheEntryOptions { AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10) });
-
-        return dto;
+        return _mapper.Map<ProductStockSummaryModel, ProductStockSummaryDto>(summary);
     }
 
     // Yeni ürün oluşturur — manager iş kurallarını uygular, repository persist eder.
@@ -131,13 +121,14 @@ public class ProductAppService : InventoryTrackingAutomationAppService, IProduct
         return _mapper.Map<Product, ProductDto>(saved);
     }
 
-    // Ürünü soft delete ile siler.
+    // Urunu silmek yerine pasife alir; master veri gecmisi ve FK butunlugu korunur.
     [UnitOfWork]
 //işlevi: İlgili iş senaryosunu (use-case) yürütür.
 //sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task DeleteAsync(Guid id)
     {
-        await _manager.EnsureExistsAsync(id);
-        await _repository.SoftDeleteAsync(id);
+        var existing = await _manager.EnsureExistsAsync(id);
+        var passivated = await _manager.PassivateAsync(existing);
+        await _repository.UpdateAsync(passivated, autoSave: true);
     }
 }

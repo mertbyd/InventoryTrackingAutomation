@@ -32,5 +32,10 @@ public class WorkerConfiguration : IEntityTypeConfiguration<Worker>
             .WithMany()
             .HasForeignKey(x => x.ManagerId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne<WorkerType>()
+            .WithMany()
+            .HasForeignKey(x => x.WorkerTypeId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

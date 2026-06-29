@@ -11,3 +11,4 @@ public class CreateProductCategoryModel
     public string Name { get; set; }        // Kategori adı. Örnek: "Elektrik Malzemeleri"
     public Guid? ParentId { get; set; }     // Üst kategori kimliği. Örnek: Ana Kategori Id'si
 }
+

@@ -1,9 +1,11 @@
 using Microsoft.Extensions.DependencyInjection;
+using InventoryTrackingAutomation.Application.Caching;
 using InventoryTrackingAutomation.Application.Services.Auth;
 using InventoryTrackingAutomation.Services.Auth;
 using InventoryTrackingAutomation.Application.Services.Movements;
 using InventoryTrackingAutomation.Services.Movements;
 using Volo.Abp.AutoMapper;
+using Volo.Abp.DependencyInjection;
 using Volo.Abp.Modularity;
 using Volo.Abp.Application;
 
@@ -17,6 +19,13 @@ namespace InventoryTrackingAutomation;
     )]
 public class InventoryTrackingAutomationApplicationModule : AbpModule
 {
+    // islevi: Attribute cache interceptor kaydini ABP servis kayit surecinden once hazirlar.
+    // sistemdeki gorevi: [InventoryCache] kullanan AppService metotlarinin Redis cache akisini otomatik yakalamasini saglar.
+    public override void PreConfigureServices(ServiceConfigurationContext context)
+    {
+        context.Services.OnRegistered(InventoryCacheInterceptorRegistrar.RegisterIfNeeded);
+    }
+
     public override void ConfigureServices(ServiceConfigurationContext context)
     {
         context.Services.AddAutoMapperObjectMapper<InventoryTrackingAutomationApplicationModule>();

@@ -1,21 +1,21 @@
 using System;
-using InventoryTrackingAutomation.Enums.Tasks;
-using InventoryTrackingAutomation.Enums.Inventory;
+using InventoryTrackingAutomation.Entities;
 using InventoryTrackingAutomation.Enums;
 using Volo.Abp.Domain.Entities.Auditing;
-using Volo.Abp.MultiTenancy;
 
 namespace InventoryTrackingAutomation.Entities.Masters;
 
 /// <summary>
 /// Stokta takip edilen urunu temsil eden master aggregate.
 /// </summary>
-public class Product : FullAuditedEntity<Guid>
+// islevi: Stokta takip edilen urunun kimlik, kategori, birim ve aktiflik bilgilerini tasir.
+// sistemdeki gorevi: Operasyonel stok hareketlerinin uzerinden yurutuldugu temel master veridir.
+public class Product : AuditedEntity<Guid>, IPassivable
 {
     public string Code { get; set; } = default!; // Urunun kurumsal kodunu tasir.
     public string Name { get; set; } = default!; // Urunun operasyonlarda gorunen adini tasir.
     public Guid? CategoryId { get; set; } // Urunun bagli oldugu kategori baglamini tasir.
-    public UnitTypeEnum BaseUnit { get; set; } // Urunun stok olcum birimini belirler.
+    public Guid UnitTypeId { get; set; } // Urunun stok olcum birimini (Lookup FK) belirler.
     public bool IsActive { get; set; } // Urunun operasyonlarda kullanilip kullanilamayacagini belirler.
     public bool IsSerializable { get; set; } // Urunun seri bazli takip gerektirip gerektirmedigini belirler.
 

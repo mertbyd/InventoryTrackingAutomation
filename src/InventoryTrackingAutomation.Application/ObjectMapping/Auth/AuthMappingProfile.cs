@@ -14,7 +14,6 @@ public class AuthMappingProfile : Profile
     {
         // Login DTO → Login Model
         CreateMap<LoginDto, LoginModel>();
-
         // Register DTO → Register Model
         CreateMap<RegisterDto, RegisterModel>();
     }

@@ -84,7 +84,7 @@ public class TaskLineAppService : InventoryTrackingAutomationAppService, ITaskLi
         return await MapTaskLineAsync(saved);
     }
 
-    /// Görev kalemini silmek için kullanılır.
+    /// Tahsis edilmemis gorev kalemini silmek icin kullanilir.
     [UnitOfWork]
     public async Task DeleteAsync(Guid taskId, Guid lineId)
     {

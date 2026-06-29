@@ -86,7 +86,7 @@ public abstract class MovementRequestAppService_Tests<TStartupModule> : Inventor
         var vehicle = await _vehicleRepository.InsertAsync(new Vehicle(Guid.NewGuid())
         {
             PlateNumber = $"{prefix}-{Guid.NewGuid():N}"[..12],
-            VehicleType = VehicleTypeEnum.Van,
+            VehicleTypeId = System.Guid.NewGuid(),
             IsActive = true
         }, autoSave: true);
 
@@ -94,7 +94,7 @@ public abstract class MovementRequestAppService_Tests<TStartupModule> : Inventor
         {
             UserId = Guid.NewGuid(),
             RegistrationNumber = $"{prefix}-WRK-{Guid.NewGuid():N}"[..30],
-            WorkerType = WorkerTypeEnum.WhiteCollar,
+            WorkerTypeId = System.Guid.NewGuid(),
             DefaultWarehouseId = warehouse.Id,
             IsActive = true
         }, autoSave: true);
@@ -130,3 +130,4 @@ public abstract class MovementRequestAppService_Tests<TStartupModule> : Inventor
         }, autoSave: true);
     }
 }
+

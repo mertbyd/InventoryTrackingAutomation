@@ -118,6 +118,8 @@ public class VehicleTaskLineManager : BaseManager<VehicleTaskLine>
     /// <summary>
     /// Arac-gorev kalemini silmek icin kullanilir. Teslim alinmis satir silinemez.
     /// </summary>
+    // islevi: Henuz teslim/iade uzlasmasi almamis tahsis satirini fiziksel olarak kaldirir.
+    // sistemdeki gorevi: Operasyonel miktar bilgisi olusan satirlarin silinmesini engelleyerek hareket gecmisini korur.
     public async Task DeleteAsync(Guid lineId)
     {
         var line = await EnsureExistsAsync(lineId);

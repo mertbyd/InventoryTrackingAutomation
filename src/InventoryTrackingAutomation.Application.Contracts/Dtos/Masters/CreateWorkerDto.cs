@@ -1,7 +1,7 @@
 using System;
 using InventoryTrackingAutomation.Enums.Tasks;
 using InventoryTrackingAutomation.Enums.Inventory;
-using InventoryTrackingAutomation.Enums;
+using System;
 
 namespace InventoryTrackingAutomation.Dtos.Masters;
 
@@ -18,9 +18,9 @@ public class CreateWorkerDto
     /// </summary>
     public string RegistrationNumber { get; set; }    // Sicil numarası. Örnek: "EMP-2024-001"
     /// <summary>
-    /// Çalışan tipi. Örnek: WorkerTypeEnum.BlueCollar
+    /// Çalışan tipi. Örnek: (Lookup)
     /// </summary>
-    public WorkerTypeEnum WorkerType { get; set; }    // Çalışan tipi. Örnek: WorkerTypeEnum.BlueCollar
+    public Guid WorkerTypeId { get; set; }    // Çalışan tipi. Örnek: (Lookup)
     /// <summary>
     /// Bağlı departman Id.
     /// </summary>
@@ -38,3 +38,4 @@ public class CreateWorkerDto
     /// </summary>
     public bool IsActive { get; set; }                // Aktif mi. Örnek: true
 }
+
