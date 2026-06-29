@@ -1,25 +1,21 @@
-using FluentValidation;
+﻿using FluentValidation;
 using InventoryTrackingAutomation.Dtos.Masters;
 
 namespace InventoryTrackingAutomation.FluentValidation.Masters;
 
-/// <summary>
-/// UpdateProductDto için validation kuralları — güncelleme işleminde tüm alanlar zorunlu tutulur.
-/// </summary>
 public class UpdateProductDtoValidator : AbstractValidator<UpdateProductDto>
 {
     public UpdateProductDtoValidator()
     {
         RuleFor(x => x.Name)
-            .NotEmpty()
-            .MaximumLength(200);
+            .NotEmpty().WithMessage("Validation:Product:NameRequired")
+            .MaximumLength(200).WithMessage("Validation:Product:NameMaxLength");
 
         RuleFor(x => x.Code)
-            .NotEmpty()
-            .MaximumLength(50);
+            .NotEmpty().WithMessage("Validation:Product:CodeRequired")
+            .MaximumLength(50).WithMessage("Validation:Product:CodeMaxLength");
 
-        // islevi: UnitType artik lookup FK oldugu icin bos Guid gonderilmesini engeller.
         RuleFor(x => x.UnitTypeId)
-            .NotEmpty();
+            .NotEmpty().WithMessage("Validation:Product:UnitTypeRequired");
     }
 }

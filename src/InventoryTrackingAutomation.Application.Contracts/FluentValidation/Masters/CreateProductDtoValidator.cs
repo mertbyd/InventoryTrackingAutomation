@@ -1,24 +1,20 @@
-using FluentValidation;
+﻿using FluentValidation;
 using InventoryTrackingAutomation.Dtos.Masters;
 
 namespace InventoryTrackingAutomation.FluentValidation.Masters;
 
-/// <summary>
-/// CreateProductDto için sade validation kuralları.
-/// </summary>
 public class CreateProductDtoValidator : AbstractValidator<CreateProductDto>
 {
     public CreateProductDtoValidator()
     {
         RuleFor(x => x.Name)
-            .NotEmpty()
-            .MaximumLength(200);
+            .NotEmpty().WithMessage("Validation:Product:NameRequired")
+            .MaximumLength(200).WithMessage("Validation:Product:NameMaxLength");
 
         RuleFor(x => x.Code)
-            .MaximumLength(50);
+            .MaximumLength(50).WithMessage("Validation:Product:CodeMaxLength");
 
-        // islevi: UnitType artik lookup FK oldugu icin bos Guid gonderilmesini engeller.
         RuleFor(x => x.UnitTypeId)
-            .NotEmpty();
+            .NotEmpty().WithMessage("Validation:Product:UnitTypeRequired");
     }
 }
