@@ -10,6 +10,8 @@ using Volo.Abp.DependencyInjection;
 
 namespace InventoryTrackingAutomation.Application.Services.Lookups;
 
+// islevi: WorkerType lookup use-case'lerini koordine eder.
+// sistemdeki gorevi: Calisan tipi referans verisi icin validation, manager ve repository akisini base sinif uzerinden yurutur.
 public class WorkerTypeAppService : LookupCrudAppService<WorkerType, WorkerTypeDto, CreateWorkerTypeDto, UpdateWorkerTypeDto, CreateWorkerTypeModel, UpdateWorkerTypeModel>, IWorkerTypeAppService
 {
     private WorkerTypeManager _manager => LazyGetRequiredService<WorkerTypeManager>();

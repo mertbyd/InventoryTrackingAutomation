@@ -10,6 +10,8 @@ using Volo.Abp.DependencyInjection;
 
 namespace InventoryTrackingAutomation.Application.Services.Lookups;
 
+// islevi: UnitType lookup use-case'lerini koordine eder.
+// sistemdeki gorevi: Olcu birimi referans verisi icin validation, manager ve repository akisini base sinif uzerinden yurutur.
 public class UnitTypeAppService : LookupCrudAppService<UnitType, UnitTypeDto, CreateUnitTypeDto, UpdateUnitTypeDto, CreateUnitTypeModel, UpdateUnitTypeModel>, IUnitTypeAppService
 {
     private UnitTypeManager _manager => LazyGetRequiredService<UnitTypeManager>();
