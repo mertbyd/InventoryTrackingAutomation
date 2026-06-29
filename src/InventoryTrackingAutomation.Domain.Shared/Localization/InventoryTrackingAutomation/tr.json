@@ -1,4 +1,4 @@
-{
+﻿{
   "culture": "tr",
   "texts": {
     "MyAccount": "Hesabim",
@@ -42,6 +42,12 @@
     "InventoryTrackingAutomation:StockLocation.DeleteNotSupported": "Stok bakiyesi kayitlari silinemez; miktar degisikligi stok hareketi veya guncelleme akislariyla yapilmalidir.",
     "InventoryTrackingAutomation:UnitType.AlreadyExists": "Ayni koda sahip bir olcu birimi zaten var.",
     "InventoryTrackingAutomation:VehicleType.AlreadyExists": "Ayni koda sahip bir arac tipi zaten var.",
-    "InventoryTrackingAutomation:WorkerType.AlreadyExists": "Ayni koda sahip bir calisan tipi zaten var."
+    "InventoryTrackingAutomation:WorkerType.AlreadyExists": "Ayni koda sahip bir calisan tipi zaten var.",
+    "Validation:Lookup:CodeRequired": "Kod alan� zorunludur.",
+    "Validation:Lookup:CodeMaxLength": "Kod en fazla {MaxLength} karakter olabilir.",
+    "Validation:Lookup:NameRequired": "Ad alan� zorunludur.",
+    "Validation:Lookup:NameMaxLength": "Ad en fazla {MaxLength} karakter olabilir.",
+    "Validation:Lookup:DescriptionMaxLength": "A��klama en fazla {MaxLength} karakter olabilir."
   }
 }
+
