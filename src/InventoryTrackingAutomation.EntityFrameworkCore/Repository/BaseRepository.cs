@@ -60,3 +60,4 @@ public class BaseRepository<T> : EfCoreRepository<InventoryTrackingAutomationDbC
         await DeleteManyAsync(ids, autoSave: true);
     }
 }
+

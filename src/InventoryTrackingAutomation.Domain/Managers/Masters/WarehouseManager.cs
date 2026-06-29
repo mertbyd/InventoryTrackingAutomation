@@ -62,4 +62,15 @@ public class WarehouseManager : BaseManager<Warehouse>
         _mapper.Map(model, existing);
         return existing;
     }
+
+    /// <summary>
+    /// Depoyu operasyon gecmisi bozulmadan pasife almak icin kullanilir.
+    /// </summary>
+    // islevi: Master depo kaydini silmeden stok ve gorevlerde kullanima kapatir.
+    // sistemdeki gorevi: Depo baglantili stok/hareket gecmisini koruyarak soft-delete kolonlarina olan ihtiyaci kaldirir.
+    public Task<Warehouse> PassivateAsync(Warehouse existing)
+    {
+        existing.IsActive = false;
+        return Task.FromResult(existing);
+    }
 }

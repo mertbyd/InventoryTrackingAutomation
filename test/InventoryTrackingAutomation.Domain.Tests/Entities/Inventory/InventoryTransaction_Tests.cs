@@ -2,6 +2,8 @@ using System;
 using InventoryTrackingAutomation.Entities.Inventory;
 using InventoryTrackingAutomation.Enums.Inventory;
 using Shouldly;
+using Volo.Abp;
+using Volo.Abp.Domain.Entities.Auditing;
 using Xunit;
 
 namespace InventoryTrackingAutomation.Entities.Inventory;
@@ -41,5 +43,22 @@ public class InventoryTransaction_Tests
         transaction.ProductId.ShouldBe(productId);
         transaction.Quantity.ShouldBe(50);
         transaction.RelatedMovementRequestId.ShouldBe(movementId);
+    }
+
+    [Fact]
+    public void Should_Use_Creation_Audit_Only()
+    {
+        // ARRANGE
+        var transaction = new InventoryTransaction(Guid.NewGuid());
+
+        // ACT
+        var transactionType = transaction.GetType();
+
+        // ASSERT
+        // islevi: Ledger kaydinin sadece olusturma audit bilgisi tasidigini dogrular.
+        // sistemdeki gorevi: InventoryTransaction'in yanlislikla tekrar FullAudited/SoftDelete yapilmasini engeller.
+        typeof(CreationAuditedEntity<Guid>).IsAssignableFrom(transactionType).ShouldBeTrue();
+        typeof(FullAuditedEntity<Guid>).IsAssignableFrom(transactionType).ShouldBeFalse();
+        typeof(ISoftDelete).IsAssignableFrom(transactionType).ShouldBeFalse();
     }
 }

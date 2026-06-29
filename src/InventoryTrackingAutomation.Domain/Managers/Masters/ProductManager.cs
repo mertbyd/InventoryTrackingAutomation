@@ -1,10 +1,12 @@
 using AutoMapper;
 using System.Threading.Tasks;
+using InventoryTrackingAutomation.Entities.Lookups;
 using InventoryTrackingAutomation.Entities.Masters;
 using InventoryTrackingAutomation.Interface.Lookups;
 using InventoryTrackingAutomation.Interface.Masters;
 using InventoryTrackingAutomation.Models.Masters;
 using Volo.Abp.DependencyInjection;
+using Volo.Abp.Domain.Repositories;
 
 namespace InventoryTrackingAutomation.Managers.Masters;
 
@@ -16,6 +18,7 @@ namespace InventoryTrackingAutomation.Managers.Masters;
 public class ProductManager : BaseManager<Product>
 {
     private IProductCategoryRepository _categoryRepository => LazyGetRequiredService<IProductCategoryRepository>();  // CategoryId FK validasyonu için
+    private IRepository<UnitType, System.Guid> _unitTypeRepository => LazyGetRequiredService<IRepository<UnitType, System.Guid>>();
 
     /// <summary>
     /// ProductManager constructor'ı.
@@ -47,7 +50,8 @@ public class ProductManager : BaseManager<Product>
                 model.CategoryId.Value);
         }
 
-        await EnsureValidEnumAsync(model.BaseUnit, InventoryTrackingAutomation.Settings.InventoryTrackingAutomationSettings.Masters.AllowedUnitTypes);
+        // islevi: Enum yerine gelen UnitType lookup kaydinin DB'de var oldugunu dogrular.
+        await EnsureExistsInAsync(_unitTypeRepository, model.UnitTypeId);
 
         var entity = new Product(GuidGenerator.Create());
         _mapper.Map(model, entity);
@@ -75,10 +79,22 @@ public class ProductManager : BaseManager<Product>
                 model.CategoryId.Value);
         }
 
-        await EnsureValidEnumAsync(model.BaseUnit, InventoryTrackingAutomation.Settings.InventoryTrackingAutomationSettings.Masters.AllowedUnitTypes);
+        // islevi: Enum yerine gelen UnitType lookup kaydinin DB'de var oldugunu dogrular.
+        await EnsureExistsInAsync(_unitTypeRepository, model.UnitTypeId);
 
         _mapper.Map(model, existing);
         return existing;
+    }
+
+    /// <summary>
+    /// Urunu operasyon gecmisi bozulmadan pasife almak icin kullanilir.
+    /// </summary>
+    // islevi: Master veriyi silmeden kullanim disi birakir.
+    // sistemdeki gorevi: Product FK gecmisini koruyarak soft-delete kolonlarina olan ihtiyaci kaldirir.
+    public Task<Product> PassivateAsync(Product existing)
+    {
+        existing.IsActive = false;
+        return Task.FromResult(existing);
     }
 }
 

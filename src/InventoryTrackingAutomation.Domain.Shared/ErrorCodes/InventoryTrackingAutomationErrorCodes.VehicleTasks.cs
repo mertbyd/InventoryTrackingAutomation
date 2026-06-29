@@ -6,5 +6,6 @@ public static partial class InventoryTrackingAutomationErrorCodes
     {
         public const string NotFound = Prefix + ":VehicleTask.NotFound";
         public const string VehicleAlreadyAssigned = Prefix + ":VehicleTask.VehicleAlreadyAssigned";
+        public const string CannotDeleteWithLines = Prefix + ":VehicleTask.CannotDeleteWithLines";
     }
 }

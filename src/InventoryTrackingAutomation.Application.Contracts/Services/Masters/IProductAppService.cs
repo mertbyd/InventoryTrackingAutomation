@@ -31,6 +31,6 @@ public interface IProductAppService : IApplicationService
     /// <summary> Ürünü günceller. </summary>
     Task<ProductDto> UpdateAsync(Guid id, UpdateProductDto input);
 
-    /// <summary> Ürünü soft delete ile siler. </summary>
+    /// <summary> Urunu silmek yerine pasife alir. </summary>
     Task DeleteAsync(Guid id);
 }

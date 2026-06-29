@@ -99,7 +99,7 @@ public abstract class AutoMapperConfig_Tests<TStartupModule> : InventoryTracking
         {
             Code = "PRD-001",
             Name = "Test Ürün",
-            BaseUnit = UnitTypeEnum.Piece,
+            UnitTypeId = System.Guid.NewGuid(),
             IsActive = true
         };
 
@@ -108,7 +108,7 @@ public abstract class AutoMapperConfig_Tests<TStartupModule> : InventoryTracking
         Assert.Equal(entity.Id, dto.Id);
         Assert.Equal(entity.Code, dto.Code);
         Assert.Equal(entity.Name, dto.Name);
-        Assert.Equal(entity.BaseUnit, dto.BaseUnit);
+        Assert.Equal(entity.UnitTypeId, dto.UnitTypeId);
     }
 
     // ───────────────────────────────────────────────
@@ -210,3 +210,4 @@ public abstract class AutoMapperConfig_Tests<TStartupModule> : InventoryTracking
         _mapper.ConfigurationProvider.AssertConfigurationIsValid();
     }
 }
+

@@ -96,6 +96,8 @@ public class TaskLineManager : BaseManager<TaskLine>
     }
 
     /// Gorev kalemini silmek icin kullanilir. Tahsis varsa silme engellenir.
+    // islevi: Tahsis edilmemis taslak gorev kalemini fiziksel olarak kaldirir.
+    // sistemdeki gorevi: VehicleTaskLine baglantisi olusan operasyonel satirlarin silinmesini engelleyerek sureci korur.
     public async Task DeleteAsync(Guid lineId)
     {
         var line = await EnsureExistsAsync(lineId);
