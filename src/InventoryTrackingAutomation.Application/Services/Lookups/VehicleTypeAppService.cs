@@ -10,6 +10,8 @@ using Volo.Abp.DependencyInjection;
 
 namespace InventoryTrackingAutomation.Application.Services.Lookups;
 
+// islevi: VehicleType lookup use-case'lerini koordine eder.
+// sistemdeki gorevi: Arac tipi referans verisi icin validation, manager ve repository akisini base sinif uzerinden yurutur.
 public class VehicleTypeAppService : LookupCrudAppService<VehicleType, VehicleTypeDto, CreateVehicleTypeDto, UpdateVehicleTypeDto, CreateVehicleTypeModel, UpdateVehicleTypeModel>, IVehicleTypeAppService
 {
     private VehicleTypeManager _manager => LazyGetRequiredService<VehicleTypeManager>();
