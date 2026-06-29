@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using AutoMapper;
@@ -10,6 +10,8 @@ using Volo.Abp.Domain.Repositories;
 
 namespace InventoryTrackingAutomation.Application.Services.Lookups;
 
+// islevi: Tum lookup (referans) tablolari icin ortak CRUD operasyonlarini saglar.
+// sistemdeki gorevi: AppService katmanindaki kod tekrarini onleyerek, UnitType, VehicleType gibi lookup entity'lerinin standart CRUD akisini tek merkezden yonetir.
 public abstract class LookupCrudAppService<TEntity, TDto, TCreateDto, TUpdateDto, TCreateModel, TUpdateModel> 
     : InventoryTrackingAutomationAppService
     where TEntity : class, IEntity<Guid>
