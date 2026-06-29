@@ -1,7 +1,7 @@
 using System;
 using InventoryTrackingAutomation.Enums.Tasks;
 using InventoryTrackingAutomation.Enums.Inventory;
-using InventoryTrackingAutomation.Enums;
+using System;
 
 namespace InventoryTrackingAutomation.Dtos.Masters;
 
@@ -22,9 +22,9 @@ public class UpdateProductDto
     /// </summary>
     public Guid? CategoryId { get; set; }       // Bağlı kategori Id.
     /// <summary>
-    /// Ölçü birimi. Örnek: UnitTypeEnum.Piece
+    /// Ölçü birimi. Örnek: (Lookup)
     /// </summary>
-    public UnitTypeEnum BaseUnit { get; set; }  // Ölçü birimi. Örnek: UnitTypeEnum.Piece
+    public Guid UnitTypeId { get; set; }  // Ölçü birimi. Örnek: (Lookup)
     /// <summary>
     /// Aktif mi. Örnek: true
     /// </summary>
@@ -34,3 +34,4 @@ public class UpdateProductDto
     /// </summary>
     public bool IsSerializable { get; set; }    // Seri numaralı mı. Örnek: false
 }
+

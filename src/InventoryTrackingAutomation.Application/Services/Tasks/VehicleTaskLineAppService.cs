@@ -93,7 +93,7 @@ public class VehicleTaskLineAppService : InventoryTrackingAutomationAppService, 
     }
 
     /// <summary>
-    /// Araç-görev kalemini siler.
+    /// Teslim/iade uzlasmasi almamis arac-gorev kalemini siler.
     /// </summary>
     [UnitOfWork]
     public async Task DeleteAsync(Guid vehicleTaskId, Guid lineId)

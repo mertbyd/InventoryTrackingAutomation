@@ -17,10 +17,10 @@ public class WarehouseMappingProfile : Profile
         CreateMap<CreateWarehouseDto, CreateWarehouseModel>();
         CreateMap<UpdateWarehouseDto, UpdateWarehouseModel>();
         CreateMap<CreateWarehouseModel, Warehouse>()
-            .IgnoreFullAuditedObjectProperties()
+            .IgnoreAuditedObjectProperties()
             .ForMember(dest => dest.Id, opt => opt.Ignore());
         CreateMap<UpdateWarehouseModel, Warehouse>()
-            .IgnoreFullAuditedObjectProperties()
+            .IgnoreAuditedObjectProperties()
             .ForMember(dest => dest.Id, opt => opt.Ignore());
     }
 }

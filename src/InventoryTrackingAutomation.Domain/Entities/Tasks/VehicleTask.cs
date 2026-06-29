@@ -7,7 +7,9 @@ namespace InventoryTrackingAutomation.Entities.Tasks;
 /// <summary>
 /// Bir aracin belirli bir envanter gorevine atanma gecmisini temsil eden aggregate.
 /// </summary>
-public class VehicleTask : FullAuditedEntity<Guid>
+// islevi: Aracin bir InventoryTask uzerindeki atama ve serbest birakma zamanini tasir.
+// sistemdeki gorevi: VehicleTaskLine tahsislerinin ust operasyonel baglamidir.
+public class VehicleTask : AuditedEntity<Guid>
 {
     public Guid VehicleId { get; set; } // Operasyona atanan arac baglamini tasir.
     public Guid TaskId { get; set; } // Aracin bagli oldugu operasyon isi baglamini tasir.

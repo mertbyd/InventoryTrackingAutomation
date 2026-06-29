@@ -1,3 +1,5 @@
+using System;
+
 namespace InventoryTrackingAutomation.Events.Cache;
 
 /// <summary>
@@ -16,8 +18,19 @@ public class CacheInvalidationEto
 /// </summary>
 public static class CacheKeys
 {
-    public static string ProductStockSummary(Guid productId)   => $"stock-summary:{productId}";
-    public static string VehicleInventories(Guid vehicleId)    => $"vehicle-inventories:{vehicleId}";
-    public static string TaskInventory(Guid taskId)            => $"task-inventory:{taskId}";
-    public static string TaskVehicles(Guid taskId)             => $"task-vehicles:{taskId}";
+    // Attribute cache ve invalidation ayni key formatini kullansin diye sablonlar merkezi tutulur.
+    public const string ProductStockSummaryTemplate = "stock-summary:{id}";
+    public const string VehicleInventoriesTemplate = "vehicle-inventories:{id}";
+    public const string TaskInventoryTemplate = "task-inventory:{id}";
+    public const string TaskVehiclesTemplate = "task-vehicles:{id}";
+
+    public static string ProductStockSummary(Guid productId) => Format(ProductStockSummaryTemplate, productId);
+    public static string VehicleInventories(Guid vehicleId) => Format(VehicleInventoriesTemplate, vehicleId);
+    public static string TaskInventory(Guid taskId) => Format(TaskInventoryTemplate, taskId);
+    public static string TaskVehicles(Guid taskId) => Format(TaskVehiclesTemplate, taskId);
+
+    private static string Format(string template, Guid id)
+    {
+        return template.Replace("{id}", id.ToString("D"), StringComparison.Ordinal);
+    }
 }

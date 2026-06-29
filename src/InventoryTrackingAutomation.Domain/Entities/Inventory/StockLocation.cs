@@ -10,7 +10,9 @@ namespace InventoryTrackingAutomation.Entities.Inventory;
 /// <summary>
 /// Bir urunun depo veya arac uzerindeki stok bakiyesini temsil eden aggregate.
 /// </summary>
-public class StockLocation : FullAuditedEntity<Guid>
+// islevi: Urunun depo veya arac uzerindeki anlik stok bakiyesini saklar.
+// sistemdeki gorevi: Stok hareketleri sonucunda guncellenen mevcut miktar kaydini silinmeden izlenebilir tutar.
+public class StockLocation : AuditedEntity<Guid>
 {
     public Guid ProductId { get; set; } // Stoku izlenen urun baglamini tasir.
     public StockLocationTypeEnum LocationType { get; set; } // Fiziksel lokasyonun depo mu arac mi oldugunu belirler.

@@ -1,8 +1,9 @@
 using System;
+using InventoryTrackingAutomation.Enums;
 using Volo.Abp.Application.Dtos;
 using InventoryTrackingAutomation.Enums.Tasks;
 using InventoryTrackingAutomation.Enums.Inventory;
-using InventoryTrackingAutomation.Enums;
+using System;
 
 namespace InventoryTrackingAutomation.Dtos.Movements;
 

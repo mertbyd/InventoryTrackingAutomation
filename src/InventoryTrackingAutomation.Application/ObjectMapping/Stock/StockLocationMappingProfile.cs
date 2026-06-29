@@ -17,10 +17,10 @@ public class StockLocationMappingProfile : Profile
         CreateMap<CreateStockLocationDto, CreateStockLocationModel>();
         CreateMap<UpdateStockLocationDto, UpdateStockLocationModel>();
         CreateMap<CreateStockLocationModel, StockLocation>()
-            .IgnoreFullAuditedObjectProperties()
+            .IgnoreAuditedObjectProperties()
             .ForMember(dest => dest.Id, opt => opt.Ignore());
         CreateMap<UpdateStockLocationModel, StockLocation>()
-            .IgnoreFullAuditedObjectProperties()
+            .IgnoreAuditedObjectProperties()
             .ForMember(dest => dest.Id, opt => opt.Ignore());
     }
 }

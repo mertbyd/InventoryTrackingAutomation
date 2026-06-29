@@ -10,7 +10,9 @@ namespace InventoryTrackingAutomation.Entities.Movements;
 /// <summary>
 /// Hareket talebinin onay surecindeki karar izini temsil eden aggregate.
 /// </summary>
-public class MovementApproval : FullAuditedEntity<Guid>
+// islevi: Onay veya red kararini tekil ve degistirilemez karar izi olarak saklar.
+// sistemdeki gorevi: MovementRequest workflow gecmisinde kim, hangi adimda, ne zaman karar verdi bilgisini korur.
+public class MovementApproval : CreationAuditedEntity<Guid>
 {
     public Guid MovementRequestId { get; set; } // Kararin bagli oldugu talep baglamini tasir.
     public Guid ApproverWorkerId { get; set; } // Karari verecek veya veren onayci calisan baglamini tasir.

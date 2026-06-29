@@ -103,13 +103,14 @@ public class WorkerAppService : InventoryTrackingAutomationAppService, IWorkerAp
         return _mapper.Map<Worker, WorkerDto>(saved);
     }
 
-    // Çalışanı soft delete ile siler.
+    // Calisani silmek yerine pasife alir; gorev, talep ve onay gecmisi korunur.
     [UnitOfWork]
 //işlevi: İlgili iş senaryosunu (use-case) yürütür.
 //sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task DeleteAsync(Guid id)
     {
-        await _manager.EnsureExistsAsync(id);
-        await _repository.SoftDeleteAsync(id);
+        var existing = await _manager.EnsureExistsAsync(id);
+        var passivated = await _manager.PassivateAsync(existing);
+        await _repository.UpdateAsync(passivated, autoSave: true);
     }
 }

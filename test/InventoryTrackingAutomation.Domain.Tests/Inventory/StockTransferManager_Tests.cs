@@ -37,7 +37,7 @@ public abstract class StockTransferManager_Tests<TStartupModule> : InventoryTrac
             {
                 Code = $"STK-PRD-{Guid.NewGuid():N}"[..30],
                 Name = "Stok transfer test urunu",
-                BaseUnit = UnitTypeEnum.Piece,
+                UnitTypeId = System.Guid.NewGuid(),
                 IsActive = true,
                 IsSerializable = false
             }, autoSave: true);
@@ -75,3 +75,4 @@ public abstract class StockTransferManager_Tests<TStartupModule> : InventoryTrac
         });
     }
 }
+

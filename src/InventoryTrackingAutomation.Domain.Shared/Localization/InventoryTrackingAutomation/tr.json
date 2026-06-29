@@ -37,6 +37,11 @@
     "Permission:Workflows": "Is akislari",
     "Permission:Workflows.Approve": "Is akisi onayla",
     "Permission:Workflows.Reject": "Is akisi reddet",
-    "Permission:Workflows.View": "Is akislarini goruntule"
+    "Permission:Workflows.View": "Is akislarini goruntule",
+    "InventoryTrackingAutomation:InventoryTransaction.ImmutableLedger": "Envanter hareketleri degistirilemez defter kaydidir; mevcut kayitlar guncellenemez veya silinemez.",
+    "InventoryTrackingAutomation:StockLocation.DeleteNotSupported": "Stok bakiyesi kayitlari silinemez; miktar degisikligi stok hareketi veya guncelleme akislariyla yapilmalidir.",
+    "InventoryTrackingAutomation:UnitType.AlreadyExists": "Ayni koda sahip bir olcu birimi zaten var.",
+    "InventoryTrackingAutomation:VehicleType.AlreadyExists": "Ayni koda sahip bir arac tipi zaten var.",
+    "InventoryTrackingAutomation:WorkerType.AlreadyExists": "Ayni koda sahip bir calisan tipi zaten var."
   }
 }

@@ -14,7 +14,7 @@ using Volo.Abp.DependencyInjection;
 namespace InventoryTrackingAutomation.Controllers.Stock;
 
 /// <summary>
-/// Envanter hareketleri CRUD endpoint'leri.
+/// Envanter hareketleri append-only ledger endpoint'leri.
 /// </summary>
 [Route("api/inventory-transactions")]
 [ApiExplorerSettings(GroupName = "Stock")]
@@ -161,36 +161,13 @@ public class InventoryTransactionController : InventoryTrackingAutomationControl
     }
 
     /// <summary>
-    /// Envanter hareketi kaydını günceller.
+    /// Envanter hareketi kaydini guncelleme istegini reddeder.
     /// </summary>
     /// <param name="id">Kaydın benzersiz Id'si.</param>
-    /// <param name="input">Güncel hareket bilgileri.</param>
+    /// <param name="input">Geriye donuk API uyumlulugu icin alinan, islenmeyen hareket bilgileri.</param>
     /// <remarks>
-    /// Request {
-    ///   ProductId                (Guid)                         → Ürün Id'si
-    ///   TransactionType          (InventoryTransactionTypeEnum) → İşlem tipi
-    ///   Quantity                 (int)                          → Miktar
-    ///   SourceLocationType       (StockLocationTypeEnum?)       → Kaynak lokasyon tipi
-    ///   SourceLocationId         (Guid?)                        → Kaynak depo veya araç Id'si
-    ///   TargetLocationType       (StockLocationTypeEnum?)       → Hedef lokasyon tipi
-    ///   TargetLocationId         (Guid?)                        → Hedef depo veya araç Id'si
-    ///   RelatedMovementRequestId (Guid?)                        → Bağlı talep Id'si
-    ///   OccurredAt               (DateTime)                     → Hareket zamanı
-    ///   Note                     (string?)                      → İşlem notu
-    /// }
-    /// Response {
-    ///   ProductId                 (Guid)                         → Ürün Id'si
-    ///   TransactionType           (InventoryTransactionTypeEnum) → İşlem tipi
-    ///   Quantity                  (int)                          → Miktar
-    ///   SourceLocationType        (StockLocationTypeEnum?)       → Kaynak lokasyon tipi
-    ///   SourceLocationId          (Guid?)                        → Kaynak depo veya araç Id'si
-    ///   TargetLocationType        (StockLocationTypeEnum?)       → Hedef lokasyon tipi
-    ///   TargetLocationId          (Guid?)                        → Hedef depo veya araç Id'si
-    ///   RelatedMovementRequestId  (Guid?)                        → Bağlı talep Id'si
-    ///   PerformedByUserId         (Guid?)                        → İşlemi başlatan kullanıcı Id'si
-    ///   OccurredAt                (DateTime)                     → Hareket zamanı
-    ///   Note                      (string?)                      → İşlem notu
-    /// }
+    /// InventoryTransaction append-only ledger kaydidir; mevcut kayitlar guncellenmez.
+    /// Bu endpoint geriye donuk API uyumlulugu icin durur ve InventoryTransaction.ImmutableLedger hatasi dondurur.
     /// </remarks>
     [HttpPut("{id}")]
     [Authorize(InventoryTrackingAutomationPermissions.Inventory.Manage)]
@@ -201,9 +178,13 @@ public class InventoryTransactionController : InventoryTrackingAutomationControl
     }
 
     /// <summary>
-    /// Envanter hareketi kaydını siler.
+    /// Envanter hareketi kaydini silme istegini reddeder.
     /// </summary>
     /// <param name="id">Kaydın benzersiz Id'si.</param>
+    /// <remarks>
+    /// InventoryTransaction append-only ledger kaydidir; mevcut kayitlar soft/hard delete ile silinmez.
+    /// Bu endpoint geriye donuk API uyumlulugu icin durur ve InventoryTransaction.ImmutableLedger hatasi dondurur.
+    /// </remarks>
     [HttpDelete("{id}")]
     [Authorize(InventoryTrackingAutomationPermissions.Inventory.Manage)]
     public async Task<Result> Delete(Guid id)

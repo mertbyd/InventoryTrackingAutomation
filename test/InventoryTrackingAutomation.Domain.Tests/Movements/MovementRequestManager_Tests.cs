@@ -74,14 +74,14 @@ public abstract class MovementRequestManager_Tests<TStartupModule> : InventoryTr
             {
                 UserId = currentUserId,
                 RegistrationNumber = $"MGR-WRK-{Guid.NewGuid():N}"[..30],
-                WorkerType = WorkerTypeEnum.WhiteCollar,
+                WorkerTypeId = System.Guid.NewGuid(),
                 IsActive = true
             }, autoSave: true);
 
             var vehicle = await _vehicleRepository.InsertAsync(new Vehicle(Guid.NewGuid())
             {
                 PlateNumber = $"34-MGR-{Guid.NewGuid():N}"[..16],
-                VehicleType = VehicleTypeEnum.Van,
+                VehicleTypeId = System.Guid.NewGuid(),
                 IsActive = true
             }, autoSave: true);
 
@@ -100,7 +100,7 @@ public abstract class MovementRequestManager_Tests<TStartupModule> : InventoryTr
             {
                 Code = $"PRD-MGR-{Guid.NewGuid():N}"[..30],
                 Name = "Movement Manager Product",
-                BaseUnit = UnitTypeEnum.Piece,
+                UnitTypeId = System.Guid.NewGuid(),
                 IsActive = true
             }, autoSave: true);
 
@@ -170,3 +170,4 @@ public abstract class MovementRequestManager_Tests<TStartupModule> : InventoryTr
         });
     }
 }
+

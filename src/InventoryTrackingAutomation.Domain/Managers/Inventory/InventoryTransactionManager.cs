@@ -41,14 +41,26 @@ public class InventoryTransactionManager : BaseManager<InventoryTransaction>
         return entity;
     }
 
-    /// Mevcut bir stok hareket kaydını güncellemek için kullanılır.
-    public async Task<InventoryTransaction> UpdateAsync(InventoryTransaction existing, UpdateInventoryTransactionModel model)
+    /// <summary>
+    /// Mevcut stok hareketini guncelleme istegini append-only ledger kuralina gore reddeder.
+    /// </summary>
+    // islevi: Ledger kaydinin sonradan degistirilmesini engeller.
+    // sistemdeki gorevi: Stok gecmisinin kanonik audit kaydi olarak guvenilir kalmasini saglar.
+    public async Task<InventoryTransaction> RejectUpdateAsync(System.Guid id)
     {
-        await ValidateReferencesAsync(model.ProductId, model.RelatedMovementRequestId);
-        ValidateQuantity(model.Quantity);
+        await EnsureExistsAsync(id);
+        throw CreateImmutableLedgerException("Update");
+    }
 
-        _mapper.Map(model, existing);
-        return existing;
+    /// <summary>
+    /// Stok hareketi silme istegini append-only ledger kuralina gore reddeder.
+    /// </summary>
+    // islevi: Ledger kaydinin soft/hard delete ile kaybolmasini engeller.
+    // sistemdeki gorevi: InventoryTransaction tablosunu operasyonel geriye donuk izleme defteri olarak korur.
+    public async Task DeleteAsync(System.Guid id)
+    {
+        await EnsureExistsAsync(id);
+        throw CreateImmutableLedgerException("Delete");
     }
 
     /// Hareket referanslarını doğrulamak için kullanılır.
@@ -67,6 +79,17 @@ public class InventoryTransactionManager : BaseManager<InventoryTransaction>
         {
             throw new BusinessException(InventoryTrackingAutomationErrorCodes.InventoryTransactions.InvalidTransfer);
         }
+    }
+
+    /// <summary>
+    /// Degistirilemez ledger ihlalleri icin ortak domain hatasini olusturur.
+    /// </summary>
+    // islevi: Update/Delete gibi mutasyon denemelerini tek hata kodu ile standartlastirir.
+    // sistemdeki gorevi: API, log ve UI tarafinda stok defteri mutasyon hatalarinin ayni kodla izlenmesini saglar.
+    private static BusinessException CreateImmutableLedgerException(string operation)
+    {
+        return new BusinessException(InventoryTrackingAutomationErrorCodes.InventoryTransactions.ImmutableLedger)
+            .WithData("Operation", operation);
     }
 
     /// Stok hareketini ledger'a kaydetmek için kullanılır.
