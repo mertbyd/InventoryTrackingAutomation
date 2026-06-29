@@ -59,8 +59,7 @@ public class DepartmentAppService : InventoryTrackingAutomationAppService, IDepa
     }
 
     // Yeni departman oluşturur — manager iş kurallarını uygular, repository persist eder.
-    [UnitOfWork]
-//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+    //işlevi: İlgili iş senaryosunu (use-case) yürütür.
 //sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<DepartmentDto> CreateAsync(CreateDepartmentDto input)
     {
@@ -72,8 +71,7 @@ public class DepartmentAppService : InventoryTrackingAutomationAppService, IDepa
     }
 
     // Birden fazla departmanı toplu oluşturur.
-    [UnitOfWork]
-//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+    //işlevi: İlgili iş senaryosunu (use-case) yürütür.
 //sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<List<DepartmentDto>> CreateManyAsync(List<CreateDepartmentDto> inputs)
     {
@@ -90,8 +88,7 @@ public class DepartmentAppService : InventoryTrackingAutomationAppService, IDepa
     }
 
     // Departmanı günceller — manager iş kurallarını uygular, repository persist eder.
-    [UnitOfWork]
-//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+    //işlevi: İlgili iş senaryosunu (use-case) yürütür.
 //sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<DepartmentDto> UpdateAsync(Guid id, UpdateDepartmentDto input)
     {
@@ -104,12 +101,14 @@ public class DepartmentAppService : InventoryTrackingAutomationAppService, IDepa
     }
 
     // Departmanı soft delete ile siler.
-    [UnitOfWork]
-//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+    //işlevi: İlgili iş senaryosunu (use-case) yürütür.
 //sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task DeleteAsync(Guid id)
     {
-        await _manager.EnsureExistsAsync(id);
-        await _repository.SoftDeleteAsync(id);
+        var existing = await _manager.EnsureExistsAsync(id);
+        // islevi: Lookup entity artik ISoftDelete tasimadigi icin soft-delete yerine fiziksel delete kullanilir.
+        // sistemdeki gorevi: Kullanilan departmanlarin FK ile korunmasini, bos referanslarin ise temizlenebilmesini saglar.
+        await _repository.DeleteAsync(existing, autoSave: true);
     }
 }
+

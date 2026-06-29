@@ -35,7 +35,7 @@ public class VehicleController : InventoryTrackingAutomationController
     /// <remarks>
     /// Response {
     ///   PlateNumber  (string)          → Plaka numarası
-    ///   VehicleType  (VehicleTypeEnum) → Araç tipi
+    ///   VehicleTypeId (Guid) → Arac tipi lookup Id'si
     ///   IsActive     (bool)            → Aktif mi
     /// }
     /// </remarks>
@@ -76,7 +76,7 @@ public class VehicleController : InventoryTrackingAutomationController
     /// <remarks>
     /// Response {
     ///   PlateNumber  (string)          → Plaka numarası
-    ///   VehicleType  (VehicleTypeEnum) → Araç tipi
+    ///   VehicleTypeId (Guid) → Arac tipi lookup Id'si
     ///   IsActive     (bool)            → Aktif mi
     /// }
     /// </remarks>
@@ -95,12 +95,12 @@ public class VehicleController : InventoryTrackingAutomationController
     /// <remarks>
     /// Request {
     ///   PlateNumber  (string)          → Plaka numarası
-    ///   VehicleType  (VehicleTypeEnum) → Araç tipi
+    ///   VehicleTypeId (Guid) → Arac tipi lookup Id'si
     ///   IsActive     (bool)            → Aktif mi
     /// }
     /// Response {
     ///   PlateNumber  (string)          → Plaka numarası
-    ///   VehicleType  (VehicleTypeEnum) → Araç tipi
+    ///   VehicleTypeId (Guid) → Arac tipi lookup Id'si
     ///   IsActive     (bool)            → Aktif mi
     /// }
     /// </remarks>
@@ -119,12 +119,12 @@ public class VehicleController : InventoryTrackingAutomationController
     /// <remarks>
     /// Request {
     ///   PlateNumber  (string)          → Plaka numarası
-    ///   VehicleType  (VehicleTypeEnum) → Araç tipi
+    ///   VehicleTypeId (Guid) → Arac tipi lookup Id'si
     ///   IsActive     (bool)            → Aktif mi
     /// }
     /// Response {
     ///   PlateNumber  (string)          → Plaka numarası
-    ///   VehicleType  (VehicleTypeEnum) → Araç tipi
+    ///   VehicleTypeId (Guid) → Arac tipi lookup Id'si
     ///   IsActive     (bool)            → Aktif mi
     /// }
     /// </remarks>
@@ -144,12 +144,12 @@ public class VehicleController : InventoryTrackingAutomationController
     /// <remarks>
     /// Request {
     ///   PlateNumber  (string)          → Plaka numarası
-    ///   VehicleType  (VehicleTypeEnum) → Araç tipi
+    ///   VehicleTypeId (Guid) → Arac tipi lookup Id'si
     ///   IsActive     (bool)            → Aktif mi
     /// }
     /// Response {
     ///   PlateNumber  (string)          → Plaka numarası
-    ///   VehicleType  (VehicleTypeEnum) → Araç tipi
+    ///   VehicleTypeId (Guid) → Arac tipi lookup Id'si
     ///   IsActive     (bool)            → Aktif mi
     /// }
     /// </remarks>
@@ -162,7 +162,7 @@ public class VehicleController : InventoryTrackingAutomationController
     }
 
     /// <summary>
-    /// Araç kaydını siler.
+    /// Arac kaydini silmek yerine pasife alir.
     /// </summary>
     /// <param name="id">Kaydın benzersiz Id'si.</param>
     [HttpDelete("{id}")]

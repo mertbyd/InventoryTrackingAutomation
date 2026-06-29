@@ -15,21 +15,21 @@ public class WorkerMappingProfile : Profile
     {
         CreateMap<Worker, WorkerDto>().ReverseMap();
         CreateMap<CreateWorkerDto, Worker>()
-            .IgnoreFullAuditedObjectProperties()
+            .IgnoreAuditedObjectProperties()
             .ForMember(dest => dest.Id, opt => opt.Ignore())
             .ReverseMap();
         CreateMap<UpdateWorkerDto, Worker>()
-            .IgnoreFullAuditedObjectProperties()
+            .IgnoreAuditedObjectProperties()
             .ForMember(dest => dest.Id, opt => opt.Ignore())
             .ReverseMap();
 
         CreateMap<CreateWorkerDto, CreateWorkerModel>();
         CreateMap<CreateWorkerModel, Worker>()
-            .IgnoreFullAuditedObjectProperties()
+            .IgnoreAuditedObjectProperties()
             .ForMember(dest => dest.Id, opt => opt.Ignore());
         CreateMap<UpdateWorkerDto, UpdateWorkerModel>();
         CreateMap<UpdateWorkerModel, Worker>()
-            .IgnoreFullAuditedObjectProperties()
+            .IgnoreAuditedObjectProperties()
             .ForMember(dest => dest.Id, opt => opt.Ignore());
     }
 }

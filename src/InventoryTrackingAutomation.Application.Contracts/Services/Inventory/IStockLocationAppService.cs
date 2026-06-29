@@ -17,5 +17,9 @@ public interface IStockLocationAppService : IApplicationService
     Task<StockLocationDto> CreateAsync(CreateStockLocationDto input);
     Task<List<StockLocationDto>> CreateManyAsync(List<CreateStockLocationDto> inputs);
     Task<StockLocationDto> UpdateAsync(Guid id, UpdateStockLocationDto input);
+
+    /// <summary>
+    /// Stok bakiyesi silinemez; silme istegini StockLocation.DeleteNotSupported hatasi ile reddeder.
+    /// </summary>
     Task DeleteAsync(Guid id);
 }

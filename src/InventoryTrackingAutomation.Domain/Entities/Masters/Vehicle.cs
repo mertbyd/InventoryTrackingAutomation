@@ -1,19 +1,19 @@
 using System;
-using InventoryTrackingAutomation.Enums.Tasks;
-using InventoryTrackingAutomation.Enums.Inventory;
+using InventoryTrackingAutomation.Entities;
 using InventoryTrackingAutomation.Enums;
 using Volo.Abp.Domain.Entities.Auditing;
-using Volo.Abp.MultiTenancy;
 
 namespace InventoryTrackingAutomation.Entities.Masters;
 
 /// <summary>
 /// Sahada stok tasiyabilen araci temsil eden master aggregate.
 /// </summary>
-public class Vehicle : FullAuditedEntity<Guid>
+// islevi: Aracin plaka, tip ve aktiflik bilgilerini tasir.
+// sistemdeki gorevi: VehicleTask atamalarinda stok tasima kapasitesi olan operasyonel varligi temsil eder.
+public class Vehicle : AuditedEntity<Guid>, IPassivable
 {
     public string PlateNumber { get; set; } = default!; // Aracin operasyonel plaka bilgisini tasir.
-    public VehicleTypeEnum VehicleType { get; set; } // Aracin saha operasyonundaki tipini belirler.
+    public Guid VehicleTypeId { get; set; } // Aracin saha operasyonundaki tipini (Lookup FK) belirler.
     public bool IsActive { get; set; } // Aracin gorevlere atanabilir olup olmadigini belirler.
 
     protected Vehicle() { }

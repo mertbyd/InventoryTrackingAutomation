@@ -31,6 +31,6 @@ public interface IVehicleAppService : IApplicationService
     /// <summary> Aracı günceller. </summary>
     Task<VehicleDto> UpdateAsync(Guid id, UpdateVehicleDto input);
 
-    /// <summary> Aracı soft delete ile siler. </summary>
+    /// <summary> Araci silmek yerine pasife alir. </summary>
     Task DeleteAsync(Guid id);
 }

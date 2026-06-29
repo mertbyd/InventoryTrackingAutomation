@@ -13,3 +13,4 @@ public class UpdateDepartmentDto
     /// </summary>
     public string Name { get; set; }       // Departman adı. Örnek: "Bilgi Teknolojileri"
 }
+

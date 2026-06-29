@@ -139,7 +139,7 @@ public class WarehouseController : InventoryTrackingAutomationController
     }
 
     /// <summary>
-    /// Depo kaydını siler.
+    /// Depo kaydini silmek yerine pasife alir.
     /// </summary>
     /// <param name="id">Kaydın benzersiz Id'si.</param>
     [HttpDelete("{id}")]
