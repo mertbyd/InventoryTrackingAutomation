@@ -1,14 +1,15 @@
 using System;
-using Volo.Abp.Application.Dtos;
+using InventoryTrackingAutomation.Entities;
 using Volo.Abp.Domain.Entities.Auditing;
-using Volo.Abp.MultiTenancy;
 
 namespace InventoryTrackingAutomation.Entities.Masters;
 
 /// <summary>
 /// Envanter saklanan depoyu temsil eden master aggregate.
 /// </summary>
-public class Warehouse : FullAuditedEntity<Guid>
+// islevi: Depo kodu, adi, adresi, sorumlusu ve aktiflik bilgisini tasir.
+// sistemdeki gorevi: Stok cikis, hedef ve iade lokasyonu olarak kullanilan master veridir.
+public class Warehouse : AuditedEntity<Guid>, IPassivable
 {
     public string Code { get; set; } = default!; // Deponun kurumsal kodunu tasir.
     public string Name { get; set; } = default!; // Deponun operasyonlarda gorunen adini tasir.

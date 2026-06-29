@@ -27,6 +27,6 @@ public interface IWarehouseAppService : IApplicationService
     /// <summary> Lokasyonu günceller. </summary>
     Task<WarehouseDto> UpdateAsync(Guid id, UpdateWarehouseDto input);
 
-    /// <summary> Lokasyonu soft delete ile siler. </summary>
+    /// <summary> Depoyu silmek yerine pasife alir. </summary>
     Task DeleteAsync(Guid id);
 }

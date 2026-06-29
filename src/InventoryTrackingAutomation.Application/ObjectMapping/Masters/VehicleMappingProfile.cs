@@ -15,21 +15,21 @@ public class VehicleMappingProfile : Profile
     {
         CreateMap<Vehicle, VehicleDto>().ReverseMap();
         CreateMap<CreateVehicleDto, Vehicle>()
-            .IgnoreFullAuditedObjectProperties()
+            .IgnoreAuditedObjectProperties()
             .ForMember(dest => dest.Id, opt => opt.Ignore())
             .ReverseMap();
         CreateMap<UpdateVehicleDto, Vehicle>()
-            .IgnoreFullAuditedObjectProperties()
+            .IgnoreAuditedObjectProperties()
             .ForMember(dest => dest.Id, opt => opt.Ignore())
             .ReverseMap();
 
         CreateMap<CreateVehicleDto, CreateVehicleModel>();
         CreateMap<CreateVehicleModel, Vehicle>()
-            .IgnoreFullAuditedObjectProperties()
+            .IgnoreAuditedObjectProperties()
             .ForMember(dest => dest.Id, opt => opt.Ignore());
         CreateMap<UpdateVehicleDto, UpdateVehicleModel>();
         CreateMap<UpdateVehicleModel, Vehicle>()
-            .IgnoreFullAuditedObjectProperties()
+            .IgnoreAuditedObjectProperties()
             .ForMember(dest => dest.Id, opt => opt.Ignore());
     }
 }

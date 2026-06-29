@@ -14,7 +14,8 @@ public class UpdateVehicleDtoValidator : AbstractValidator<UpdateVehicleDto>
             .NotEmpty()
             .MaximumLength(20);
 
-        RuleFor(x => x.VehicleType)
-            .IsInEnum();
+        // islevi: VehicleType artik lookup FK oldugu icin bos Guid gonderilmesini engeller.
+        RuleFor(x => x.VehicleTypeId)
+            .NotEmpty();
     }
 }

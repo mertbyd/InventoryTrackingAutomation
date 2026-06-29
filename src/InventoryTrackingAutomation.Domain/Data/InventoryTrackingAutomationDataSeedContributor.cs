@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using InventoryTrackingAutomation.Entities.Lookups;
 using InventoryTrackingAutomation.Entities.Masters;
 using InventoryTrackingAutomation.Enums.Tasks;
 using InventoryTrackingAutomation.Enums.Inventory;
@@ -25,8 +26,20 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
     private const string RolePermissionProviderName = "R";
 
 
+    private VehicleType vanType;
+    private VehicleType truckType;
+    private VehicleType carType;
+    private UnitType pieceType;
+    private UnitType kgType;
+    private WorkerType whiteCollarType;
+    private WorkerType blueCollarType;
+    private WorkerType subcontractorType;
+
     private readonly IRepository<InventoryTrackingAutomation.Entities.Lookups.Department, Guid> _departmentRepository;
     private readonly IRepository<InventoryTrackingAutomation.Entities.Lookups.ProductCategory, Guid> _productCategoryRepository;
+    private readonly InventoryTrackingAutomation.Interface.Lookups.IVehicleTypeRepository _vehicleTypeRepository;
+    private readonly InventoryTrackingAutomation.Interface.Lookups.IWorkerTypeRepository _workerTypeRepository;
+    private readonly InventoryTrackingAutomation.Interface.Lookups.IUnitTypeRepository _unitTypeRepository;
     private readonly IRepository<Product, Guid> _productRepository;
     private readonly IRepository<Warehouse, Guid> _warehouseRepository;
     private readonly IRepository<Worker, Guid> _workerRepository;
@@ -47,6 +60,9 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
     public InventoryTrackingAutomationDataSeedContributor(
         IRepository<InventoryTrackingAutomation.Entities.Lookups.Department, Guid> departmentRepository,
         IRepository<InventoryTrackingAutomation.Entities.Lookups.ProductCategory, Guid> productCategoryRepository,
+        InventoryTrackingAutomation.Interface.Lookups.IVehicleTypeRepository vehicleTypeRepository,
+        InventoryTrackingAutomation.Interface.Lookups.IWorkerTypeRepository workerTypeRepository,
+        InventoryTrackingAutomation.Interface.Lookups.IUnitTypeRepository unitTypeRepository,
         IRepository<Product, Guid> productRepository,
         IRepository<Warehouse, Guid> warehouseRepository,
         IRepository<Worker, Guid> workerRepository,
@@ -66,6 +82,9 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
     {
         _departmentRepository = departmentRepository;
         _productCategoryRepository = productCategoryRepository;
+        _vehicleTypeRepository = vehicleTypeRepository;
+        _workerTypeRepository = workerTypeRepository;
+        _unitTypeRepository = unitTypeRepository;
         _productRepository = productRepository;
         _warehouseRepository = warehouseRepository;
         _workerRepository = workerRepository;
@@ -88,6 +107,26 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
     {
         // 0. Identity Roles & Permissions Seed'leme
         await SeedRolesAndPermissionsAsync();
+
+        // 1.5 Lookup verileri (VehicleType, WorkerType, UnitType)
+        vanType = await _vehicleTypeRepository.FirstOrDefaultAsync(x => x.Code == "VAN");
+        if (vanType == null) { vanType = await _vehicleTypeRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Lookups.VehicleType(_guidGenerator.Create(), "VAN", "Panelvan"), autoSave: true); }
+        truckType = await _vehicleTypeRepository.FirstOrDefaultAsync(x => x.Code == "TRUCK");
+        if (truckType == null) { truckType = await _vehicleTypeRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Lookups.VehicleType(_guidGenerator.Create(), "TRUCK", "Kamyon"), autoSave: true); }
+        carType = await _vehicleTypeRepository.FirstOrDefaultAsync(x => x.Code == "CAR");
+        if (carType == null) { carType = await _vehicleTypeRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Lookups.VehicleType(_guidGenerator.Create(), "CAR", "Binek Araç"), autoSave: true); }
+
+        pieceType = await _unitTypeRepository.FirstOrDefaultAsync(x => x.Code == "PIECE");
+        if (pieceType == null) { pieceType = await _unitTypeRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Lookups.UnitType(_guidGenerator.Create(), "PIECE", "Adet"), autoSave: true); }
+        kgType = await _unitTypeRepository.FirstOrDefaultAsync(x => x.Code == "KG");
+        if (kgType == null) { kgType = await _unitTypeRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Lookups.UnitType(_guidGenerator.Create(), "KG", "Kilogram"), autoSave: true); }
+
+        whiteCollarType = await _workerTypeRepository.FirstOrDefaultAsync(x => x.Code == "WHITE_COLLAR");
+        if (whiteCollarType == null) { whiteCollarType = await _workerTypeRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Lookups.WorkerType(_guidGenerator.Create(), "WHITE_COLLAR", "Beyaz Yaka"), autoSave: true); }
+        blueCollarType = await _workerTypeRepository.FirstOrDefaultAsync(x => x.Code == "BLUE_COLLAR");
+        if (blueCollarType == null) { blueCollarType = await _workerTypeRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Lookups.WorkerType(_guidGenerator.Create(), "BLUE_COLLAR", "Mavi Yaka"), autoSave: true); }
+        subcontractorType = await _workerTypeRepository.FirstOrDefaultAsync(x => x.Code == "SUBCONTRACTOR");
+        if (subcontractorType == null) { subcontractorType = await _workerTypeRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Lookups.WorkerType(_guidGenerator.Create(), "SUBCONTRACTOR", "Taşeron"), autoSave: true); }
 
         // 1. UserId'si olmayan eski orphan worker kayıtlarını temizle
         await CleanupOrphanWorkersAsync();
@@ -174,14 +213,14 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
             await _vehicleRepository.InsertAsync(new Vehicle(_guidGenerator.Create())
             {
                 PlateNumber = "34 ABC 123",
-                VehicleType = VehicleTypeEnum.Van,
+                VehicleTypeId = vanType.Id,
                 IsActive = true
             }, autoSave: true);
 
             await _vehicleRepository.InsertAsync(new Vehicle(_guidGenerator.Create())
             {
                 PlateNumber = "34 ABC 456",
-                VehicleType = VehicleTypeEnum.Van,
+                VehicleTypeId = vanType.Id,
                 IsActive = true
             }, autoSave: true);
 
@@ -189,14 +228,14 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
             await _vehicleRepository.InsertAsync(new Vehicle(_guidGenerator.Create())
             {
                 PlateNumber = "34 DEF 789",
-                VehicleType = VehicleTypeEnum.Truck,
+                VehicleTypeId = truckType.Id,
                 IsActive = true
             }, autoSave: true);
 
             await _vehicleRepository.InsertAsync(new Vehicle(_guidGenerator.Create())
             {
                 PlateNumber = "34 GHI 101",
-                VehicleType = VehicleTypeEnum.Truck,
+                VehicleTypeId = truckType.Id,
                 IsActive = true
             }, autoSave: true);
 
@@ -204,7 +243,7 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
             await _vehicleRepository.InsertAsync(new Vehicle(_guidGenerator.Create())
             {
                 PlateNumber = "34 JKL 202",
-                VehicleType = VehicleTypeEnum.Car,
+                VehicleTypeId = carType.Id,
                 IsActive = true
             }, autoSave: true);
         }
@@ -217,7 +256,7 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
             {
                 Code = "PRD-01",
                 Name = "C30 Hazır Beton",
-                BaseUnit = UnitTypeEnum.Piece,
+                UnitTypeId = pieceType.Id,
                 CategoryId = hammaddeCatId != default ? hammaddeCatId : null,
                 IsActive = true
             }, autoSave: true);
@@ -226,7 +265,7 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
             {
                 Code = "PRD-02",
                 Name = "Nervürlü İnşaat Demiri Ø16",
-                BaseUnit = UnitTypeEnum.Kilogram,
+                UnitTypeId = kgType.Id,
                 CategoryId = hammaddeCatId != default ? hammaddeCatId : null,
                 IsActive = true
             }, autoSave: true);
@@ -235,7 +274,7 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
             {
                 Code = "PRD-03",
                 Name = "Saf Kum 0-4mm",
-                BaseUnit = UnitTypeEnum.Kilogram,
+                UnitTypeId = kgType.Id,
                 CategoryId = hammaddeCatId != default ? hammaddeCatId : null,
                 IsActive = true
             }, autoSave: true);
@@ -244,7 +283,7 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
             {
                 Code = "PRD-04",
                 Name = "Çakıl 5-15mm",
-                BaseUnit = UnitTypeEnum.Kilogram,
+                UnitTypeId = kgType.Id,
                 CategoryId = hammaddeCatId != default ? hammaddeCatId : null,
                 IsActive = true
             }, autoSave: true);
@@ -254,7 +293,7 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
             {
                 Code = "EQP-01",
                 Name = "Hilti Kırıcı Delici TE 3000",
-                BaseUnit = UnitTypeEnum.Piece,
+                UnitTypeId = pieceType.Id,
                 CategoryId = ekipmanCatId != default ? ekipmanCatId : null,
                 IsActive = true
             }, autoSave: true);
@@ -263,7 +302,7 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
             {
                 Code = "EQP-02",
                 Name = "Bosch Darbeli Matkap GSB 16",
-                BaseUnit = UnitTypeEnum.Piece,
+                UnitTypeId = pieceType.Id,
                 CategoryId = ekipmanCatId != default ? ekipmanCatId : null,
                 IsActive = true
             }, autoSave: true);
@@ -272,7 +311,7 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
             {
                 Code = "EQP-03",
                 Name = "İnşaat İskelesi (Standart Çerçeve)",
-                BaseUnit = UnitTypeEnum.Piece,
+                UnitTypeId = pieceType.Id,
                 CategoryId = ekipmanCatId != default ? ekipmanCatId : null,
                 IsActive = true
             }, autoSave: true);
@@ -281,7 +320,7 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
             {
                 Code = "EQP-04",
                 Name = "Güvenlik Kemeri",
-                BaseUnit = UnitTypeEnum.Piece,
+                UnitTypeId = pieceType.Id,
                 CategoryId = ekipmanCatId != default ? ekipmanCatId : null,
                 IsActive = true
             }, autoSave: true);
@@ -1020,17 +1059,17 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
         // Test kullanıcı ve worker verileri tanımla
         var usersToCreate = new[]
         {
-            new { Username = "admin", Email = "admin@inventorysystem.local", Password = "123456aA@", FullName = "Sistem Yöneticisi", Roles = new[] { InventoryTrackingAutomationRoleConstants.Admin }, RegNo = "ADM-001", WorkerType = WorkerTypeEnum.WhiteCollar, ManagerUsername = (string)null },
-            new { Username = "manager.istanbul", Email = "manager.istanbul@inventorysystem.local", Password = "123456aA@", FullName = "İstanbul Şube Müdürü", Roles = new[] { InventoryTrackingAutomationRoleConstants.Manager }, RegNo = "MGR-001", WorkerType = WorkerTypeEnum.WhiteCollar, ManagerUsername = "admin" },
-            new { Username = "supervisor.logistics", Email = "supervisor.logistics@inventorysystem.local", Password = "123456aA@", FullName = "Lojistik Operasyon Müdürü", Roles = new[] { InventoryTrackingAutomationRoleConstants.LogisticsSupervisor }, RegNo = "SUP-LOG-001", WorkerType = WorkerTypeEnum.WhiteCollar, ManagerUsername = "manager.istanbul" },
-            new { Username = "approver.warehouse", Email = "approver.warehouse@inventorysystem.local", Password = "123456aA@", FullName = "Depo Onay Sorumlusu", Roles = new[] { InventoryTrackingAutomationRoleConstants.WorkflowApprover }, RegNo = "APP-001", WorkerType = WorkerTypeEnum.WhiteCollar, ManagerUsername = "supervisor.logistics" },
-            new { Username = "worker.warehouse01", Email = "worker.warehouse01@inventorysystem.local", Password = "123456aA@", FullName = "Depo Operatörü - Merkezhan", Roles = new[] { InventoryTrackingAutomationRoleConstants.WarehouseWorker }, RegNo = "WRK-WH-001", WorkerType = WorkerTypeEnum.BlueCollar, ManagerUsername = "approver.warehouse" },
-            new { Username = "worker.warehouse02", Email = "worker.warehouse02@inventorysystem.local", Password = "123456aA@", FullName = "Depo Operatörü - Depo 2", Roles = new[] { InventoryTrackingAutomationRoleConstants.WarehouseWorker }, RegNo = "WRK-WH-002", WorkerType = WorkerTypeEnum.BlueCollar, ManagerUsername = "approver.warehouse" },
-            new { Username = "worker.field01", Email = "worker.field01@inventorysystem.local", Password = "123456aA@", FullName = "Saha Teknikeri - Kadıköy", Roles = new[] { InventoryTrackingAutomationRoleConstants.FieldWorker }, RegNo = "WRK-FLD-001", WorkerType = WorkerTypeEnum.BlueCollar, ManagerUsername = "supervisor.logistics" },
-            new { Username = "worker.field02", Email = "worker.field02@inventorysystem.local", Password = "123456aA@", FullName = "Saha Teknikeri - Taksim", Roles = new[] { InventoryTrackingAutomationRoleConstants.FieldWorker }, RegNo = "WRK-FLD-002", WorkerType = WorkerTypeEnum.BlueCollar, ManagerUsername = "supervisor.logistics" },
-            new { Username = "manager.vehicle", Email = "manager.vehicle@inventorysystem.local", Password = "123456aA@", FullName = "Araç Servis Müdürü", Roles = new[] { InventoryTrackingAutomationRoleConstants.VehicleManager }, RegNo = "MGR-VHC-001", WorkerType = WorkerTypeEnum.WhiteCollar, ManagerUsername = "manager.istanbul" },
-            new { Username = "driver.ali", Email = "driver.ali@inventorysystem.local", Password = "123456aA@", FullName = "Ali Yılmaz (Şoför)", Roles = new[] { InventoryTrackingAutomationRoleConstants.Driver }, RegNo = "DRV-001", WorkerType = WorkerTypeEnum.BlueCollar, ManagerUsername = "manager.vehicle" },
-            new { Username = "driver.veli", Email = "driver.veli@inventorysystem.local", Password = "123456aA@", FullName = "Veli Demir (Şoför)", Roles = new[] { InventoryTrackingAutomationRoleConstants.Driver }, RegNo = "DRV-002", WorkerType = WorkerTypeEnum.BlueCollar, ManagerUsername = "manager.vehicle" }
+            new { Username = "admin", Email = "admin@inventorysystem.local", Password = "123456aA@", FullName = "Sistem Yöneticisi", Roles = new[] { InventoryTrackingAutomationRoleConstants.Admin }, RegNo = "ADM-001", WorkerType = whiteCollarType, ManagerUsername = (string)null },
+            new { Username = "manager.istanbul", Email = "manager.istanbul@inventorysystem.local", Password = "123456aA@", FullName = "İstanbul Şube Müdürü", Roles = new[] { InventoryTrackingAutomationRoleConstants.Manager }, RegNo = "MGR-001", WorkerType = whiteCollarType, ManagerUsername = "admin" },
+            new { Username = "supervisor.logistics", Email = "supervisor.logistics@inventorysystem.local", Password = "123456aA@", FullName = "Lojistik Operasyon Müdürü", Roles = new[] { InventoryTrackingAutomationRoleConstants.LogisticsSupervisor }, RegNo = "SUP-LOG-001", WorkerType = whiteCollarType, ManagerUsername = "manager.istanbul" },
+            new { Username = "approver.warehouse", Email = "approver.warehouse@inventorysystem.local", Password = "123456aA@", FullName = "Depo Onay Sorumlusu", Roles = new[] { InventoryTrackingAutomationRoleConstants.WorkflowApprover }, RegNo = "APP-001", WorkerType = whiteCollarType, ManagerUsername = "supervisor.logistics" },
+            new { Username = "worker.warehouse01", Email = "worker.warehouse01@inventorysystem.local", Password = "123456aA@", FullName = "Depo Operatörü - Merkezhan", Roles = new[] { InventoryTrackingAutomationRoleConstants.WarehouseWorker }, RegNo = "WRK-WH-001", WorkerType = blueCollarType, ManagerUsername = "approver.warehouse" },
+            new { Username = "worker.warehouse02", Email = "worker.warehouse02@inventorysystem.local", Password = "123456aA@", FullName = "Depo Operatörü - Depo 2", Roles = new[] { InventoryTrackingAutomationRoleConstants.WarehouseWorker }, RegNo = "WRK-WH-002", WorkerType = blueCollarType, ManagerUsername = "approver.warehouse" },
+            new { Username = "worker.field01", Email = "worker.field01@inventorysystem.local", Password = "123456aA@", FullName = "Saha Teknikeri - Kadıköy", Roles = new[] { InventoryTrackingAutomationRoleConstants.FieldWorker }, RegNo = "WRK-FLD-001", WorkerType = blueCollarType, ManagerUsername = "supervisor.logistics" },
+            new { Username = "worker.field02", Email = "worker.field02@inventorysystem.local", Password = "123456aA@", FullName = "Saha Teknikeri - Taksim", Roles = new[] { InventoryTrackingAutomationRoleConstants.FieldWorker }, RegNo = "WRK-FLD-002", WorkerType = blueCollarType, ManagerUsername = "supervisor.logistics" },
+            new { Username = "manager.vehicle", Email = "manager.vehicle@inventorysystem.local", Password = "123456aA@", FullName = "Araç Servis Müdürü", Roles = new[] { InventoryTrackingAutomationRoleConstants.VehicleManager }, RegNo = "MGR-VHC-001", WorkerType = whiteCollarType, ManagerUsername = "manager.istanbul" },
+            new { Username = "driver.ali", Email = "driver.ali@inventorysystem.local", Password = "123456aA@", FullName = "Ali Yılmaz (Şoför)", Roles = new[] { InventoryTrackingAutomationRoleConstants.Driver }, RegNo = "DRV-001", WorkerType = blueCollarType, ManagerUsername = "manager.vehicle" },
+            new { Username = "driver.veli", Email = "driver.veli@inventorysystem.local", Password = "123456aA@", FullName = "Veli Demir (Şoför)", Roles = new[] { InventoryTrackingAutomationRoleConstants.Driver }, RegNo = "DRV-002", WorkerType = blueCollarType, ManagerUsername = "manager.vehicle" }
         };
 
         // Departmanlar ve Warehouseler hazırla
@@ -1084,9 +1123,9 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
             {
                 UserId = userId,
                 RegistrationNumber = userInfo.RegNo,
-                WorkerType = userInfo.WorkerType,
-                DepartmentId = userInfo.WorkerType == WorkerTypeEnum.WhiteCollar ? lojistikDep?.Id : sahaDepId,
-                DefaultWarehouseId = userInfo.WorkerType == WorkerTypeEnum.WhiteCollar ? warehouseWarehouse?.Id : null,
+                WorkerTypeId = userInfo.WorkerType.Id,
+                DepartmentId = userInfo.WorkerType.Id == whiteCollarType.Id ? lojistikDep?.Id : sahaDepId,
+                DefaultWarehouseId = userInfo.WorkerType.Id == whiteCollarType.Id ? warehouseWarehouse?.Id : null,
                 IsActive = true,
                 ManagerId = null // Adım 2'de set edelim
             };

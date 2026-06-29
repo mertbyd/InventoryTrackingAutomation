@@ -1,6 +1,6 @@
 using InventoryTrackingAutomation.Enums.Tasks;
 using InventoryTrackingAutomation.Enums.Inventory;
-using InventoryTrackingAutomation.Enums;
+using System;
 
 namespace InventoryTrackingAutomation.Models.Masters;
 
@@ -10,6 +10,7 @@ namespace InventoryTrackingAutomation.Models.Masters;
 public class CreateVehicleModel
 {
     public string PlateNumber { get; set; }           // Plaka numarası. Örnek: "34 ABC 123"
-    public VehicleTypeEnum VehicleType { get; set; } // Araç tipi. Örnek: VehicleTypeEnum.Van
+    public Guid VehicleTypeId { get; set; } // Araç tipi. Örnek: (Lookup)
     public bool IsActive { get; set; }               // Aktif mi. Örnek: true
 }
+

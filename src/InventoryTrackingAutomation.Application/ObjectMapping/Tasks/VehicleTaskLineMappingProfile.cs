@@ -21,7 +21,7 @@ public class VehicleTaskLineMappingProfile : Profile
         CreateMap<ReceiveVehicleTaskLineDto, ReceiveVehicleTaskLineModel>()
             .ForMember(dest => dest.VehicleTaskLineId, opt => opt.Ignore());
         CreateMap<CreateVehicleTaskLineModel, VehicleTaskLine>()
-            .IgnoreFullAuditedObjectProperties()
+            .IgnoreAuditedObjectProperties()
             .ForMember(dest => dest.Id, opt => opt.Ignore())
             .ForMember(dest => dest.ReceivedQuantity, opt => opt.Ignore())
             .ForMember(dest => dest.DamagedQuantity, opt => opt.Ignore())
@@ -29,7 +29,7 @@ public class VehicleTaskLineMappingProfile : Profile
             .ForMember(dest => dest.ConsumedQuantity, opt => opt.Ignore())
             .ForMember(dest => dest.ReceiveNote, opt => opt.Ignore());
         CreateMap<ReceiveVehicleTaskLineModel, VehicleTaskLine>()
-            .IgnoreFullAuditedObjectProperties()
+            .IgnoreAuditedObjectProperties()
             .ForMember(dest => dest.Id, opt => opt.Ignore())
             .ForMember(dest => dest.VehicleTaskId, opt => opt.Ignore())
             .ForMember(dest => dest.TaskLineId, opt => opt.Ignore())

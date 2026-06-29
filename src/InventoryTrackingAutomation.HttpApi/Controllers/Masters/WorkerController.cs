@@ -35,7 +35,7 @@ public class WorkerController : InventoryTrackingAutomationController
     /// Response {
     ///   UserId              (Guid)            → ABP Identity kullanıcı Id'si
     ///   RegistrationNumber  (string)          → Sicil numarası
-    ///   WorkerType          (WorkerTypeEnum)  → Çalışan tipi
+    ///   WorkerTypeId        (Guid)            → Calisan tipi lookup Id'si
     ///   DepartmentId        (Guid?)           → Bağlı departman Id'si
     ///   DefaultWarehouseId  (Guid?)           → Varsayılan lokasyon Id'si
     ///   ManagerId           (Guid?)           → Yönetici Worker Id'si
@@ -58,7 +58,7 @@ public class WorkerController : InventoryTrackingAutomationController
     /// Response {
     ///   UserId              (Guid)            → ABP Identity kullanıcı Id'si
     ///   RegistrationNumber  (string)          → Sicil numarası
-    ///   WorkerType          (WorkerTypeEnum)  → Çalışan tipi
+    ///   WorkerTypeId        (Guid)            → Calisan tipi lookup Id'si
     ///   DepartmentId        (Guid?)           → Bağlı departman Id'si
     ///   DefaultWarehouseId  (Guid?)           → Varsayılan lokasyon Id'si
     ///   ManagerId           (Guid?)           → Yönetici Worker Id'si
@@ -81,7 +81,7 @@ public class WorkerController : InventoryTrackingAutomationController
     /// Request {
     ///   UserId              (Guid)            → ABP Identity kullanıcı Id'si
     ///   RegistrationNumber  (string)          → Sicil numarası
-    ///   WorkerType          (WorkerTypeEnum)  → Çalışan tipi
+    ///   WorkerTypeId        (Guid)            → Calisan tipi lookup Id'si
     ///   DepartmentId        (Guid?)           → Bağlı departman Id'si
     ///   DefaultWarehouseId  (Guid?)           → Varsayılan lokasyon Id'si
     ///   ManagerId           (Guid?)           → Yönetici Worker Id'si
@@ -90,7 +90,7 @@ public class WorkerController : InventoryTrackingAutomationController
     /// Response {
     ///   UserId              (Guid)            → ABP Identity kullanıcı Id'si
     ///   RegistrationNumber  (string)          → Sicil numarası
-    ///   WorkerType          (WorkerTypeEnum)  → Çalışan tipi
+    ///   WorkerTypeId        (Guid)            → Calisan tipi lookup Id'si
     ///   DepartmentId        (Guid?)           → Bağlı departman Id'si
     ///   DefaultWarehouseId  (Guid?)           → Varsayılan lokasyon Id'si
     ///   ManagerId           (Guid?)           → Yönetici Worker Id'si
@@ -113,7 +113,7 @@ public class WorkerController : InventoryTrackingAutomationController
     /// Request {
     ///   UserId              (Guid)            → ABP Identity kullanıcı Id'si
     ///   RegistrationNumber  (string)          → Sicil numarası
-    ///   WorkerType          (WorkerTypeEnum)  → Çalışan tipi
+    ///   WorkerTypeId        (Guid)            → Calisan tipi lookup Id'si
     ///   DepartmentId        (Guid?)           → Bağlı departman Id'si
     ///   DefaultWarehouseId  (Guid?)           → Varsayılan lokasyon Id'si
     ///   ManagerId           (Guid?)           → Yönetici Worker Id'si
@@ -122,7 +122,7 @@ public class WorkerController : InventoryTrackingAutomationController
     /// Response {
     ///   UserId              (Guid)            → ABP Identity kullanıcı Id'si
     ///   RegistrationNumber  (string)          → Sicil numarası
-    ///   WorkerType          (WorkerTypeEnum)  → Çalışan tipi
+    ///   WorkerTypeId        (Guid)            → Calisan tipi lookup Id'si
     ///   DepartmentId        (Guid?)           → Bağlı departman Id'si
     ///   DefaultWarehouseId  (Guid?)           → Varsayılan lokasyon Id'si
     ///   ManagerId           (Guid?)           → Yönetici Worker Id'si
@@ -146,7 +146,7 @@ public class WorkerController : InventoryTrackingAutomationController
     /// Request {
     ///   UserId              (Guid)            → ABP Identity kullanıcı Id'si
     ///   RegistrationNumber  (string)          → Sicil numarası
-    ///   WorkerType          (WorkerTypeEnum)  → Çalışan tipi
+    ///   WorkerTypeId        (Guid)            → Calisan tipi lookup Id'si
     ///   DepartmentId        (Guid?)           → Bağlı departman Id'si
     ///   DefaultWarehouseId  (Guid?)           → Varsayılan lokasyon Id'si
     ///   ManagerId           (Guid?)           → Yönetici Worker Id'si
@@ -155,7 +155,7 @@ public class WorkerController : InventoryTrackingAutomationController
     /// Response {
     ///   UserId              (Guid)            → ABP Identity kullanıcı Id'si
     ///   RegistrationNumber  (string)          → Sicil numarası
-    ///   WorkerType          (WorkerTypeEnum)  → Çalışan tipi
+    ///   WorkerTypeId        (Guid)            → Calisan tipi lookup Id'si
     ///   DepartmentId        (Guid?)           → Bağlı departman Id'si
     ///   DefaultWarehouseId  (Guid?)           → Varsayılan lokasyon Id'si
     ///   ManagerId           (Guid?)           → Yönetici Worker Id'si
@@ -171,7 +171,7 @@ public class WorkerController : InventoryTrackingAutomationController
     }
 
     /// <summary>
-    /// Çalışan kaydını siler.
+    /// Calisan kaydini silmek yerine pasife alir.
     /// </summary>
     /// <param name="id">Kaydın benzersiz Id'si.</param>
     [HttpDelete("{id}")]

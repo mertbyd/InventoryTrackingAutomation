@@ -10,5 +10,6 @@ public static partial class InventoryTrackingAutomationErrorCodes
         public const string DuplicateLocation = Prefix + ":StockLocation.DuplicateLocation";
         public const string InvalidQuantity = Prefix + ":StockLocation.InvalidQuantity";
         public const string UnsupportedLocationType = Prefix + ":StockLocation.UnsupportedLocationType";
+        public const string DeleteNotSupported = Prefix + ":StockLocation.DeleteNotSupported";
     }
 }

@@ -17,7 +17,8 @@ public class CreateProductDtoValidator : AbstractValidator<CreateProductDto>
         RuleFor(x => x.Code)
             .MaximumLength(50);
 
-        RuleFor(x => x.BaseUnit)
-            .IsInEnum();
+        // islevi: UnitType artik lookup FK oldugu icin bos Guid gonderilmesini engeller.
+        RuleFor(x => x.UnitTypeId)
+            .NotEmpty();
     }
 }

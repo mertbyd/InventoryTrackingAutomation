@@ -16,3 +16,4 @@ public class DepartmentDto : EntityDto<Guid>
     /// </summary>
     public string Name { get; set; }       // Departman adı. Örnek: "Bilgi Teknolojileri"
 }
+

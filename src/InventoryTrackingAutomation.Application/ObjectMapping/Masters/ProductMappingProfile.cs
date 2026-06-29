@@ -16,25 +16,25 @@ public class ProductMappingProfile : Profile
         CreateMap<Product, ProductDto>().ReverseMap();
 
         CreateMap<CreateProductDto, Product>()
-            .IgnoreFullAuditedObjectProperties()
+            .IgnoreAuditedObjectProperties()
             .ForMember(dest => dest.Id, opt => opt.Ignore())
             .ReverseMap();
 
         CreateMap<UpdateProductDto, Product>()
-            .IgnoreFullAuditedObjectProperties()
+            .IgnoreAuditedObjectProperties()
             .ForMember(dest => dest.Id, opt => opt.Ignore())
             .ReverseMap();
 
         CreateMap<CreateProductDto, CreateProductModel>()
             .ForMember(dest => dest.MinimumStockLevel, opt => opt.Ignore());
         CreateMap<CreateProductModel, Product>()
-            .IgnoreFullAuditedObjectProperties()
+            .IgnoreAuditedObjectProperties()
             .ForMember(dest => dest.Id, opt => opt.Ignore());
 
         CreateMap<UpdateProductDto, UpdateProductModel>()
             .ForMember(dest => dest.MinimumStockLevel, opt => opt.Ignore());
         CreateMap<UpdateProductModel, Product>()
-            .IgnoreFullAuditedObjectProperties()
+            .IgnoreAuditedObjectProperties()
             .ForMember(dest => dest.Id, opt => opt.Ignore());
     }
 }

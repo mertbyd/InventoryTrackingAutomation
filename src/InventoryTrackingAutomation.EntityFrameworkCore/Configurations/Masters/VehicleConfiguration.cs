@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using InventoryTrackingAutomation.Entities.Masters;
+using InventoryTrackingAutomation.Entities.Lookups;
 using Volo.Abp.EntityFrameworkCore.Modeling;
 
 namespace InventoryTrackingAutomation.EntityFrameworkCore.Configurations.Masters;
@@ -15,5 +16,10 @@ public class VehicleConfiguration : IEntityTypeConfiguration<Vehicle>
         builder.Property(x => x.PlateNumber).IsRequired().HasMaxLength(20);
 
         builder.HasIndex(x => x.PlateNumber).IsUnique();
+
+        builder.HasOne<VehicleType>()
+            .WithMany()
+            .HasForeignKey(x => x.VehicleTypeId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

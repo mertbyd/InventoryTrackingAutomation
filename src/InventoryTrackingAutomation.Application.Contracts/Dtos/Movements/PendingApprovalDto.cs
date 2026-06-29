@@ -1,7 +1,8 @@
 using System;
+using InventoryTrackingAutomation.Enums;
 using InventoryTrackingAutomation.Enums.Tasks;
 using InventoryTrackingAutomation.Enums.Inventory;
-using InventoryTrackingAutomation.Enums;
+using System;
 
 namespace InventoryTrackingAutomation.Dtos.Movements;
 

@@ -10,7 +10,9 @@ namespace InventoryTrackingAutomation.Entities.Inventory;
 /// <summary>
 /// Depo ve arac stok hareketlerinin degistirilemez ledger kaydini temsil eden aggregate.
 /// </summary>
-public class InventoryTransaction : FullAuditedEntity<Guid>
+// islevi: Stok hareketlerini append-only defter kaydi olarak saklar.
+// sistemdeki gorevi: Stok degisimlerinin kaynak, hedef, miktar ve zaman bilgisini sonradan degistirilmeden izlenebilir tutar.
+public class InventoryTransaction : CreationAuditedEntity<Guid>
 {
     public Guid ProductId { get; set; } // Hareket eden urun baglamini tasir.
     public InventoryTransactionTypeEnum TransactionType { get; set; } // Hareketin yon ve sebep tipini belirler.

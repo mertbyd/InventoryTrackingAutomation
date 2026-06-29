@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using InventoryTrackingAutomation.Entities.Inventory;
+using InventoryTrackingAutomation.Entities.Lookups;
 using InventoryTrackingAutomation.Entities.Masters;
 using InventoryTrackingAutomation.Entities.Movements;
 using InventoryTrackingAutomation.Entities.Tasks;
@@ -42,6 +43,9 @@ public class MovementFlow_Integration_Tests : InventoryTrackingAutomationEntityF
     private readonly IRepository<Warehouse, Guid> _warehouseRepository;
     private readonly IRepository<Vehicle, Guid> _vehicleRepository;
     private readonly IRepository<Worker, Guid> _workerRepository;
+    private readonly IRepository<WorkerType, Guid> _workerTypeRepository;
+    private readonly IRepository<VehicleType, Guid> _vehicleTypeRepository;
+    private readonly IRepository<UnitType, Guid> _unitTypeRepository;
     private readonly IRepository<Product, Guid> _productRepository;
     private readonly IStockLocationRepository _stockLocationRepository;
     private readonly IInventoryTransactionRepository _inventoryTransactionRepository;
@@ -79,6 +83,9 @@ public class MovementFlow_Integration_Tests : InventoryTrackingAutomationEntityF
         _warehouseRepository = GetRequiredService<IRepository<Warehouse, Guid>>();
         _vehicleRepository = GetRequiredService<IRepository<Vehicle, Guid>>();
         _workerRepository = GetRequiredService<IRepository<Worker, Guid>>();
+        _workerTypeRepository = GetRequiredService<IRepository<WorkerType, Guid>>();
+        _vehicleTypeRepository = GetRequiredService<IRepository<VehicleType, Guid>>();
+        _unitTypeRepository = GetRequiredService<IRepository<UnitType, Guid>>();
         _productRepository = GetRequiredService<IRepository<Product, Guid>>();
         _stockLocationRepository = GetRequiredService<IStockLocationRepository>();
         _inventoryTransactionRepository = GetRequiredService<IInventoryTransactionRepository>();
@@ -555,10 +562,10 @@ public class MovementFlow_Integration_Tests : InventoryTrackingAutomationEntityF
 
     private async Task<MovementScenario> SeedScenarioAsync(string prefix, int sourceQuantity)
     {
-        var initiatorManager = await InsertActorAsync(prefix, "IM", WorkerTypeEnum.WhiteCollar);
-        var sourceWarehouseManager = await InsertActorAsync(prefix, "SM", WorkerTypeEnum.WhiteCollar);
-        var targetWarehouseManager = await InsertActorAsync(prefix, "TM", WorkerTypeEnum.WhiteCollar);
-        var requester = await InsertActorAsync(prefix, "RQ", WorkerTypeEnum.BlueCollar, initiatorManager.WorkerId);
+        var initiatorManager = await InsertActorAsync(prefix, "IM", "WHITE_COLLAR");
+        var sourceWarehouseManager = await InsertActorAsync(prefix, "SM", "WHITE_COLLAR");
+        var targetWarehouseManager = await InsertActorAsync(prefix, "TM", "WHITE_COLLAR");
+        var requester = await InsertActorAsync(prefix, "RQ", "BLUE_COLLAR", initiatorManager.WorkerId);
 
         var sourceWarehouse = await _warehouseRepository.InsertAsync(new Warehouse(Guid.NewGuid())
         {
@@ -576,10 +583,13 @@ public class MovementFlow_Integration_Tests : InventoryTrackingAutomationEntityF
             IsActive = true
         }, autoSave: true);
 
+        var vehicleType = await EnsureVehicleTypeAsync("VAN");
+        var unitType = await EnsureUnitTypeAsync("PIECE");
+
         var vehicle = await _vehicleRepository.InsertAsync(new Vehicle(Guid.NewGuid())
         {
             PlateNumber = $"{prefix}-{Guid.NewGuid():N}"[..12],
-            VehicleType = VehicleTypeEnum.Van,
+            VehicleTypeId = vehicleType.Id,
             IsActive = true
         }, autoSave: true);
 
@@ -587,7 +597,7 @@ public class MovementFlow_Integration_Tests : InventoryTrackingAutomationEntityF
         {
             Code = $"{prefix}-PRD-{Guid.NewGuid():N}"[..30],
             Name = $"{prefix} Urun",
-            BaseUnit = UnitTypeEnum.Piece,
+            UnitTypeId = unitType.Id,
             IsActive = true,
             IsSerializable = false
         }, autoSave: true);
@@ -619,7 +629,7 @@ public class MovementFlow_Integration_Tests : InventoryTrackingAutomationEntityF
     private async Task<TestActor> InsertActorAsync(
         string prefix,
         string roleCode,
-        WorkerTypeEnum workerType,
+        string workerTypeCode,
         Guid? managerWorkerId = null)
     {
         var suffix = Guid.NewGuid().ToString("N")[..8];
@@ -638,16 +648,58 @@ public class MovementFlow_Integration_Tests : InventoryTrackingAutomationEntityF
             createResult.Succeeded,
             string.Join("; ", createResult.Errors.Select(x => x.Description)));
 
+        var workerType = await EnsureWorkerTypeAsync(workerTypeCode);
+
         var worker = await _workerRepository.InsertAsync(new Worker(Guid.NewGuid())
         {
             UserId = userId,
             RegistrationNumber = BuildRegistrationNumber(safePrefix, safeRole, suffix),
-            WorkerType = workerType,
+            WorkerTypeId = workerType.Id,
             ManagerId = managerWorkerId,
             IsActive = true
         }, autoSave: true);
 
         return new TestActor(worker.Id, userId);
+    }
+
+    private async Task<WorkerType> EnsureWorkerTypeAsync(string code)
+    {
+        // islevi: Test aktoru icin gerekli lookup worker type kaydini hazirlar.
+        // sistemdeki gorevi: Enum yerine FK kullanan Worker modeline uygun test verisi uretir.
+        var existing = await _workerTypeRepository.FirstOrDefaultAsync(x => x.Code == code);
+        if (existing != null)
+        {
+            return existing;
+        }
+
+        var name = code == "WHITE_COLLAR" ? "Beyaz Yaka" : "Mavi Yaka";
+        return await _workerTypeRepository.InsertAsync(new WorkerType(Guid.NewGuid(), code, name), autoSave: true);
+    }
+
+    private async Task<VehicleType> EnsureVehicleTypeAsync(string code)
+    {
+        // islevi: Test araci icin gerekli lookup vehicle type kaydini hazirlar.
+        // sistemdeki gorevi: Enum yerine FK kullanan Vehicle modeline uygun test verisi uretir.
+        var existing = await _vehicleTypeRepository.FirstOrDefaultAsync(x => x.Code == code);
+        if (existing != null)
+        {
+            return existing;
+        }
+
+        return await _vehicleTypeRepository.InsertAsync(new VehicleType(Guid.NewGuid(), code, "Panelvan"), autoSave: true);
+    }
+
+    private async Task<UnitType> EnsureUnitTypeAsync(string code)
+    {
+        // islevi: Test urunu icin gerekli lookup unit type kaydini hazirlar.
+        // sistemdeki gorevi: Enum yerine FK kullanan Product modeline uygun test verisi uretir.
+        var existing = await _unitTypeRepository.FirstOrDefaultAsync(x => x.Code == code);
+        if (existing != null)
+        {
+            return existing;
+        }
+
+        return await _unitTypeRepository.InsertAsync(new UnitType(Guid.NewGuid(), code, "Adet"), autoSave: true);
     }
 
     private static string BuildRegistrationNumber(string safePrefix, string roleCode, string suffix)
@@ -1143,3 +1195,4 @@ public class MovementFlow_Integration_Tests : InventoryTrackingAutomationEntityF
 
     private sealed record TestActor(Guid WorkerId, Guid UserId);
 }
+

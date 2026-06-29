@@ -14,7 +14,8 @@ public class UpdateWorkerDtoValidator : AbstractValidator<UpdateWorkerDto>
             .NotEmpty()
             .MaximumLength(50);
 
-        RuleFor(x => x.WorkerType)
-            .IsInEnum();
+        // islevi: WorkerType artik lookup FK oldugu icin bos Guid gonderilmesini engeller.
+        RuleFor(x => x.WorkerTypeId)
+            .NotEmpty();
     }
 }

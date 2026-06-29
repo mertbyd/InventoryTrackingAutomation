@@ -37,6 +37,11 @@
     "Permission:Workflows": "Workflows",
     "Permission:Workflows.Approve": "Approve workflows",
     "Permission:Workflows.Reject": "Reject workflows",
-    "Permission:Workflows.View": "View workflows"
+    "Permission:Workflows.View": "View workflows",
+    "InventoryTrackingAutomation:InventoryTransaction.ImmutableLedger": "Inventory transactions are immutable ledger records; existing records cannot be updated or deleted.",
+    "InventoryTrackingAutomation:StockLocation.DeleteNotSupported": "Stock balance records cannot be deleted; quantity changes must be handled through stock movement or update flows.",
+    "InventoryTrackingAutomation:UnitType.AlreadyExists": "A unit type with the same code already exists.",
+    "InventoryTrackingAutomation:VehicleType.AlreadyExists": "A vehicle type with the same code already exists.",
+    "InventoryTrackingAutomation:WorkerType.AlreadyExists": "A worker type with the same code already exists."
   }
 }

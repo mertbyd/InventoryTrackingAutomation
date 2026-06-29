@@ -7,6 +7,7 @@ using InventoryTrackingAutomation.Interface;
 using Volo.Abp;
 using Volo.Abp.DependencyInjection;
 using Volo.Abp.Domain.Entities;
+using Volo.Abp.Domain.Repositories;
 
 namespace InventoryTrackingAutomation.Managers;
 
@@ -63,9 +64,34 @@ public abstract class BaseManager<TEntity> : InventoryTrackingAutomationDomainSe
         }
     }
 
+    /// Belirli bir ABP repository'de entity varligini dogrulamak icin kullanilir.
+    public async Task EnsureExistsInAsync<TOther>(
+        IRepository<TOther, Guid> otherRepository,
+        Guid id)
+        where TOther : class, IEntity<Guid>
+    {
+        var entity = await otherRepository.FindAsync(id);
+        if (entity == null)
+        {
+            throw new EntityNotFoundException(typeof(TOther), id);
+        }
+    }
+
     /// Opsiyonel entity varlığını doğrulamak için kullanılır.
     public async Task EnsureExistsInAsync<TOther>(
         IBaseRepository<TOther> otherRepository,
+        Guid? id)
+        where TOther : class, IEntity<Guid>
+    {
+        if (id.HasValue)
+        {
+            await EnsureExistsInAsync(otherRepository, id.Value);
+        }
+    }
+
+    /// Opsiyonel ABP repository entity varligini dogrulamak icin kullanilir.
+    public async Task EnsureExistsInAsync<TOther>(
+        IRepository<TOther, Guid> otherRepository,
         Guid? id)
         where TOther : class, IEntity<Guid>
     {

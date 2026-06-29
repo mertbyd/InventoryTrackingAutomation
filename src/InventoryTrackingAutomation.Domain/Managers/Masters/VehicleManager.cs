@@ -1,9 +1,11 @@
 using AutoMapper;
 using System.Threading.Tasks;
+using InventoryTrackingAutomation.Entities.Lookups;
 using InventoryTrackingAutomation.Entities.Masters;
 using InventoryTrackingAutomation.Interface.Masters;
 using InventoryTrackingAutomation.Models.Masters;
 using Volo.Abp.DependencyInjection;
+using Volo.Abp.Domain.Repositories;
 
 namespace InventoryTrackingAutomation.Managers.Masters;
 
@@ -14,6 +16,8 @@ namespace InventoryTrackingAutomation.Managers.Masters;
 //sistemdeki görevi: Domain katmanındaki iş kurallarının merkezi yönetimini ve validasyonunu sağlar.
 public class VehicleManager : BaseManager<Vehicle>
 {
+    private IRepository<VehicleType, System.Guid> _vehicleTypeRepository => LazyGetRequiredService<IRepository<VehicleType, System.Guid>>();
+
     /// <summary>
     /// VehicleManager constructor'ı.
     /// </summary>
@@ -37,7 +41,8 @@ public class VehicleManager : BaseManager<Vehicle>
                 x => x.PlateNumber == model.PlateNumber);
         }
 
-        await EnsureValidEnumAsync(model.VehicleType, InventoryTrackingAutomation.Settings.InventoryTrackingAutomationSettings.Masters.AllowedVehicleTypes);
+        // islevi: Enum yerine gelen VehicleType lookup kaydinin DB'de var oldugunu dogrular.
+        await EnsureExistsInAsync(_vehicleTypeRepository, model.VehicleTypeId);
 
         var entity = new Vehicle(GuidGenerator.Create());
         _mapper.Map(model, entity);
@@ -58,10 +63,22 @@ public class VehicleManager : BaseManager<Vehicle>
                 existing.Id);
         }
 
-        await EnsureValidEnumAsync(model.VehicleType, InventoryTrackingAutomation.Settings.InventoryTrackingAutomationSettings.Masters.AllowedVehicleTypes);
+        // islevi: Enum yerine gelen VehicleType lookup kaydinin DB'de var oldugunu dogrular.
+        await EnsureExistsInAsync(_vehicleTypeRepository, model.VehicleTypeId);
 
         _mapper.Map(model, existing);
         return existing;
+    }
+
+    /// <summary>
+    /// Araci operasyon gecmisi bozulmadan pasife almak icin kullanilir.
+    /// </summary>
+    // islevi: Master araci silmeden gorev atamalarinda kullanima kapatir.
+    // sistemdeki gorevi: VehicleTask ve stok gecmisini koruyarak soft-delete kolonlarina olan ihtiyaci kaldirir.
+    public Task<Vehicle> PassivateAsync(Vehicle existing)
+    {
+        existing.IsActive = false;
+        return Task.FromResult(existing);
     }
 }
 

@@ -26,11 +26,11 @@ public class InventoryTrackingAutomationSettingDefinitionProvider : SettingDefin
         context.Add(
             new SettingDefinition(
                 InventoryTrackingAutomationSettings.Products.DefaultUnitType,
-                ((int)UnitTypeEnum.Piece).ToString()
+                "PIECE"
             ),
             new SettingDefinition(
                 InventoryTrackingAutomationSettings.Products.AllowedUnitTypes,
-                $"{(int)UnitTypeEnum.Piece},{(int)UnitTypeEnum.Box},{(int)UnitTypeEnum.Kilogram},{(int)UnitTypeEnum.Meter},{(int)UnitTypeEnum.Liter}"
+                "PIECE,BOX,KG,METER,LITER"
             )
         );
 
@@ -38,19 +38,19 @@ public class InventoryTrackingAutomationSettingDefinitionProvider : SettingDefin
         context.Add(
             new SettingDefinition(
                 InventoryTrackingAutomationSettings.Vehicles.DefaultVehicleType,
-                ((int)VehicleTypeEnum.Truck).ToString()
+                "TRUCK"
             ),
             new SettingDefinition(
                 InventoryTrackingAutomationSettings.Vehicles.AllowedVehicleTypes,
-                $"{(int)VehicleTypeEnum.Truck},{(int)VehicleTypeEnum.Van},{(int)VehicleTypeEnum.Car}"
+                "TRUCK,VAN,CAR"
             ),
             new SettingDefinition(
                 InventoryTrackingAutomationSettings.Workers.DefaultWorkerType,
-                ((int)WorkerTypeEnum.BlueCollar).ToString()
+                "BLUE_COLLAR"
             ),
             new SettingDefinition(
                 InventoryTrackingAutomationSettings.Workers.AllowedWorkerTypes,
-                $"{(int)WorkerTypeEnum.WhiteCollar},{(int)WorkerTypeEnum.BlueCollar},{(int)WorkerTypeEnum.Subcontractor}"
+                "WHITE_COLLAR,BLUE_COLLAR,SUBCONTRACTOR"
             )
         );
 

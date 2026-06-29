@@ -59,8 +59,7 @@ public class ProductCategoryAppService : InventoryTrackingAutomationAppService, 
     }
 
     // Yeni ürün kategorisi oluşturur — manager iş kurallarını uygular, repository persist eder.
-    [UnitOfWork]
-//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+    //işlevi: İlgili iş senaryosunu (use-case) yürütür.
 //sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<ProductCategoryDto> CreateAsync(CreateProductCategoryDto input)
     {
@@ -72,8 +71,7 @@ public class ProductCategoryAppService : InventoryTrackingAutomationAppService, 
     }
 
     // Birden fazla ürün kategorisini toplu oluşturur.
-    [UnitOfWork]
-//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+    //işlevi: İlgili iş senaryosunu (use-case) yürütür.
 //sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<List<ProductCategoryDto>> CreateManyAsync(List<CreateProductCategoryDto> inputs)
     {
@@ -90,8 +88,7 @@ public class ProductCategoryAppService : InventoryTrackingAutomationAppService, 
     }
 
     // Ürün kategorisini günceller — manager iş kurallarını uygular, repository persist eder.
-    [UnitOfWork]
-//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+    //işlevi: İlgili iş senaryosunu (use-case) yürütür.
 //sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<ProductCategoryDto> UpdateAsync(Guid id, UpdateProductCategoryDto input)
     {
@@ -104,12 +101,14 @@ public class ProductCategoryAppService : InventoryTrackingAutomationAppService, 
     }
 
     // Ürün kategorisini soft delete ile siler.
-    [UnitOfWork]
-//işlevi: İlgili iş senaryosunu (use-case) yürütür.
+    //işlevi: İlgili iş senaryosunu (use-case) yürütür.
 //sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task DeleteAsync(Guid id)
     {
-        await _manager.EnsureExistsAsync(id);
-        await _repository.SoftDeleteAsync(id);
+        var existing = await _manager.EnsureExistsAsync(id);
+        // islevi: Lookup entity artik ISoftDelete tasimadigi icin soft-delete yerine fiziksel delete kullanilir.
+        // sistemdeki gorevi: Kullanilan kategorilerin FK ile korunmasini, bos referanslarin ise temizlenebilmesini saglar.
+        await _repository.DeleteAsync(existing, autoSave: true);
     }
 }
+

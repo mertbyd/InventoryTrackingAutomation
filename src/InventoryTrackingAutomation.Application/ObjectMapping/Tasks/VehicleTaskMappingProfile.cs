@@ -19,10 +19,10 @@ public class VehicleTaskMappingProfile : Profile
         CreateMap<CreateVehicleTaskDto, CreateVehicleTaskModel>();
         CreateMap<UpdateVehicleTaskDto, UpdateVehicleTaskModel>();
         CreateMap<CreateVehicleTaskModel, VehicleTask>()
-            .IgnoreFullAuditedObjectProperties()
+            .IgnoreAuditedObjectProperties()
             .ForMember(dest => dest.Id, opt => opt.Ignore());
         CreateMap<UpdateVehicleTaskModel, VehicleTask>()
-            .IgnoreFullAuditedObjectProperties()
+            .IgnoreAuditedObjectProperties()
             .ForMember(dest => dest.Id, opt => opt.Ignore());
     }
 }

@@ -19,10 +19,10 @@ public class TaskLineMappingProfile : Profile
             .ForMember(dest => dest.TaskId, opt => opt.Ignore());
         CreateMap<UpdateTaskLineDto, UpdateTaskLineModel>();
         CreateMap<CreateTaskLineModel, TaskLine>()
-            .IgnoreFullAuditedObjectProperties()
+            .IgnoreAuditedObjectProperties()
             .ForMember(dest => dest.Id, opt => opt.Ignore());
         CreateMap<UpdateTaskLineModel, TaskLine>()
-            .IgnoreFullAuditedObjectProperties()
+            .IgnoreAuditedObjectProperties()
             .ForMember(dest => dest.Id, opt => opt.Ignore())
             .ForMember(dest => dest.TaskId, opt => opt.Ignore());
     }

@@ -2,7 +2,6 @@ using AutoMapper;
 using InventoryTrackingAutomation.Dtos.Movements;
 using InventoryTrackingAutomation.Entities.Movements;
 using InventoryTrackingAutomation.Models.Movements;
-using Volo.Abp.AutoMapper;
 
 namespace InventoryTrackingAutomation.ObjectMapping.Movements;
 
