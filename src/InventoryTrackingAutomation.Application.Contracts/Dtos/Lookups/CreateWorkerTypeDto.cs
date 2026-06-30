@@ -1,5 +1,5 @@
 namespace InventoryTrackingAutomation.Dtos.Lookups;
 
-public class CreateWorkerTypeDto : LookupCommonDto
+public class CreateWorkerTypeDto : LookupCreateDto
 {
 }

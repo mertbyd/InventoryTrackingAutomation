@@ -1,5 +1,5 @@
 namespace InventoryTrackingAutomation.Dtos.Lookups;
 
-public class UnitTypeDto : LookupCommonResponseDto
+public class UnitTypeDto : LookupCommonDto
 {
 }
