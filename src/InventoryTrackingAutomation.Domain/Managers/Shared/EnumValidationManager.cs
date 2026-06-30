@@ -10,11 +10,11 @@ using Volo.Abp.DependencyInjection;
 namespace InventoryTrackingAutomation.Managers.Shared;
 
 /// <summary>
-/// Proje genelindeki Enum doðrulama iþlemlerini SettingProvider üzerinden
-/// dinamik ve merkezi olarak yöneten servis.
+/// Proje genelindeki Enum doï¿½rulama iï¿½lemlerini SettingProvider ï¿½zerinden
+/// dinamik ve merkezi olarak yï¿½neten servis.
 /// </summary>
-//iþlevi: EnumValidation etki alaný (domain) kurallarýný ve karmaþýk veri bütünlüðünü saðlar.
-//sistemdeki görevi: Domain katmanýndaki iþ kurallarýnýn merkezi yönetimini ve validasyonunu saðlar.
+//iï¿½levi: EnumValidation etki alanï¿½ (domain) kurallarï¿½nï¿½ ve karmaï¿½ï¿½k veri bï¿½tï¿½nlï¿½ï¿½ï¿½nï¿½ saï¿½lar.
+//sistemdeki gï¿½revi: Domain katmanï¿½ndaki iï¿½ kurallarï¿½nï¿½n merkezi yï¿½netimini ve validasyonunu saï¿½lar.
 public class EnumValidationManager : InventoryTrackingAutomationDomainService
 {
     public EnumValidationManager(IAbpLazyServiceProvider abpLazyServiceProvider)
@@ -27,18 +27,18 @@ public class EnumValidationManager : InventoryTrackingAutomationDomainService
 
 
     /// <summary>
-    /// Verilen Enum deðerinin belirtilen ayar adýndaki izin verilen deðerler
-    /// listesinde olup olmadýðýný kontrol eder.
+    /// Verilen Enum deï¿½erinin belirtilen ayar adï¿½ndaki izin verilen deï¿½erler
+    /// listesinde olup olmadï¿½ï¿½ï¿½nï¿½ kontrol eder.
     /// </summary>
     /// <typeparam name="TEnum">Enum tipi</typeparam>
-    /// <param name="enumValue">Kontrol edilecek Enum deðeri</param>
-    /// <param name="settingName">Ýzin verilen deðerlerin tutulduðu Setting adý (Örn: InventoryTrackingAutomationSettings.Workflows.AllowedStates)</param>
+    /// <param name="enumValue">Kontrol edilecek Enum deï¿½eri</param>
+    /// <param name="settingName">ï¿½zin verilen deï¿½erlerin tutulduï¿½u Setting adï¿½ (ï¿½rn: InventoryTrackingAutomationSettings.Workflows.AllowedStates)</param>
     public async Task ValidateAllowedEnumAsync<TEnum>(TEnum enumValue, string settingName) where TEnum : struct, Enum
     {
         var allowedValuesStr = await _settingProvider.GetOrNullAsync(settingName);
         if (string.IsNullOrWhiteSpace(allowedValuesStr))
         {
-            throw new BusinessException(InventoryTrackingAutomationErrorCodes.General.InvalidOperation)
+            throw new BusinessException(GeneralExceptionCodes.InvalidOperation)
                 .WithData("Message", $"Missing setting configuration for '{settingName}'");
         }
 
@@ -53,7 +53,7 @@ public class EnumValidationManager : InventoryTrackingAutomationDomainService
 
         if (!allowedInts.Contains(intValue))
         {
-            throw new BusinessException(InventoryTrackingAutomationErrorCodes.General.InvalidEnumValue)
+            throw new BusinessException(GeneralExceptionCodes.InvalidEnumValue)
                 .WithData("EnumType", typeof(TEnum).Name)
                 .WithData("InvalidValue", enumValue.ToString())
                 .WithData("AllowedValues", allowedValuesStr);

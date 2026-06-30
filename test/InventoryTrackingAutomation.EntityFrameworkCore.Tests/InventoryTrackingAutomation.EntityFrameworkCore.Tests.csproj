@@ -23,4 +23,9 @@
     <PackageReference Include="Volo.Abp.PermissionManagement.EntityFrameworkCore" Version="10.3.0" />
   </ItemGroup>
 
+<ItemGroup>
+    <Using Include="InventoryTrackingAutomation.ExceptionCodes" />
+  </ItemGroup>
+
 </Project>
+

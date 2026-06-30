@@ -11,11 +11,11 @@ public class CreateWorkflowDefinitionDtoValidator : AbstractValidator<CreateWork
     public CreateWorkflowDefinitionDtoValidator()
     {
         RuleFor(x => x.Name)
-            .NotEmpty().WithMessage("İş akışı adı boş olamaz.")
-            .MaximumLength(100).WithMessage("İş akışı adı en fazla 100 karakter olabilir.");
+            .NotEmpty().WithMessage(WorkflowExceptionCodes.ValidationExceptions.Definition.NameCannotEmpty)
+            .MaximumLength(100).WithMessage(WorkflowExceptionCodes.ValidationExceptions.Definition.NameMaxLength);
 
         RuleFor(x => x.Version)
-            .GreaterThan(0).WithMessage("Versiyon 0'dan büyük olmalıdır.");
+            .GreaterThan(0).WithMessage(WorkflowExceptionCodes.ValidationExceptions.Definition.VersionInvalid);
 
         RuleForEach(x => x.Steps).SetValidator(new CreateWorkflowStepDefinitionDtoValidator());
     }

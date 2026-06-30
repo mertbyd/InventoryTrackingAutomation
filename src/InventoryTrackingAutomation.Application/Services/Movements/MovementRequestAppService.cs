@@ -136,7 +136,7 @@ public class MovementRequestAppService : InventoryTrackingAutomationAppService, 
         var request = await _manager.EnsureExistsAsync(id);
         if (request.Status != MovementStatusEnum.Pending)
         {
-            throw new BusinessException(InventoryTrackingAutomationErrorCodes.MovementRequests.InvalidStateTransition)
+            throw new BusinessException(MovementRequestExceptionCodes.InvalidStateTransition)
                 .WithData("MovementRequestId", id)
                 .WithData("CurrentStatus", request.Status)
                 .WithData("AllowedStatus", MovementStatusEnum.Pending);

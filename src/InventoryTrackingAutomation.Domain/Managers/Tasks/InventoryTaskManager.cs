@@ -132,7 +132,7 @@ public class InventoryTaskManager : BaseManager<InventoryTask>
     {
         if (endDate.HasValue && endDate.Value < startDate)
         {
-            throw new BusinessException(InventoryTrackingAutomationErrorCodes.General.InvalidOperation);
+            throw new BusinessException(GeneralExceptionCodes.InvalidOperation);
         }
     }
 
@@ -147,7 +147,7 @@ public class InventoryTaskManager : BaseManager<InventoryTask>
     {
         if (sourceWarehouseId == Guid.Empty)
         {
-            throw new BusinessException(InventoryTrackingAutomationErrorCodes.Warehouses.NotFound)
+            throw new BusinessException(WarehouseExceptionCodes.NotFound)
                 .WithData("SourceWarehouseId", sourceWarehouseId);
         }
 
@@ -167,12 +167,12 @@ public class InventoryTaskManager : BaseManager<InventoryTask>
         {
             if (!targetWarehouseId.HasValue || targetWarehouseId.Value == Guid.Empty)
             {
-                throw new BusinessException(InventoryTrackingAutomationErrorCodes.MovementRequests.TargetRequired);
+                throw new BusinessException(MovementRequestExceptionCodes.TargetRequired);
             }
 
             if (targetWarehouseId.Value == sourceWarehouseId)
             {
-                throw new BusinessException(InventoryTrackingAutomationErrorCodes.InventoryTransactions.InvalidLocationPair)
+                throw new BusinessException(InventoryTransactionExceptionCodes.InvalidLocationPair)
                     .WithData("SourceWarehouseId", sourceWarehouseId)
                     .WithData("TargetWarehouseId", targetWarehouseId.Value);
             }
@@ -203,7 +203,7 @@ public class InventoryTaskManager : BaseManager<InventoryTask>
         };
 
         if (!allowed)
-            throw new BusinessException(InventoryTrackingAutomationErrorCodes.General.InvalidOperation)
+            throw new BusinessException(GeneralExceptionCodes.InvalidOperation)
                 .WithData("From", task.Status).WithData("To", target);
 
         task.Status = target;

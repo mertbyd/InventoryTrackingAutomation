@@ -50,7 +50,7 @@ public class MovementApprovalAppService : InventoryTrackingAutomationAppService,
             // Red durumunda note zorunlu
             if (string.IsNullOrWhiteSpace(input.Note))
             {
-                throw new BusinessException(InventoryTrackingAutomationErrorCodes.MovementApprovals.RejectionNoteRequired);
+                throw new BusinessException(MovementApprovalExceptionCodes.RejectionNoteRequired);
             }
             approval = await _manager.RejectAsync(movementRequestId, CurrentUser.GetId(), input.Note);
         }

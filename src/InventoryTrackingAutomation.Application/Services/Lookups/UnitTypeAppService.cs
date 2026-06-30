@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 using InventoryTrackingAutomation.Dtos.Lookups;
 using InventoryTrackingAutomation.Entities.Lookups;

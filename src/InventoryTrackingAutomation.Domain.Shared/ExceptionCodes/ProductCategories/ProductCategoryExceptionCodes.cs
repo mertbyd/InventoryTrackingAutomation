@@ -1,4 +1,4 @@
-namespace InventoryTrackingAutomation.ExceptionCodes.ProductCategories;
+namespace InventoryTrackingAutomation.ExceptionCodes;
 
 public static class ProductCategoryExceptionCodes
 {

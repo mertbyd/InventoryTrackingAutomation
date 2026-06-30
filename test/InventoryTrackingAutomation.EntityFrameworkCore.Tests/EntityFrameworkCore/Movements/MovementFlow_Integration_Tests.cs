@@ -327,7 +327,7 @@ public class MovementFlow_Integration_Tests : InventoryTrackingAutomationEntityF
                 task.Id,
                 request.Id);
 
-            Assert.Equal(InventoryTrackingAutomationErrorCodes.StockLocations.InsufficientStock, exception.Code);
+            Assert.Equal(StockLocationExceptionCodes.InsufficientStock, exception.Code);
             await AssertStockAsync(scenario.ProductId, StockLocationTypeEnum.Warehouse, scenario.SourceWarehouseId, 5);
 
             var vehicleStock = await _stockLocationRepository.FindAsync(x =>

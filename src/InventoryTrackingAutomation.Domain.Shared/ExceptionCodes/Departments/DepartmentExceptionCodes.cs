@@ -1,4 +1,4 @@
-namespace InventoryTrackingAutomation.ExceptionCodes.Departments;
+namespace InventoryTrackingAutomation.ExceptionCodes;
 
 public static class DepartmentExceptionCodes
 {

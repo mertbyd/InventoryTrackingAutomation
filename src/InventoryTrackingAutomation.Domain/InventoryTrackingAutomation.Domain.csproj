@@ -17,4 +17,9 @@
     <ProjectReference Include="..\InventoryTrackingAutomation.Domain.Shared\InventoryTrackingAutomation.Domain.Shared.csproj" />
   </ItemGroup>
 
+<ItemGroup>
+    <Using Include="InventoryTrackingAutomation.ExceptionCodes" />
+  </ItemGroup>
+
 </Project>
+

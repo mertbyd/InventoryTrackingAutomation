@@ -13,4 +13,9 @@
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.0" />
   </ItemGroup>
 
+<ItemGroup>
+    <Using Include="InventoryTrackingAutomation.ExceptionCodes" />
+  </ItemGroup>
+
 </Project>
+
