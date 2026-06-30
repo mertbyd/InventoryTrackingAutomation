@@ -83,7 +83,7 @@ public class TaskReturnRequestManager : InventoryTrackingAutomationDomainService
             var parentMovementId = await _movementRequestRepository.FindLatestMainMovementIdAsync(assignment.Id);
             if (!parentMovementId.HasValue)
             {
-                throw new BusinessException(InventoryTrackingAutomationErrorCodes.General.InvalidOperation)
+                throw new BusinessException(GeneralExceptionCodes.InvalidOperation)
                     .WithData("TaskId", taskId)
                     .WithData("VehicleTaskId", assignment.Id)
                     .WithData("Reason", "Cannot resolve parent movement request");
@@ -182,7 +182,7 @@ public class TaskReturnRequestManager : InventoryTrackingAutomationDomainService
             return lastTransaction.SourceLocationId.Value;
         }
 
-        throw new BusinessException(InventoryTrackingAutomationErrorCodes.General.InvalidOperation)
+        throw new BusinessException(GeneralExceptionCodes.InvalidOperation)
             .WithData("TaskId", taskId)
             .WithData("VehicleId", vehicleId)
             .WithData("Reason", "Cannot resolve return warehouse");

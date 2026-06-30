@@ -1,6 +1,7 @@
 using FluentValidation;
 using InventoryTrackingAutomation.Dtos.Movements;
 
+
 namespace InventoryTrackingAutomation.FluentValidation.Movements;
 
 /// <summary>
@@ -23,7 +24,7 @@ public class UpdateMovementRequestDtoValidator : AbstractValidator<UpdateMovemen
 
         RuleFor(x => x.VehicleTaskId)
             .NotEmpty()
-            .WithMessage("Arac-gorev atamasi zorunludur.");
+            .WithMessage(MovementRequestExceptionCodes.ValidationExceptions.VehicleTaskId.CannotEmpty);
 
     }
 }

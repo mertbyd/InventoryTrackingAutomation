@@ -4,6 +4,7 @@ using InventoryTrackingAutomation.Entities.Inventory;
 using InventoryTrackingAutomation.Entities.Masters;
 using InventoryTrackingAutomation.Enums;
 using InventoryTrackingAutomation.Enums.Inventory;
+using InventoryTrackingAutomation.ExceptionCodes;
 using InventoryTrackingAutomation.Interface.Inventory;
 using InventoryTrackingAutomation.Managers.Inventory;
 using InventoryTrackingAutomation.Models.Inventory;
@@ -71,7 +72,7 @@ public abstract class StockTransferManager_Tests<TStartupModule> : InventoryTrac
                 await _stockTransferManager.ExecuteAsync(transferModel);
             });
 
-            Assert.Equal(InventoryTrackingAutomationErrorCodes.StockLocations.InsufficientStock, exception.Code);
+            Assert.Equal(StockLocationExceptionCodes.InsufficientStock, exception.Code);
         });
     }
 }

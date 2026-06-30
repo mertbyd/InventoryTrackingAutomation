@@ -1,4 +1,4 @@
-﻿using FluentValidation;
+using FluentValidation;
 using InventoryTrackingAutomation.Dtos.Masters;
 
 namespace InventoryTrackingAutomation.FluentValidation.Masters;
@@ -8,13 +8,13 @@ public class CreateProductDtoValidator : AbstractValidator<CreateProductDto>
     public CreateProductDtoValidator()
     {
         RuleFor(x => x.Name)
-            .NotEmpty().WithMessage("Validation:Product:NameRequired")
-            .MaximumLength(200).WithMessage("Validation:Product:NameMaxLength");
+            .NotEmpty().WithMessage(ProductExceptionCodes.ValidationExceptions.Name.CannotEmpty)
+            .MaximumLength(200).WithMessage(ProductExceptionCodes.ValidationExceptions.Name.MaxLength);
 
         RuleFor(x => x.Code)
-            .MaximumLength(50).WithMessage("Validation:Product:CodeMaxLength");
+            .MaximumLength(50).WithMessage(ProductExceptionCodes.ValidationExceptions.Code.MaxLength);
 
         RuleFor(x => x.UnitTypeId)
-            .NotEmpty().WithMessage("Validation:Product:UnitTypeRequired");
+            .NotEmpty().WithMessage(ProductExceptionCodes.ValidationExceptions.UnitType.CannotEmpty);
     }
 }

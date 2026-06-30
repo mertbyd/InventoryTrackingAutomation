@@ -12,15 +12,15 @@ public class StartWorkflowDtoValidator : AbstractValidator<StartWorkflowDto>
     public StartWorkflowDtoValidator()
     {
         RuleFor(x => x.EntityType)
-            .NotEmpty().WithMessage("Entity türü boş olamaz.")
-            .MaximumLength(50).WithMessage("Entity türü en fazla 50 karakter olabilir.");
+            .NotEmpty().WithMessage(WorkflowExceptionCodes.ValidationExceptions.StartWorkflow.EntityTypeCannotEmpty)
+            .MaximumLength(50).WithMessage(WorkflowExceptionCodes.ValidationExceptions.StartWorkflow.EntityTypeMaxLength);
 
         RuleFor(x => x.EntityId)
-            .NotEmpty().WithMessage("Entity Id boş olamaz.")
-            .NotEqual(Guid.Empty).WithMessage("Geçersiz Entity Id.");
+            .NotEmpty().WithMessage(WorkflowExceptionCodes.ValidationExceptions.StartWorkflow.EntityIdCannotEmpty)
+            .NotEqual(Guid.Empty).WithMessage(WorkflowExceptionCodes.ValidationExceptions.StartWorkflow.EntityIdInvalid);
 
         RuleFor(x => x.WorkflowDefinitionId)
-            .NotEmpty().WithMessage("İş akışı tanım Id boş olamaz.")
-            .NotEqual(Guid.Empty).WithMessage("Geçersiz İş Akışı Tanım Id.");
+            .NotEmpty().WithMessage(WorkflowExceptionCodes.ValidationExceptions.StartWorkflow.DefinitionIdCannotEmpty)
+            .NotEqual(Guid.Empty).WithMessage(WorkflowExceptionCodes.ValidationExceptions.StartWorkflow.DefinitionIdInvalid);
     }
 }

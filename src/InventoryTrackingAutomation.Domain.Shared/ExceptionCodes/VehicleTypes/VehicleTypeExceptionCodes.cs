@@ -1,4 +1,4 @@
-namespace InventoryTrackingAutomation.ExceptionCodes.VehicleTypes;
+namespace InventoryTrackingAutomation.ExceptionCodes;
 
 public static class VehicleTypeExceptionCodes
 {
