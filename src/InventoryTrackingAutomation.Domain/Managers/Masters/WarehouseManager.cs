@@ -1,4 +1,3 @@
-using AutoMapper;
 using System.Threading.Tasks;
 using InventoryTrackingAutomation.Entities.Masters;
 using InventoryTrackingAutomation.Interface.Masters;
@@ -15,7 +14,6 @@ namespace InventoryTrackingAutomation.Managers.Masters;
 public class WarehouseManager : BaseManager<Warehouse>
 {
     private IWorkerRepository _workerRepository => LazyGetRequiredService<IWorkerRepository>();    // Depo sorumlusu FK kontrolu icin.
-    private IMapper _mapper => LazyGetRequiredService<IMapper>();                        // Model verisini entity uzerine tasir.
 
     /// <summary>
     /// WarehouseManager bagimliliklarini alir.
@@ -29,9 +27,9 @@ public class WarehouseManager : BaseManager<Warehouse>
     /// <summary>
     /// Yeni depo olusturur; kod tekilligi ve sorumlu calisan varligi kontrol edilir.
     /// </summary>
-//işlevi: Etki alanı kuralını veya validasyonunu işletir.
-//sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
-    public async Task<Warehouse> CreateAsync(CreateWarehouseModel model)
+    //işlevi: Etki alanı kuralını veya validasyonunu işletir.
+    //sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
+    public async Task<CreateWarehouseModel> CreateAsync(CreateWarehouseModel model)
     {
         if (!string.IsNullOrWhiteSpace(model.Code))
         {
@@ -40,17 +38,15 @@ public class WarehouseManager : BaseManager<Warehouse>
 
         await EnsureExistsInAsync(_workerRepository, model.ManagerWorkerId);
 
-        var entity = new Warehouse(GuidGenerator.Create());
-        _mapper.Map(model, entity);
-        return entity;
+        return model;
     }
 
     /// <summary>
     /// Depoyu gunceller; kod tekilligi ve sorumlu calisan varligi kontrol edilir.
     /// </summary>
-//işlevi: Etki alanı kuralını veya validasyonunu işletir.
-//sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
-    public async Task<Warehouse> UpdateAsync(Warehouse existing, UpdateWarehouseModel model)
+    //işlevi: Etki alanı kuralını veya validasyonunu işletir.
+    //sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
+    public async Task<UpdateWarehouseModel> UpdateAsync(Warehouse existing, UpdateWarehouseModel model)
     {
         if (!string.IsNullOrWhiteSpace(model.Code) && existing.Code != model.Code)
         {
@@ -59,8 +55,7 @@ public class WarehouseManager : BaseManager<Warehouse>
 
         await EnsureExistsInAsync(_workerRepository, model.ManagerWorkerId);
 
-        _mapper.Map(model, existing);
-        return existing;
+        return model;
     }
 
     /// <summary>

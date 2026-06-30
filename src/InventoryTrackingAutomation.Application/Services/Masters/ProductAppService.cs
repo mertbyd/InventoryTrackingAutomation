@@ -1,4 +1,4 @@
-using AutoMapper;
+using InventoryTrackingAutomation.Application.Mappers.Masters;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -40,21 +40,21 @@ public class ProductAppService : InventoryTrackingAutomationAppService, IProduct
     private IValidator<UpdateProductDto> _updateValidator => LazyGetRequiredService<IValidator<UpdateProductDto>>();
 
     // Tüm bağımlılıkları DI ile alır.
-    private IMapper _mapper => LazyGetRequiredService<IMapper>();
+    private static readonly ProductMapper _mapper = new ProductMapper();
 
 
     // Id ile ürünü getirir; yoksa EntityNotFoundException.
-//işlevi: İlgili iş senaryosunu (use-case) yürütür.
-//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
+    //işlevi: İlgili iş senaryosunu (use-case) yürütür.
+    //sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<ProductDto> GetAsync(Guid id)
     {
         var entity = await _manager.EnsureExistsAsync(id);
-        return _mapper.Map<Product, ProductDto>(entity);
+        return _mapper.MapToDto(entity);
     }
 
     // Ürünleri sayfalı listeler.
-//işlevi: İlgili iş senaryosunu (use-case) yürütür.
-//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
+    //işlevi: İlgili iş senaryosunu (use-case) yürütür.
+    //sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<PagedResultDto<ProductDto>> GetListAsync(PagedResultRequestDto input)
     {
         var totalCount = await _repository.GetCountAsync();
@@ -62,69 +62,75 @@ public class ProductAppService : InventoryTrackingAutomationAppService, IProduct
             input.SkipCount, input.MaxResultCount, sorting: string.Empty);
         return new PagedResultDto<ProductDto>(
             totalCount,
-            _mapper.Map<List<Product>, List<ProductDto>>(entities));
+            _mapper.MapToDto(entities));
     }
 
     // Urunun lokasyon bazli stok ozetini getirir; cache okuma/yazma InventoryCacheInterceptor tarafindan yapilir.
-//işlevi: İlgili iş senaryosunu (use-case) yürütür.
-//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
+    //işlevi: İlgili iş senaryosunu (use-case) yürütür.
+    //sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     // CacheKeys.ProductStockSummaryTemplate invalidation tarafindaki ProductStockSummary key'i ile ayni sozlesmeyi kullanir.
     [InventoryCache(CacheKeys.ProductStockSummaryTemplate, 10)]
     public async Task<ProductStockSummaryDto> GetStockSummaryAsync(Guid id)
     {
         var summary = await _inventoryQueryManager.GetProductStockSummaryAsync(id);
-        return _mapper.Map<ProductStockSummaryModel, ProductStockSummaryDto>(summary);
+        return _mapper.MapToDto(summary);
     }
 
     // Yeni ürün oluşturur — manager iş kurallarını uygular, repository persist eder.
     [UnitOfWork]
-//işlevi: İlgili iş senaryosunu (use-case) yürütür.
-//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
+    //işlevi: İlgili iş senaryosunu (use-case) yürütür.
+    //sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<ProductDto> CreateAsync(CreateProductDto input)
     {
         await _createValidator.ValidateAndThrowAsync(input);
-        var model = _mapper.Map<CreateProductDto, CreateProductModel>(input);
-        var entity = await _manager.CreateAsync(model);
+        var model = _mapper.MapToModel(input);
+        var validatedModel = await _manager.CreateAsync(model);
+        var entity = new Product(GuidGenerator.Create());
+        _mapper.MapToEntity(validatedModel, entity);
         var inserted = await _repository.InsertAsync(entity, autoSave: true);
-        return _mapper.Map<Product, ProductDto>(inserted);
+        return _mapper.MapToDto(inserted);
     }
 
     // Birden fazla ürünü toplu oluşturur.
     [UnitOfWork]
-//işlevi: İlgili iş senaryosunu (use-case) yürütür.
-//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
+    //işlevi: İlgili iş senaryosunu (use-case) yürütür.
+    //sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<List<ProductDto>> CreateManyAsync(List<CreateProductDto> inputs)
     {
         var entities = new List<Product>();
         foreach (var dto in inputs)
         {
             await _createValidator.ValidateAndThrowAsync(dto);
-            var model = _mapper.Map<CreateProductDto, CreateProductModel>(dto);
-            entities.Add(await _manager.CreateAsync(model));
+            var model = _mapper.MapToModel(dto);
+            var validatedModel = await _manager.CreateAsync(model);
+            var entity = new Product(GuidGenerator.Create());
+            _mapper.MapToEntity(validatedModel, entity);
+            entities.Add(entity);
         }
 
         var inserted = await _repository.InsertManyAndGetListAsync(entities);
-        return _mapper.Map<List<Product>, List<ProductDto>>(inserted);
+        return _mapper.MapToDto(inserted);
     }
 
     // Ürünü günceller — manager iş kurallarını uygular, repository persist eder.
     [UnitOfWork]
-//işlevi: İlgili iş senaryosunu (use-case) yürütür.
-//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
+    //işlevi: İlgili iş senaryosunu (use-case) yürütür.
+    //sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<ProductDto> UpdateAsync(Guid id, UpdateProductDto input)
     {
         await _updateValidator.ValidateAndThrowAsync(input);
         var existing = await _manager.EnsureExistsAsync(id);
-        var model = _mapper.Map<UpdateProductDto, UpdateProductModel>(input);
-        var updated = await _manager.UpdateAsync(existing, model);
-        var saved = await _repository.UpdateAsync(updated, autoSave: true);
-        return _mapper.Map<Product, ProductDto>(saved);
+        var model = _mapper.MapToModel(input);
+        var validatedModel = await _manager.UpdateAsync(existing, model);
+        _mapper.MapToEntity(validatedModel, existing);
+        var saved = await _repository.UpdateAsync(existing, autoSave: true);
+        return _mapper.MapToDto(saved);
     }
 
     // Urunu silmek yerine pasife alir; master veri gecmisi ve FK butunlugu korunur.
     [UnitOfWork]
-//işlevi: İlgili iş senaryosunu (use-case) yürütür.
-//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
+    //işlevi: İlgili iş senaryosunu (use-case) yürütür.
+    //sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task DeleteAsync(Guid id)
     {
         var existing = await _manager.EnsureExistsAsync(id);

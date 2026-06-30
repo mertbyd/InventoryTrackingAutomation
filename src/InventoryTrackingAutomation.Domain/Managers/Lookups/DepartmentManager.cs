@@ -1,4 +1,3 @@
-using AutoMapper;
 using System.Threading.Tasks;
 using InventoryTrackingAutomation.Entities.Lookups;
 using InventoryTrackingAutomation.Interface.Lookups;
@@ -17,7 +16,7 @@ public class DepartmentManager : BaseManager<Department>
     /// <summary>
     /// DepartmentManager constructor'ı.
     /// </summary>
-    private IMapper _mapper => LazyGetRequiredService<IMapper>();
+
     public DepartmentManager(IDepartmentRepository repository,
         IAbpLazyServiceProvider abpLazyServiceProvider)
         : base(repository, abpLazyServiceProvider)
@@ -27,26 +26,23 @@ public class DepartmentManager : BaseManager<Department>
     /// <summary>
     /// Yeni departman oluşturur — Code unique kontrolü yapar.
     /// </summary>
-//işlevi: Etki alanı kuralını veya validasyonunu işletir.
-//sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
-    public async Task<Department> CreateAsync(CreateDepartmentModel model)
+    //işlevi: Etki alanı kuralını veya validasyonunu işletir.
+    //sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
+    public async Task<CreateDepartmentModel> CreateAsync(CreateDepartmentModel model)
     {
         if (!string.IsNullOrWhiteSpace(model.Code))
         {
-            await EnsureUniqueAsync(
-                x => x.Code == model.Code);
+            await EnsureUniqueAsync(x => x.Code == model.Code);
         }
-        var entity = new Department(GuidGenerator.Create());
-        _mapper.Map(model, entity);
-        return entity;
+        return model;
     }
 
     /// <summary>
     /// Departmanı günceller — Code unique (self hariç) kontrolü yapar.
     /// </summary>
-//işlevi: Etki alanı kuralını veya validasyonunu işletir.
-//sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
-    public async Task<Department> UpdateAsync(Department existing, UpdateDepartmentModel model)
+    //işlevi: Etki alanı kuralını veya validasyonunu işletir.
+    //sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
+    public async Task<UpdateDepartmentModel> UpdateAsync(Department existing, UpdateDepartmentModel model)
     {
         if (!string.IsNullOrWhiteSpace(model.Code) && existing.Code != model.Code)
         {
@@ -54,8 +50,7 @@ public class DepartmentManager : BaseManager<Department>
                 x => x.Code == model.Code,
                 existing.Id);
         }
-        _mapper.Map(model, existing);
-        return existing;
+        return model;
     }
 }
 

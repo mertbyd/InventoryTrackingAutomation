@@ -1,4 +1,3 @@
-using AutoMapper;
 using System.Threading.Tasks;
 using InventoryTrackingAutomation.Entities.Lookups;
 using InventoryTrackingAutomation.Interface.Lookups;
@@ -17,7 +16,7 @@ public class ProductCategoryManager : BaseManager<ProductCategory>
     /// <summary>
     /// ProductCategoryManager constructor'ı.
     /// </summary>
-    private IMapper _mapper => LazyGetRequiredService<IMapper>();
+
     public ProductCategoryManager(IProductCategoryRepository repository,
         IAbpLazyServiceProvider abpLazyServiceProvider)
         : base(repository, abpLazyServiceProvider)
@@ -27,32 +26,23 @@ public class ProductCategoryManager : BaseManager<ProductCategory>
     /// <summary>
     /// Yeni ürün kategorisi oluşturur — Code unique ve ParentId varlık kontrolü yapar.
     /// </summary>
-//işlevi: Etki alanı kuralını veya validasyonunu işletir.
-//sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
-    public async Task<ProductCategory> CreateAsync(CreateProductCategoryModel model)
+    //işlevi: Etki alanı kuralını veya validasyonunu işletir.
+    //sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
+    public async Task<CreateProductCategoryModel> CreateAsync(CreateProductCategoryModel model)
     {
         if (!string.IsNullOrWhiteSpace(model.Code))
         {
-            await EnsureUniqueAsync(
-                x => x.Code == model.Code);
+            await EnsureUniqueAsync(x => x.Code == model.Code);
         }
-        if (model.ParentId.HasValue)
-        {
-            await EnsureExistsInAsync(
-                Repository,
-                model.ParentId.Value);
-        }
-        var entity = new ProductCategory(GuidGenerator.Create());
-        _mapper.Map(model, entity);
-        return entity;
+        return model;
     }
 
     /// <summary>
     /// Ürün kategorisini günceller — Code unique (self hariç) ve ParentId varlık kontrolü yapar.
     /// </summary>
-//işlevi: Etki alanı kuralını veya validasyonunu işletir.
-//sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
-    public async Task<ProductCategory> UpdateAsync(ProductCategory existing, UpdateProductCategoryModel model)
+    //işlevi: Etki alanı kuralını veya validasyonunu işletir.
+    //sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
+    public async Task<UpdateProductCategoryModel> UpdateAsync(ProductCategory existing, UpdateProductCategoryModel model)
     {
         if (!string.IsNullOrWhiteSpace(model.Code) && existing.Code != model.Code)
         {
@@ -62,12 +52,8 @@ public class ProductCategoryManager : BaseManager<ProductCategory>
         }
         if (model.ParentId.HasValue && existing.ParentId != model.ParentId)
         {
-            await EnsureExistsInAsync(
-                Repository,
-                model.ParentId.Value);
+            await EnsureExistsAsync(model.ParentId.Value);
         }
-        _mapper.Map(model, existing);
-        return existing;
+        return model;
     }
 }
-

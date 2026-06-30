@@ -40,9 +40,9 @@ public class CreateInventoryTaskDtoValidator_Tests
     public void Should_Not_Have_Error_When_Valid()
     {
         // ARRANGE
-        var model = new CreateInventoryTaskDto 
-        { 
-            Code = "T-001", 
+        var model = new CreateInventoryTaskDto
+        {
+            Code = "T-001",
             Name = "Saha Montaj Görevi",
             Type = Enums.Tasks.InventoryTaskTypeEnum.WarehouseTransfer,
             Status = Enums.Tasks.TaskStatusEnum.Draft,

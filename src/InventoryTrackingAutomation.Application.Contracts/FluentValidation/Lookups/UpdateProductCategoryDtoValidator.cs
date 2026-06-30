@@ -2,6 +2,7 @@ using FluentValidation;
 using InventoryTrackingAutomation.Dtos.Lookups;
 
 
+
 namespace InventoryTrackingAutomation.FluentValidation.Lookups;
 
 public class UpdateProductCategoryDtoValidator : AbstractValidator<UpdateProductCategoryDto>

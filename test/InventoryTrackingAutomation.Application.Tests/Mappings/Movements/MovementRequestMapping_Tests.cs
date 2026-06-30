@@ -1,30 +1,22 @@
-using AutoMapper;
+using InventoryTrackingAutomation.Application.Mappers.Movements;
 using InventoryTrackingAutomation.Dtos.Movements;
 using InventoryTrackingAutomation.Entities.Movements;
 using Shouldly;
 using Xunit;
+using System;
 
 namespace InventoryTrackingAutomation.Mappings.Movements;
 
-/*
- * TEST DIZINI: test/InventoryTrackingAutomation.Application.Tests/Mappings/Movements/
- * ACIKLAMA: 'MovementRequest' ile DTO'lar arasindaki AutoMapper donusumlerini test eder.
- * NEDEN BURADA?: Mapping islemleri genellikle Application katmaninda gerceklesir ve 
- * AutoMapper konfigurasyonunun (Profile) dogrulugundan emin olmak gerekir.
- */
 public abstract class MovementRequestMapping_Tests<TStartupModule> : InventoryTrackingAutomationApplicationTestBase<TStartupModule>
     where TStartupModule : Volo.Abp.Modularity.IAbpModule
 {
-    private readonly IMapper _mapper;
+    private readonly MovementRequestMapper _mapper;
 
     protected MovementRequestMapping_Tests()
     {
-        _mapper = GetRequiredService<IMapper>();
+        _mapper = new MovementRequestMapper();
     }
 
-    /*
-     * SENARYO: MovementRequest Entity'si MovementRequestDto'ya dogru haritalanmalidir.
-     */
     [Fact]
     public void Should_Map_MovementRequest_To_Dto()
     {
@@ -37,7 +29,7 @@ public abstract class MovementRequestMapping_Tests<TStartupModule> : InventoryTr
         };
 
         // ACT
-        var dto = _mapper.Map<MovementRequest, MovementRequestDto>(entity);
+        var dto = _mapper.MapToDto(entity);
 
         // ASSERT
         dto.Id.ShouldBe(entity.Id);
@@ -45,12 +37,8 @@ public abstract class MovementRequestMapping_Tests<TStartupModule> : InventoryTr
         dto.Status.ShouldBe(entity.Status);
     }
 
-    /*
-     * SENARYO: CreateMovementRequestDto, MovementRequest Entity'sine donusturulurken 
-     * kritik alanlar (Id, Status vb.) ezilmemelidir (Ignore edilmelidir).
-     */
     [Fact]
-    public void Should_Map_CreateDto_To_Entity_Safely()
+    public void Should_Map_CreateDto_To_Model()
     {
         // ARRANGE
         var dto = new CreateMovementRequestDto
@@ -61,12 +49,11 @@ public abstract class MovementRequestMapping_Tests<TStartupModule> : InventoryTr
         };
 
         // ACT
-        var entity = _mapper.Map<CreateMovementRequestDto, MovementRequest>(dto);
+        var model = _mapper.MapToModel(dto);
 
         // ASSERT
-        entity.RequestNumber.ShouldBe(dto.RequestNumber);
-        entity.VehicleTaskId.ShouldBe(dto.VehicleTaskId);
-        entity.RequestNote.ShouldBe(dto.RequestNote);
-        entity.Id.ShouldBe(Guid.Empty); // Profile'da Ignore edildigi icin bos kalmali.
+        model.RequestNumber.ShouldBe(dto.RequestNumber);
+        model.VehicleTaskId.ShouldBe(dto.VehicleTaskId);
+        model.RequestNote.ShouldBe(dto.RequestNote);
     }
 }

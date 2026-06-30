@@ -1,4 +1,4 @@
-using AutoMapper;
+using InventoryTrackingAutomation.Application.Mappers.Movements;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -41,7 +41,7 @@ public class MovementRequestAppService : InventoryTrackingAutomationAppService, 
     // Cache temizleme eventleri uygulama katmanindan local event bus ile yayinlanir.
     private ILocalEventBus _localEventBus => LazyGetRequiredService<ILocalEventBus>();
     // Tüm bağımlılıkları DI ile alır.
-    private IMapper _mapper => LazyGetRequiredService<IMapper>();
+    private static readonly MovementRequestMapper _mapper = new MovementRequestMapper();
     /// Hareket talebi verisini getirmek için kullanılır.
     public async Task<MovementRequestDto> GetAsync(Guid id)
     {
@@ -64,10 +64,21 @@ public class MovementRequestAppService : InventoryTrackingAutomationAppService, 
     {
         var currentUserId = CurrentUser.GetId();
         var currentWorkerId = await ResolveCurrentWorkerIdAsync();
-        var model = _mapper.Map<CreateMovementRequestDto, CreateMovementRequestModel>(input);
+        var model = _mapper.MapToModel(input);
         model.RequestedByWorkerId = currentWorkerId;
-        // Manager Create + Workflow assignment + Insert akışını birlikte yürütür.
-        var inserted = await _manager.CreateWithWorkflowAsync(model, currentUserId);
+        var validatedModel = await _manager.CreateAsync(model);
+        var entity = new MovementRequest(GuidGenerator.Create());
+        entity.Status = InventoryTrackingAutomation.Enums.MovementStatusEnum.Pending;
+        _mapper.MapToEntity(validatedModel, entity);
+
+        var workflowInstance = await _manager.AssignWorkflowAsync(entity, currentUserId);
+        var inserted = await _repository.InsertAsync(entity, autoSave: true);
+        
+        if (workflowInstance != null)
+        {
+            await _manager.PublishInitialWorkflowStepAssignedAsync(workflowInstance);
+        }
+
         return await MapToDtoAsync(inserted);
     }
     /// Birden fazla hareket talebini toplu olarak oluşturmak için kullanılır.
@@ -80,12 +91,33 @@ public class MovementRequestAppService : InventoryTrackingAutomationAppService, 
         var models = new List<CreateMovementRequestModel>();
         foreach (var dto in inputs)
         {
-            var model = _mapper.Map<CreateMovementRequestDto, CreateMovementRequestModel>(dto);
+            var model = _mapper.MapToModel(dto);
             model.RequestedByWorkerId = currentWorkerId;
             models.Add(model);
         }
-        // Manager toplu Create + Workflow + Insert akışını yürütür.
-        var inserted = await _manager.CreateManyWithWorkflowAsync(models, currentUserId);
+        var entities = new List<MovementRequest>();
+        var workflowInstances = new List<InventoryTrackingAutomation.Entities.Workflows.WorkflowInstance>();
+
+        foreach (var model in models)
+        {
+            var validatedModel = await _manager.CreateAsync(model);
+            var entity = new MovementRequest(GuidGenerator.Create());
+            entity.Status = InventoryTrackingAutomation.Enums.MovementStatusEnum.Pending;
+            _mapper.MapToEntity(validatedModel, entity);
+
+            var workflowInstance = await _manager.AssignWorkflowAsync(entity, currentUserId);
+            if (workflowInstance != null)
+            {
+                workflowInstances.Add(workflowInstance);
+            }
+            entities.Add(entity);
+        }
+
+        var inserted = await _repository.InsertManyAndGetListAsync(entities);
+        foreach (var workflowInstance in workflowInstances)
+        {
+            await _manager.PublishInitialWorkflowStepAssignedAsync(workflowInstance);
+        }
 
         return await MapToDtosAsync(inserted);
     }
@@ -94,10 +126,11 @@ public class MovementRequestAppService : InventoryTrackingAutomationAppService, 
     public async Task<MovementRequestDto> UpdateAsync(Guid id, UpdateMovementRequestDto input)
     {
         var existing = await _manager.EnsureExistsAsync(id);
-        var model = _mapper.Map<UpdateMovementRequestDto, UpdateMovementRequestModel>(input);
+        var model = _mapper.MapToModel(input);
         model.RequestedByWorkerId = await ResolveCurrentWorkerIdAsync();
-        var updated = await _manager.UpdateAsync(existing, model);
-        var saved = await _repository.UpdateAsync(updated, autoSave: true);
+        var validatedModel = await _manager.UpdateAsync(existing, model);
+        _mapper.MapToEntity(validatedModel, existing);
+        var saved = await _repository.UpdateAsync(existing, autoSave: true);
         return await MapToDtoAsync(saved);
     }
 
@@ -119,7 +152,7 @@ public class MovementRequestAppService : InventoryTrackingAutomationAppService, 
     [UnitOfWork]
     public async Task<MovementRequestDto> ReceiveAsync(Guid id, ReceiveMovementRequestDto input)
     {
-        var model = _mapper.Map<ReceiveMovementRequestDto, ReceiveMovementRequestModel>(input);
+        var model = _mapper.MapToModel(input);
         var received = await _manager.ReceiveAsync(
             id,
             model,
@@ -175,7 +208,7 @@ public class MovementRequestAppService : InventoryTrackingAutomationAppService, 
 
     private async Task<MovementRequestDto> MapToDtoAsync(MovementRequest entity)
     {
-        var dto = _mapper.Map<MovementRequest, MovementRequestDto>(entity);
+        var dto = _mapper.MapToDto(entity);
         var context = await _repository.GetOperationalContextAsync(entity.Id);
         if (context != null)
         {

@@ -1,4 +1,4 @@
-using AutoMapper;
+﻿using InventoryTrackingAutomation.Application.Mappers.Workflows;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -42,43 +42,43 @@ public class WorkflowAppService : InventoryTrackingAutomationAppService, IWorkfl
     private IIdentityUserRepository _identityUserRepository => LazyGetRequiredService<IIdentityUserRepository>();
 
     // Tüm bağımlılıkları DI ile alır.
-    private IMapper _mapper => LazyGetRequiredService<IMapper>();
+    private static readonly WorkflowMapper _mapper = new WorkflowMapper();
 
 
     // Yeni iş akışı süreci başlatır — initiator CurrentUser'dan çözülür, manager state machine'i kurar, instance persist edilir.
     [UnitOfWork]
-//işlevi: İlgili iş senaryosunu (use-case) yürütür.
-//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
+    //işlevi: İlgili iş senaryosunu (use-case) yürütür.
+    //sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<WorkflowInstanceDto> StartAsync(StartWorkflowDto input)
     {
         var currentUserId = CurrentUser.Id.Value;
-        var model = _mapper.Map<StartWorkflowDto, StartWorkflowModel>(input);
+        var model = _mapper.MapToModel(input);
         model.InitiatorUserId = currentUserId;
         var entity = await _workflowManager.StartWorkflowAsync(model);
         var inserted = await _workflowInstanceRepository.InsertAsync(entity, autoSave: true);
-        return _mapper.Map<WorkflowInstance, WorkflowInstanceDto>(inserted);
+        return _mapper.MapToDto(inserted);
     }
 
     // Belirtilen iş akışı adımında onay/red aksiyonunu işler — yetki kontrolünü manager yapar, kararı persist eder.
     [UnitOfWork]
-//işlevi: İlgili iş senaryosunu (use-case) yürütür.
-//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
+    //işlevi: İlgili iş senaryosunu (use-case) yürütür.
+    //sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<WorkflowInstanceStepDto> ProcessApprovalAsync(ProcessApprovalDto input)
     {
         var currentUserId = CurrentUser.Id.Value;
         var roles = CurrentUser.Roles != null ? CurrentUser.Roles.ToList() : new List<string>();
-        var model = _mapper.Map<ProcessApprovalDto, ProcessApprovalModel>(input);
+        var model = _mapper.MapToModel(input);
         model.CurrentUserId = currentUserId;
         model.CurrentUserRoles = roles;
         var entityStep = await _workflowManager.ProcessApprovalAsync(model);
         var updated = await _workflowInstanceStepRepository.UpdateAsync(entityStep, autoSave: true);
-        return _mapper.Map<WorkflowInstanceStep, WorkflowInstanceStepDto>(updated);
+        return _mapper.MapToDto(updated);
     }
 
     // Belirtilen workflow instance içindeki mevcut bekleyen adımı bulur ve generic onay akışına yollar.
     [UnitOfWork]
-//işlevi: İlgili iş senaryosunu (use-case) yürütür.
-//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
+    //işlevi: İlgili iş senaryosunu (use-case) yürütür.
+    //sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<WorkflowInstanceStepDto> ProcessInstanceApprovalAsync(
         Guid instanceId,
         ProcessWorkflowInstanceApprovalDto input)
@@ -117,8 +117,8 @@ public class WorkflowAppService : InventoryTrackingAutomationAppService, IWorkfl
     }
 
     // Mevcut kullanıcıya atanmış tüm bekleyen iş akışı adımlarını entity-agnostic olarak döner.
-//işlevi: İlgili iş senaryosunu (use-case) yürütür.
-//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
+    //işlevi: İlgili iş senaryosunu (use-case) yürütür.
+    //sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<List<PendingWorkflowStepDto>> GetMyPendingApprovalsAsync()
     {
         var currentUserId = CurrentUser.Id.Value;
@@ -154,8 +154,8 @@ public class WorkflowAppService : InventoryTrackingAutomationAppService, IWorkfl
     }
 
     // Bir iş akışı süreci için tam tarihçeyi döner — kim başlattı, geçmiş/mevcut/gelecek adımlar tek yapıda.
-//işlevi: İlgili iş senaryosunu (use-case) yürütür.
-//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
+    //işlevi: İlgili iş senaryosunu (use-case) yürütür.
+    //sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<WorkflowHistoryDto> GetHistoryAsync(Guid instanceId)
     {
         var instance = await _workflowInstanceRepository.FindAsync(instanceId);

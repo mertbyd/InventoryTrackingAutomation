@@ -1,4 +1,3 @@
-using AutoMapper;
 using InventoryTrackingAutomation.Managers;
 using System;
 using System.Collections.Generic;
@@ -54,9 +53,6 @@ public class MovementApprovalManager : InventoryTrackingAutomationDomainService
     private IGuidGenerator _guidGenerator => LazyGetRequiredService<IGuidGenerator>();
     private WorkflowManager _workflowManager => LazyGetRequiredService<WorkflowManager>();
 
-    // Tüm bağımlılıkları DI ile alır.
-    private IMapper _mapper => LazyGetRequiredService<IMapper>();
-
 
     /// Hareket talebini onaylamak için kullanılır.
     public async Task<MovementApproval> ApproveAsync(Guid movementRequestId, Guid approvingUserId, string comment)
@@ -91,14 +87,11 @@ public class MovementApprovalManager : InventoryTrackingAutomationDomainService
         var currentStep = await ValidatePendingStepExistsAsync(workflowInstance.Id);
         // Yetki kontrolü
         await ValidateApprovalAuthorizationAsync(currentStep, approvingUserId);
-
         // Rejection kaydı oluştur
         var approval = await CreateApprovalRecordAsync(
             movementRequestId, approvingUserId, currentStep, ApprovalStatusEnum.Rejected, reason);
-
         // Step kararı, workflow reject ve MovementRequest final durum event'i generic WorkflowManager tarafından yönetilir.
         await AdvanceWorkflowAsync(currentStep, approvingUserId, false, reason);
-
         return approval;
     }
 

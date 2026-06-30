@@ -449,17 +449,34 @@ public class MovementFlow_Integration_Tests : InventoryTrackingAutomationEntityF
             await _vehicleTaskLineRepository.UpdateAsync(vehicleTaskLine, autoSave: true);
         }
 
-        return await _movementRequestManager.CreateWithWorkflowAsync(
-            new CreateMovementRequestModel
-            {
-                RequestNumber = $"{prefix}-REQ-{Guid.NewGuid():N}"[..30],
-                RequestedByWorkerId = scenario.WorkerId,
-                VehicleTaskId = vehicleTask.Id,
-                Priority = MovementPriorityEnum.Normal,
-                RequestNote = $"{prefix} entegrasyon talebi",
-                PlannedDate = DateTime.UtcNow.AddHours(1)
-            },
-            scenario.UserId);
+        var model = new CreateMovementRequestModel
+        {
+            RequestNumber = $"{prefix}-REQ-{Guid.NewGuid():N}"[..30],
+            RequestedByWorkerId = scenario.WorkerId,
+            VehicleTaskId = vehicleTask.Id,
+            Priority = MovementPriorityEnum.Normal,
+            RequestNote = $"{prefix} entegrasyon talebi",
+            PlannedDate = DateTime.UtcNow.AddHours(1)
+        };
+
+        var validatedModel = await _movementRequestManager.CreateAsync(model);
+        var request = new MovementRequest(Guid.NewGuid());
+        request.RequestNumber = validatedModel.RequestNumber;
+        request.Priority = validatedModel.Priority;
+        request.RequestedByWorkerId = validatedModel.RequestedByWorkerId;
+        request.VehicleTaskId = validatedModel.VehicleTaskId;
+        request.RequestNote = validatedModel.RequestNote;
+        request.PlannedDate = validatedModel.PlannedDate;
+        request.Status = MovementStatusEnum.Pending;
+
+        var workflowInstance = await _movementRequestManager.AssignWorkflowAsync(request, scenario.UserId);
+        var inserted = await _movementRequestRepository.InsertAsync(request, autoSave: true);
+        if (workflowInstance != null)
+        {
+            await _movementRequestManager.PublishInitialWorkflowStepAssignedAsync(workflowInstance);
+        }
+
+        return inserted;
     }
 
     private async Task AssertTaskVehicleLineMappingAsync(

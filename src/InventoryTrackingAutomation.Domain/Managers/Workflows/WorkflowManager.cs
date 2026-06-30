@@ -1,4 +1,3 @@
-using AutoMapper;
 using InventoryTrackingAutomation.Managers;
 using System;
 using System.Collections.Generic;
@@ -34,12 +33,11 @@ public class WorkflowManager : InventoryTrackingAutomationDomainService
     private ILocalEventBus _localEventBus => LazyGetRequiredService<ILocalEventBus>();
     private IWorkflowApproverResolver _workflowApproverResolver => LazyGetRequiredService<IWorkflowApproverResolver>();
 
-    private IMapper _mapper => LazyGetRequiredService<IMapper>();
 
 
     // Yeni iş akışı başlatır: instance oluşturur, ilk adımın tanımını yükler, ilk onaycıyı çözer ve adımı kuyruğa alır.
-//işlevi: Etki alanı kuralını veya validasyonunu işletir.
-//sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
+    //işlevi: Etki alanı kuralını veya validasyonunu işletir.
+    //sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
     public async Task<WorkflowInstance> StartWorkflowAsync(StartWorkflowModel model)
     {
         var definition = await FindAndValidateDefinitionAsync(model.WorkflowDefinitionId);
@@ -68,23 +66,19 @@ public class WorkflowManager : InventoryTrackingAutomationDomainService
     }
 
     // Onay/red kararını işler. Onaylandıysa sonraki adıma yönlendirir, reddedildiyse iş akışını sonlandırır.
-//işlevi: Etki alanı kuralını veya validasyonunu işletir.
-//sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
+    //işlevi: Etki alanı kuralını veya validasyonunu işletir.
+    //sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
     public async Task<WorkflowInstanceStep> ProcessApprovalAsync(ProcessApprovalModel model)
     {
         var step = await FindAndValidateStepAsync(model.InstanceStepId);
         var instance = step.WorkflowInstance;
-
         ValidateWorkflowIsActive(instance);
         ValidateStepIsPending(step);
         ValidateApprovalAuthorization(step, model.CurrentUserId, model.CurrentUserRoles);
-
         step.ActionTaken = model.IsApproved ? WorkflowActionType.Approved : WorkflowActionType.Rejected;
         step.Note = model.Note;
         step.ActionDate = Clock.Now;
-
         await _workflowInstanceStepRepository.UpdateAsync(step, autoSave: true);
-
         if (!model.IsApproved)
         {
             await TerminateWorkflowAsync(instance, WorkflowState.Rejected);
@@ -107,19 +101,16 @@ public class WorkflowManager : InventoryTrackingAutomationDomainService
         var nextStepDef = definition.Steps
             .OrderBy(x => x.StepOrder)
             .FirstOrDefault(x => x.StepOrder > currentOrder);
-
         if (nextStepDef != null)
         {
             var context = new ApproverContext(instance.EntityType, instance.EntityId, instance.InitiatorUserId);
             var nextApprover = await _workflowApproverResolver.ResolveApproverAsync(context, nextStepDef);
-
             var nextStep = new WorkflowInstanceStep(
                 id: GuidGenerator.Create(),
                 workflowInstanceId: instance.Id,
                 workflowStepDefinitionId: nextStepDef.Id,
                 assignedUserId: nextApprover
             );
-
             await _workflowInstanceStepRepository.InsertAsync(nextStep, autoSave: true);
             await PublishStepAssignedAsync(instance, nextStep);
         }
@@ -133,23 +124,14 @@ public class WorkflowManager : InventoryTrackingAutomationDomainService
     {
         var query = await _workflowDefinitionRepository.WithDetailsAsync(x => x.Steps);
         var definition = query.FirstOrDefault(x => x.Id == definitionId);
-
         if (definition == null)
-        {
-            throw new BusinessException(WorkflowExceptionCodes.DefinitionNotFound)
-                .WithData("DefinitionId", definitionId);
-        }
-
+            throw new BusinessException(WorkflowExceptionCodes.DefinitionNotFound);
         if (!definition.IsActive)
-        {
-            throw new BusinessException(GeneralExceptionCodes.InvalidOperation);
-        }
-
+            throw new BusinessException(WorkflowExceptionCodes.General.InvalidOperation);
+        
         if (!definition.Steps.Any())
-        {
-            throw new BusinessException(GeneralExceptionCodes.InvalidOperation);
-        }
-
+            throw new BusinessException(WorkflowExceptionCodes.General.InvalidOperation);
+        
         return definition;
     }
 
@@ -158,14 +140,11 @@ public class WorkflowManager : InventoryTrackingAutomationDomainService
         var query = await _workflowInstanceStepRepository.WithDetailsAsync(
             x => x.WorkflowInstance,
             x => x.WorkflowStepDefinition);
-
         var step = query.FirstOrDefault(x => x.Id == stepId);
-
         if (step == null)
         {
             throw new BusinessException(WorkflowExceptionCodes.StepNotFound);
         }
-
         return step;
     }
 
@@ -178,7 +157,7 @@ public class WorkflowManager : InventoryTrackingAutomationDomainService
     private void ValidateStepIsPending(WorkflowInstanceStep step)
     {
         if (step.ActionTaken != WorkflowActionType.Pending)
-            throw new BusinessException(MovementApprovalExceptionCodes.AlreadyDecided);
+            throw new BusinessException(WorkflowExceptionCodes.MovementApprovals.AlreadyDecided);
     }
 
     // Mevcut kullanıcının bu adımı onaylama yetkisinin olup olmadığını doğrular.
@@ -195,7 +174,7 @@ public class WorkflowManager : InventoryTrackingAutomationDomainService
             var requiredRole = step.WorkflowStepDefinition.RequiredRoleName;
             if (!string.IsNullOrEmpty(requiredRole) && !currentUserRoles.Contains(requiredRole))
                 throw new BusinessException(WorkflowExceptionCodes.UnauthorizedApproval);
-            
+
         }
     }
 
@@ -225,3 +204,4 @@ public class WorkflowManager : InventoryTrackingAutomationDomainService
         });
     }
 }
+

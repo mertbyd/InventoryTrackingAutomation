@@ -83,10 +83,7 @@ public class TaskReturnRequestManager : InventoryTrackingAutomationDomainService
             var parentMovementId = await _movementRequestRepository.FindLatestMainMovementIdAsync(assignment.Id);
             if (!parentMovementId.HasValue)
             {
-                throw new BusinessException(GeneralExceptionCodes.InvalidOperation)
-                    .WithData("TaskId", taskId)
-                    .WithData("VehicleTaskId", assignment.Id)
-                    .WithData("Reason", "Cannot resolve parent movement request");
+                throw new BusinessException(GeneralExceptionCodes.InvalidOperation);
             }
 
             // Doner iade talebini olustur (header). Satirlar VehicleTaskLine'da tutulur.
@@ -181,11 +178,7 @@ public class TaskReturnRequestManager : InventoryTrackingAutomationDomainService
         {
             return lastTransaction.SourceLocationId.Value;
         }
-
-        throw new BusinessException(GeneralExceptionCodes.InvalidOperation)
-            .WithData("TaskId", taskId)
-            .WithData("VehicleId", vehicleId)
-            .WithData("Reason", "Cannot resolve return warehouse");
+        throw new BusinessException(GeneralExceptionCodes.InvalidOperation);
     }
 
     /// Görev aracındaki iade satırlarını getirmek için kullanılır.
@@ -231,3 +224,4 @@ public class TaskReturnRequestManager : InventoryTrackingAutomationDomainService
 
     private sealed record TaskVehicleReturnLine(Guid ProductId, int Quantity);
 }
+

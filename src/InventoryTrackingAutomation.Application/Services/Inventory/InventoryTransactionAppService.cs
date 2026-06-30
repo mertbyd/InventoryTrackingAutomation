@@ -1,4 +1,4 @@
-using AutoMapper;
+using InventoryTrackingAutomation.Application.Mappers.Inventory;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -28,69 +28,72 @@ public class InventoryTransactionAppService : InventoryTrackingAutomationAppServ
     private IInventoryTransactionRepository _repository => LazyGetRequiredService<IInventoryTransactionRepository>();
     private InventoryTransactionManager _manager => LazyGetRequiredService<InventoryTransactionManager>();
     private IValidator<CreateInventoryTransactionDto> _createValidator => LazyGetRequiredService<IValidator<CreateInventoryTransactionDto>>();
-    private IMapper _mapper => LazyGetRequiredService<IMapper>();
+    private static readonly InventoryTransactionMapper _mapper = new InventoryTransactionMapper();
 
 
 
-//işlevi: İlgili iş senaryosunu (use-case) yürütür.
-//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
+    //işlevi: İlgili iş senaryosunu (use-case) yürütür.
+    //sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<InventoryTransactionDto> GetAsync(Guid id)
     {
         var entity = await _manager.EnsureExistsAsync(id);
-        return _mapper.Map<InventoryTransaction, InventoryTransactionDto>(entity);
+        return _mapper.MapToDto(entity);
     }
 
-//işlevi: İlgili iş senaryosunu (use-case) yürütür.
-//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
+    //işlevi: İlgili iş senaryosunu (use-case) yürütür.
+    //sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<PagedResultDto<InventoryTransactionDto>> GetListAsync(PagedResultRequestDto input)
     {
         var totalCount = await _repository.GetCountAsync();
         var entities = await _repository.GetPagedListAsync(input.SkipCount, input.MaxResultCount, sorting: string.Empty);
-        return new PagedResultDto<InventoryTransactionDto>(totalCount, _mapper.Map<List<InventoryTransaction>, List<InventoryTransactionDto>>(entities));
+        return new PagedResultDto<InventoryTransactionDto>(totalCount, _mapper.MapToDto(entities));
     }
 
     [UnitOfWork]
-//işlevi: İlgili iş senaryosunu (use-case) yürütür.
-//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
+    //işlevi: İlgili iş senaryosunu (use-case) yürütür.
+    //sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<InventoryTransactionDto> CreateAsync(CreateInventoryTransactionDto input)
     {
         await _createValidator.ValidateAndThrowAsync(input);
-        var model = _mapper.Map<CreateInventoryTransactionDto, CreateInventoryTransactionModel>(input);
+        var model = _mapper.MapToModel(input);
         var entity = await _manager.CreateAsync(model);
+        _mapper.MapToEntity(model, entity);
         var inserted = await _repository.InsertAsync(entity, autoSave: true);
-        return _mapper.Map<InventoryTransaction, InventoryTransactionDto>(inserted);
+        return _mapper.MapToDto(inserted);
     }
 
     [UnitOfWork]
-//işlevi: İlgili iş senaryosunu (use-case) yürütür.
-//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
+    //işlevi: İlgili iş senaryosunu (use-case) yürütür.
+    //sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<List<InventoryTransactionDto>> CreateManyAsync(List<CreateInventoryTransactionDto> inputs)
     {
         var entities = new List<InventoryTransaction>();
         foreach (var dto in inputs)
         {
             await _createValidator.ValidateAndThrowAsync(dto);
-            var model = _mapper.Map<CreateInventoryTransactionDto, CreateInventoryTransactionModel>(dto);
-            entities.Add(await _manager.CreateAsync(model));
+            var model = _mapper.MapToModel(dto);
+            var entity = await _manager.CreateAsync(model);
+            _mapper.MapToEntity(model, entity);
+            entities.Add(entity);
         }
 
         var inserted = await _repository.InsertManyAndGetListAsync(entities);
-        return _mapper.Map<List<InventoryTransaction>, List<InventoryTransactionDto>>(inserted);
+        return _mapper.MapToDto(inserted);
     }
 
     [UnitOfWork]
-//işlevi: İlgili iş senaryosunu (use-case) yürütür.
-//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
+    //işlevi: İlgili iş senaryosunu (use-case) yürütür.
+    //sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<InventoryTransactionDto> UpdateAsync(Guid id, UpdateInventoryTransactionDto input)
     {
         // InventoryTransaction append-only defter oldugu icin AppService sadece domain kuralini calistirir.
         var rejected = await _manager.RejectUpdateAsync(id);
-        return _mapper.Map<InventoryTransaction, InventoryTransactionDto>(rejected);
+        return _mapper.MapToDto(rejected);
     }
 
     [UnitOfWork]
-//işlevi: İlgili iş senaryosunu (use-case) yürütür.
-//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
+    //işlevi: İlgili iş senaryosunu (use-case) yürütür.
+    //sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task DeleteAsync(Guid id)
     {
         // Soft delete kapatildigi icin silme istegi domain manager'da is kurali olarak reddedilir.

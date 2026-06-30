@@ -2,6 +2,7 @@ using InventoryTrackingAutomation.Localization;
 using Volo.Abp.Authorization.Permissions;
 using Volo.Abp.Localization;
 namespace InventoryTrackingAutomation.Permissions;
+
 public partial class InventoryTrackingAutomationPermissionDefinitionProvider : PermissionDefinitionProvider
 {
     public override void Define(IPermissionDefinitionContext context)

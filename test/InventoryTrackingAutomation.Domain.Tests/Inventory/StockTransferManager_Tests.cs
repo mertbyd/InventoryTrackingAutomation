@@ -21,12 +21,14 @@ public abstract class StockTransferManager_Tests<TStartupModule> : InventoryTrac
     private readonly StockTransferManager _stockTransferManager;
     private readonly IStockLocationRepository _stockLocationRepository;
     private readonly IRepository<Product, Guid> _productRepository;
+    private readonly IRepository<InventoryTrackingAutomation.Entities.Lookups.UnitType, Guid> _unitTypeRepository;
 
     protected StockTransferManager_Tests()
     {
         _stockTransferManager = GetRequiredService<StockTransferManager>();
         _stockLocationRepository = GetRequiredService<IStockLocationRepository>();
         _productRepository = GetRequiredService<IRepository<Product, Guid>>();
+        _unitTypeRepository = GetRequiredService<IRepository<InventoryTrackingAutomation.Entities.Lookups.UnitType, Guid>>();
     }
 
     [Fact]
@@ -34,11 +36,13 @@ public abstract class StockTransferManager_Tests<TStartupModule> : InventoryTrac
     {
         await WithUnitOfWorkAsync(async () =>
         {
+            var unitType = await _unitTypeRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Lookups.UnitType(Guid.NewGuid(), "STK-UT", "UT"), autoSave: true);
+
             var product = await _productRepository.InsertAsync(new Product(Guid.NewGuid())
             {
                 Code = $"STK-PRD-{Guid.NewGuid():N}"[..30],
                 Name = "Stok transfer test urunu",
-                UnitTypeId = System.Guid.NewGuid(),
+                UnitTypeId = unitType.Id,
                 IsActive = true,
                 IsSerializable = false
             }, autoSave: true);
