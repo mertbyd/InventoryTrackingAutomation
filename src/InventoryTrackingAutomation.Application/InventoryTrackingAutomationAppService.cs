@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 using InventoryTrackingAutomation.Interface.Masters;
 using InventoryTrackingAutomation.Localization;
@@ -38,7 +38,7 @@ public abstract class InventoryTrackingAutomationAppService : ApplicationService
         var worker = await workerRepository.FindAsync(w => w.UserId == userId);
         if (worker == null)
         {
-            throw new BusinessException(InventoryTrackingAutomationErrorCodes.Workers.NotFound)
+            throw new BusinessException(WorkerExceptionCodes.NotFound)
                 .WithData("UserId", userId);
         }
         return worker.Id;

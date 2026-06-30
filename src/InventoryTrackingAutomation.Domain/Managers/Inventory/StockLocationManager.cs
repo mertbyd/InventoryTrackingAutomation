@@ -66,7 +66,7 @@ public class StockLocationManager : BaseManager<StockLocation>
     public async Task RejectDeleteAsync(Guid id)
     {
         await EnsureExistsAsync(id);
-        throw new BusinessException(InventoryTrackingAutomationErrorCodes.StockLocations.DeleteNotSupported)
+        throw new BusinessException(StockLocationExceptionCodes.DeleteNotSupported)
             .WithData("StockLocationId", id);
     }
 
@@ -102,7 +102,7 @@ public class StockLocationManager : BaseManager<StockLocation>
 
         if (existingLocations.Any(x => !excludeId.HasValue || x.Id != excludeId.Value))
         {
-            throw new BusinessException(InventoryTrackingAutomationErrorCodes.StockLocations.DuplicateLocation);
+            throw new BusinessException(StockLocationExceptionCodes.DuplicateLocation);
         }
     }
 
@@ -112,7 +112,7 @@ public class StockLocationManager : BaseManager<StockLocation>
         // Rezerve miktar toplam stoktan buyuk olamaz.
         if (quantity < 0 || reservedQuantity < 0 || reservedQuantity > quantity)
         {
-            throw new BusinessException(InventoryTrackingAutomationErrorCodes.StockLocations.InvalidQuantity);
+            throw new BusinessException(StockLocationExceptionCodes.InvalidQuantity);
         }
     }
 
@@ -123,7 +123,7 @@ public class StockLocationManager : BaseManager<StockLocation>
             .FindAsync(x => x.LocationType == type && x.LocationId == locationId && x.ProductId == productId);
 
         if (stock == null || stock.Quantity < qty)
-            throw new BusinessException(InventoryTrackingAutomationErrorCodes.StockLocations.InsufficientStock)
+            throw new BusinessException(StockLocationExceptionCodes.InsufficientStock)
                 .WithData("LocationType", type).WithData("LocationId", locationId)
                 .WithData("ProductId", productId).WithData("Requested", qty)
                 .WithData("Available", stock?.Quantity ?? 0);
@@ -168,7 +168,7 @@ public class StockLocationManager : BaseManager<StockLocation>
                 await EnsureExistsInAsync(_vehicleRepository, locationId); 
                 break;
             default:
-                throw new BusinessException(InventoryTrackingAutomationErrorCodes.StockLocations.UnsupportedLocationType);
+                throw new BusinessException(StockLocationExceptionCodes.UnsupportedLocationType);
         }
     }
 }

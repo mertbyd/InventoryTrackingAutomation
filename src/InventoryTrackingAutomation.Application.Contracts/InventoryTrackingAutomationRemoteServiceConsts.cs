@@ -1,4 +1,4 @@
-﻿namespace InventoryTrackingAutomation;
+namespace InventoryTrackingAutomation;
 
 public class InventoryTrackingAutomationRemoteServiceConsts
 {

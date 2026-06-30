@@ -1,4 +1,4 @@
-﻿using FluentValidation;
+using FluentValidation;
 using InventoryTrackingAutomation.Dtos.Masters;
 
 namespace InventoryTrackingAutomation.FluentValidation.Masters;
@@ -8,10 +8,10 @@ public class UpdateVehicleDtoValidator : AbstractValidator<UpdateVehicleDto>
     public UpdateVehicleDtoValidator()
     {
         RuleFor(x => x.PlateNumber)
-            .NotEmpty().WithMessage("Validation:Vehicle:PlateNumberRequired")
-            .MaximumLength(20).WithMessage("Validation:Vehicle:PlateNumberMaxLength");
+            .NotEmpty().WithMessage(VehicleExceptionCodes.ValidationExceptions.PlateNumber.CannotEmpty)
+            .MaximumLength(20).WithMessage(VehicleExceptionCodes.ValidationExceptions.PlateNumber.MaxLength);
 
         RuleFor(x => x.VehicleTypeId)
-            .NotEmpty().WithMessage("Validation:Vehicle:VehicleTypeRequired");
+            .NotEmpty().WithMessage(VehicleExceptionCodes.ValidationExceptions.VehicleType.CannotEmpty);
     }
 }

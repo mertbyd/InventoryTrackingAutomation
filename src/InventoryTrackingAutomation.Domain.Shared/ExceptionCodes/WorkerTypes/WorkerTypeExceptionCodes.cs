@@ -1,4 +1,4 @@
-namespace InventoryTrackingAutomation.ExceptionCodes.WorkerTypes;
+namespace InventoryTrackingAutomation.ExceptionCodes;
 
 public static class WorkerTypeExceptionCodes
 {

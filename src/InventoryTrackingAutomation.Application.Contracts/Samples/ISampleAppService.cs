@@ -1,4 +1,4 @@
-﻿using System.Threading.Tasks;
+using System.Threading.Tasks;
 using Volo.Abp.Application.Services;
 
 namespace InventoryTrackingAutomation.Samples;
