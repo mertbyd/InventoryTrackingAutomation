@@ -11,7 +11,7 @@ using Volo.Abp.DependencyInjection;
 namespace InventoryTrackingAutomation.Managers.Tasks;
 
 /// <summary>
-/// TaskLine domain manager'i - gorev kalem kurallarini yonetir.
+/// TaskLine domain manager'i - gorev malzemeleri is kurallari.
 /// </summary>
 public class TaskLineManager : BaseManager<TaskLine>
 {
@@ -25,73 +25,68 @@ public class TaskLineManager : BaseManager<TaskLine>
     {
     }
 
-    /// Gorev kalemi olusturmak icin kullanilir.
-    public async Task<TaskLine> CreateAsync(Guid taskId, CreateTaskLineModel model)
+    /// <summary>
+    /// Yeni görev satırı oluşturmak için kullanılır.
+    /// </summary>
+    public async Task<CreateTaskLineModel> CreateAsync(Guid taskId, CreateTaskLineModel model)
     {
         await EnsureExistsInAsync(_inventoryTaskRepository, taskId);
         await EnsureExistsInAsync(_productRepository, model.ProductId);
+        ValidateQuantity(model.Quantity);
         await EnsureUniqueAsync(x => x.TaskId == taskId && x.ProductId == model.ProductId);
 
-        var entity = new TaskLine(GuidGenerator.Create())
-        {
-            TaskId = taskId,
-            ProductId = model.ProductId,
-            Quantity = model.Quantity
-        };
-        return entity;
+        return model;
     }
 
-    /// Gorev kalemini guncellemek icin kullanilir. Miktar, VehicleTaskLine toplam tahsisinin altina dusulemez.
-    public async Task<TaskLine> UpdateAsync(TaskLine existing, UpdateTaskLineModel model)
+    /// <summary>
+    /// Mevcut görev satırını güncellemek için kullanılır.
+    /// </summary>
+    public async Task<UpdateTaskLineModel> UpdateAsync(TaskLine existing, UpdateTaskLineModel model)
     {
         await EnsureExistsInAsync(_productRepository, model.ProductId);
+        ValidateQuantity(model.Quantity);
         var allocatedQuantity = await _vehicleTaskLineRepository.GetAllocatedQuantityByTaskLineIdAsync(existing.Id);
 
         if (existing.ProductId != model.ProductId)
         {
             if (allocatedQuantity > 0)
             {
-                throw new BusinessException(TaskLineExceptionCodes.CannotChangeProductAllocated)
-                    .WithData("TaskLineId", existing.Id)
-                    .WithData("AllocatedQuantity", allocatedQuantity);
+                throw new BusinessException(TaskLineExceptionCodes.CannotChangeProductAllocated);
             }
-
             await EnsureUniqueAsync(x => x.TaskId == existing.TaskId && x.ProductId == model.ProductId);
         }
 
         if (model.Quantity < allocatedQuantity)
         {
-            throw new BusinessException(TaskLineExceptionCodes.QuantityBelowAllocated)
-                .WithData("TaskLineId", existing.Id)
-                .WithData("Quantity", model.Quantity)
-                .WithData("AllocatedQuantity", allocatedQuantity);
+            throw new BusinessException(TaskLineExceptionCodes.QuantityBelowAllocated);
         }
-
-        existing.ProductId = model.ProductId;
-        existing.Quantity = model.Quantity;
-        return existing;
+        return model;
     }
 
+    /// <summary>
+    /// İstenen miktarı doğrulamak için kullanılır.
+    /// </summary>
+    private static void ValidateQuantity(decimal quantity)
+    {
+        if (quantity <= 0)
+        {
+            throw new BusinessException(TaskLineExceptionCodes.NotFound);
+        }
+    }
     /// Tek bir arac satirinin hedef miktarini gorev kalemi kapasitesine gore dogrular.
     public async Task EnsureAllocationFitsAsync(TaskLine line, int vehicleLineQuantity, Guid? excludedVehicleTaskLineId = null)
     {
         if (vehicleLineQuantity <= 0)
         {
-            throw new BusinessException(TaskLineExceptionCodes.InsufficientRemaining)
-                .WithData("TaskLineId", line.Id);
+            throw new BusinessException(TaskLineExceptionCodes.InsufficientRemaining);
         }
-
         // AllocatedQuantity TaskLine'da tutulmaz; tek dogru kaynak VehicleTaskLine toplamidir.
         var allocatedExceptCurrent = await _vehicleTaskLineRepository.GetAllocatedQuantityByTaskLineIdAsync(
             line.Id,
             excludedVehicleTaskLineId);
-
         if (allocatedExceptCurrent + vehicleLineQuantity > line.Quantity)
         {
-            throw new BusinessException(TaskLineExceptionCodes.InsufficientRemaining)
-                .WithData("TaskLineId", line.Id)
-                .WithData("Requested", vehicleLineQuantity)
-                .WithData("Remaining", line.Quantity - allocatedExceptCurrent);
+            throw new BusinessException(TaskLineExceptionCodes.InsufficientRemaining);
         }
     }
 
@@ -104,11 +99,8 @@ public class TaskLineManager : BaseManager<TaskLine>
         var allocatedQuantity = await _vehicleTaskLineRepository.GetAllocatedQuantityByTaskLineIdAsync(line.Id);
         if (allocatedQuantity > 0)
         {
-            throw new BusinessException(TaskLineExceptionCodes.CannotDeleteAllocated)
-                .WithData("TaskLineId", lineId)
-                .WithData("AllocatedQuantity", allocatedQuantity);
+            throw new BusinessException(TaskLineExceptionCodes.CannotDeleteAllocated);
         }
-
         await Repository.DeleteAsync(line);
     }
 
@@ -136,3 +128,4 @@ public class TaskLineManager : BaseManager<TaskLine>
         return await Repository.InsertAsync(entity, autoSave: true);
     }
 }
+

@@ -140,16 +140,16 @@ public abstract class WorkflowManager_Tests<TStartupModule> : InventoryTrackingA
             // Assert
             var updatedInstance = await _workflowInstanceRepository.GetAsync(instance.Id);
             updatedInstance.State.ShouldBe(WorkflowState.Active);
-            
+
             var steps = await _workflowInstanceStepRepository.GetListAsync(x => x.WorkflowInstanceId == instance.Id);
             steps.Count.ShouldBe(2);
-            
+
             var s1 = steps.First(x => x.WorkflowStepDefinitionId == step1DefId);
             var s2 = steps.First(x => x.WorkflowStepDefinitionId == step2DefId);
 
             s1.ActionTaken.ShouldBe(WorkflowActionType.Approved);
             s1.ActionDate.ShouldNotBeNull();
-            
+
             s2.ActionTaken.ShouldBe(WorkflowActionType.Pending);
             s2.ActionDate.ShouldBeNull();
         });

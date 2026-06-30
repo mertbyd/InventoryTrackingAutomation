@@ -51,7 +51,7 @@ public abstract class WarehouseAppService_Tests<TStartupModule> : InventoryTrack
         // ASSERT
         Assert.NotEqual(Guid.Empty, result.Id);
         Assert.Equal(input.Code, result.Code);
-        
+
         // Veritabaninda gercekten var mi kontrol et
         var dbWarehouse = await _warehouseRepository.GetAsync(result.Id);
         Assert.NotNull(dbWarehouse);

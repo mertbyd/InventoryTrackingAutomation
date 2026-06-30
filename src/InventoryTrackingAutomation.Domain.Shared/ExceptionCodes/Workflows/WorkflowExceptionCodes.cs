@@ -45,4 +45,13 @@ public static class WorkflowExceptionCodes
             public const string DefinitionIdInvalid = $"{WorkflowValidationExceptionsPrefix}.DefinitionId:00002";
         }
     }
+    public static class General
+    {
+        public const string InvalidOperation = "${WorkflowErrorCodesPrefix}.General:00001";
+    }
+
+    public static class MovementApprovals
+    {
+        public const string AlreadyDecided = "${WorkflowErrorCodesPrefix}.MovementApprovals:00001";
+    }
 }

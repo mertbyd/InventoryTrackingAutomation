@@ -26,6 +26,9 @@ public abstract class MovementRequestAppService_Tests<TStartupModule> : Inventor
     private readonly IRepository<InventoryTaskEntity, Guid> _taskRepository;
     private readonly IRepository<VehicleTask, Guid> _vehicleTaskRepository;
 
+    private readonly IRepository<InventoryTrackingAutomation.Entities.Lookups.VehicleType, Guid> _vehicleTypeRepository;
+    private readonly IRepository<InventoryTrackingAutomation.Entities.Lookups.WorkerType, Guid> _workerTypeRepository;
+
     protected MovementRequestAppService_Tests()
     {
         _appService = GetRequiredService<IMovementRequestAppService>();
@@ -35,6 +38,8 @@ public abstract class MovementRequestAppService_Tests<TStartupModule> : Inventor
         _workerRepository = GetRequiredService<IRepository<Worker, Guid>>();
         _taskRepository = GetRequiredService<IRepository<InventoryTaskEntity, Guid>>();
         _vehicleTaskRepository = GetRequiredService<IRepository<VehicleTask, Guid>>();
+        _vehicleTypeRepository = GetRequiredService<IRepository<InventoryTrackingAutomation.Entities.Lookups.VehicleType, Guid>>();
+        _workerTypeRepository = GetRequiredService<IRepository<InventoryTrackingAutomation.Entities.Lookups.WorkerType, Guid>>();
     }
 
     [Fact]
@@ -83,10 +88,13 @@ public abstract class MovementRequestAppService_Tests<TStartupModule> : Inventor
             IsActive = true
         }, autoSave: true);
 
+        var vehicleType = await _vehicleTypeRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Lookups.VehicleType(Guid.NewGuid(), $"{prefix}-VT", "VT"), autoSave: true);
+        var workerType = await _workerTypeRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Lookups.WorkerType(Guid.NewGuid(), $"{prefix}-WT", "WT"), autoSave: true);
+
         var vehicle = await _vehicleRepository.InsertAsync(new Vehicle(Guid.NewGuid())
         {
             PlateNumber = $"{prefix}-{Guid.NewGuid():N}"[..12],
-            VehicleTypeId = System.Guid.NewGuid(),
+            VehicleTypeId = vehicleType.Id,
             IsActive = true
         }, autoSave: true);
 
@@ -94,7 +102,7 @@ public abstract class MovementRequestAppService_Tests<TStartupModule> : Inventor
         {
             UserId = Guid.NewGuid(),
             RegistrationNumber = $"{prefix}-WRK-{Guid.NewGuid():N}"[..30],
-            WorkerTypeId = System.Guid.NewGuid(),
+            WorkerTypeId = workerType.Id,
             DefaultWarehouseId = warehouse.Id,
             IsActive = true
         }, autoSave: true);

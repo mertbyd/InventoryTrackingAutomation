@@ -1,4 +1,3 @@
-using AutoMapper;
 using System.Threading.Tasks;
 using InventoryTrackingAutomation.Entities.Lookups;
 using InventoryTrackingAutomation.Entities.Masters;
@@ -23,7 +22,6 @@ public class ProductManager : BaseManager<Product>
     /// <summary>
     /// ProductManager constructor'ı.
     /// </summary>
-    private IMapper _mapper => LazyGetRequiredService<IMapper>();
     public ProductManager(IProductRepository repository,
         IAbpLazyServiceProvider abpLazyServiceProvider)
         : base(repository, abpLazyServiceProvider)
@@ -33,9 +31,9 @@ public class ProductManager : BaseManager<Product>
     /// <summary>
     /// Yeni ürün oluşturur — Code unique ve CategoryId varlık kontrolü yapar.
     /// </summary>
-//işlevi: Etki alanı kuralını veya validasyonunu işletir.
-//sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
-    public async Task<Product> CreateAsync(CreateProductModel model)
+    //işlevi: Etki alanı kuralını veya validasyonunu işletir.
+    //sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
+    public async Task<CreateProductModel> CreateAsync(CreateProductModel model)
     {
         if (!string.IsNullOrWhiteSpace(model.Code))
         {
@@ -53,17 +51,15 @@ public class ProductManager : BaseManager<Product>
         // islevi: Enum yerine gelen UnitType lookup kaydinin DB'de var oldugunu dogrular.
         await EnsureExistsInAsync(_unitTypeRepository, model.UnitTypeId);
 
-        var entity = new Product(GuidGenerator.Create());
-        _mapper.Map(model, entity);
-        return entity;
+        return model;
     }
 
     /// <summary>
     /// Ürünü günceller — Code unique (self hariç) ve CategoryId varlık kontrolü yapar.
     /// </summary>
-//işlevi: Etki alanı kuralını veya validasyonunu işletir.
-//sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
-    public async Task<Product> UpdateAsync(Product existing, UpdateProductModel model)
+    //işlevi: Etki alanı kuralını veya validasyonunu işletir.
+    //sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
+    public async Task<UpdateProductModel> UpdateAsync(Product existing, UpdateProductModel model)
     {
         if (!string.IsNullOrWhiteSpace(model.Code) && existing.Code != model.Code)
         {
@@ -72,7 +68,7 @@ public class ProductManager : BaseManager<Product>
                 existing.Id);
         }
 
-        if (model.CategoryId.HasValue && existing.CategoryId != model.CategoryId)
+        if (model.CategoryId.HasValue)
         {
             await EnsureExistsInAsync(
                 _categoryRepository,
@@ -82,8 +78,7 @@ public class ProductManager : BaseManager<Product>
         // islevi: Enum yerine gelen UnitType lookup kaydinin DB'de var oldugunu dogrular.
         await EnsureExistsInAsync(_unitTypeRepository, model.UnitTypeId);
 
-        _mapper.Map(model, existing);
-        return existing;
+        return model;
     }
 
     /// <summary>

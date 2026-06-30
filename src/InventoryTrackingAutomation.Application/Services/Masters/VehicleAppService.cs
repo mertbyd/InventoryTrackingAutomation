@@ -1,4 +1,4 @@
-using AutoMapper;
+using InventoryTrackingAutomation.Application.Mappers.Masters;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -40,21 +40,21 @@ public class VehicleAppService : InventoryTrackingAutomationAppService, IVehicle
     private IValidator<UpdateVehicleDto> _updateValidator => LazyGetRequiredService<IValidator<UpdateVehicleDto>>();
 
     // Tüm bağımlılıkları DI ile alır.
-    private IMapper _mapper => LazyGetRequiredService<IMapper>();
+    private static readonly VehicleMapper _mapper = new VehicleMapper();
 
 
     // Id ile aracı getirir; yoksa EntityNotFoundException.
-//işlevi: İlgili iş senaryosunu (use-case) yürütür.
-//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
+    //işlevi: İlgili iş senaryosunu (use-case) yürütür.
+    //sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<VehicleDto> GetAsync(Guid id)
     {
         var entity = await _manager.EnsureExistsAsync(id);
-        return _mapper.Map<Vehicle, VehicleDto>(entity);
+        return _mapper.MapToDto(entity);
     }
 
     // Araçları sayfalı listeler.
-//işlevi: İlgili iş senaryosunu (use-case) yürütür.
-//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
+    //işlevi: İlgili iş senaryosunu (use-case) yürütür.
+    //sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<PagedResultDto<VehicleDto>> GetListAsync(PagedResultRequestDto input)
     {
         var totalCount = await _repository.GetCountAsync();
@@ -62,69 +62,75 @@ public class VehicleAppService : InventoryTrackingAutomationAppService, IVehicle
             input.SkipCount, input.MaxResultCount, sorting: string.Empty);
         return new PagedResultDto<VehicleDto>(
             totalCount,
-            _mapper.Map<List<Vehicle>, List<VehicleDto>>(entities));
+            _mapper.MapToDto(entities));
     }
 
     // Arac uzerindeki envanterleri getirir; cache okuma/yazma InventoryCacheInterceptor tarafindan yapilir.
-//işlevi: İlgili iş senaryosunu (use-case) yürütür.
-//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
+    //işlevi: İlgili iş senaryosunu (use-case) yürütür.
+    //sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     // CacheKeys.VehicleInventoriesTemplate invalidation tarafindaki VehicleInventories key'i ile ayni sozlesmeyi kullanir.
     [InventoryCache(CacheKeys.VehicleInventoriesTemplate, 10)]
     public async Task<List<VehicleInventoryDto>> GetInventoriesAsync(Guid id)
     {
         var inventories = await _inventoryQueryManager.GetVehicleInventoriesAsync(id);
-        return _mapper.Map<List<VehicleInventoryModel>, List<VehicleInventoryDto>>(inventories);
+        return _mapper.MapToDto(inventories);
     }
 
     // Yeni araç oluşturur — manager iş kurallarını uygular, repository persist eder.
     [UnitOfWork]
-//işlevi: İlgili iş senaryosunu (use-case) yürütür.
-//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
+    //işlevi: İlgili iş senaryosunu (use-case) yürütür.
+    //sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<VehicleDto> CreateAsync(CreateVehicleDto input)
     {
         await _createValidator.ValidateAndThrowAsync(input);
-        var model = _mapper.Map<CreateVehicleDto, CreateVehicleModel>(input);
-        var entity = await _manager.CreateAsync(model);
+        var model = _mapper.MapToModel(input);
+        var validatedModel = await _manager.CreateAsync(model);
+        var entity = new Vehicle(GuidGenerator.Create());
+        _mapper.MapToEntity(validatedModel, entity);
         var inserted = await _repository.InsertAsync(entity, autoSave: true);
-        return _mapper.Map<Vehicle, VehicleDto>(inserted);
+        return _mapper.MapToDto(inserted);
     }
 
     // Birden fazla aracı toplu oluşturur.
     [UnitOfWork]
-//işlevi: İlgili iş senaryosunu (use-case) yürütür.
-//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
+    //işlevi: İlgili iş senaryosunu (use-case) yürütür.
+    //sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<List<VehicleDto>> CreateManyAsync(List<CreateVehicleDto> inputs)
     {
         var entities = new List<Vehicle>();
         foreach (var dto in inputs)
         {
             await _createValidator.ValidateAndThrowAsync(dto);
-            var model = _mapper.Map<CreateVehicleDto, CreateVehicleModel>(dto);
-            entities.Add(await _manager.CreateAsync(model));
+            var model = _mapper.MapToModel(dto);
+            var validatedModel = await _manager.CreateAsync(model);
+            var entity = new Vehicle(GuidGenerator.Create());
+            _mapper.MapToEntity(validatedModel, entity);
+            entities.Add(entity);
         }
 
         var inserted = await _repository.InsertManyAndGetListAsync(entities);
-        return _mapper.Map<List<Vehicle>, List<VehicleDto>>(inserted);
+        return _mapper.MapToDto(inserted);
     }
 
     // Aracı günceller — manager iş kurallarını uygular, repository persist eder.
     [UnitOfWork]
-//işlevi: İlgili iş senaryosunu (use-case) yürütür.
-//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
+    //işlevi: İlgili iş senaryosunu (use-case) yürütür.
+    //sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<VehicleDto> UpdateAsync(Guid id, UpdateVehicleDto input)
     {
         await _updateValidator.ValidateAndThrowAsync(input);
         var existing = await _manager.EnsureExistsAsync(id);
-        var model = _mapper.Map<UpdateVehicleDto, UpdateVehicleModel>(input);
-        var updated = await _manager.UpdateAsync(existing, model);
-        var saved = await _repository.UpdateAsync(updated, autoSave: true);
-        return _mapper.Map<Vehicle, VehicleDto>(saved);
+        var model = _mapper.MapToModel(input);
+        var validatedModel = await _manager.UpdateAsync(existing, model);
+        _mapper.MapToEntity(validatedModel, existing);
+        var saved = await _repository.UpdateAsync(existing, autoSave: true);
+        return _mapper.MapToDto(saved);
     }
 
     // Araci silmek yerine pasife alir; arac-gorev ve stok gecmisi korunur.
     [UnitOfWork]
-//işlevi: İlgili iş senaryosunu (use-case) yürütür.
-//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
+    //işlevi: İlgili iş senaryosunu (use-case) yürütür.
+    //sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task DeleteAsync(Guid id)
     {
         var existing = await _manager.EnsureExistsAsync(id);

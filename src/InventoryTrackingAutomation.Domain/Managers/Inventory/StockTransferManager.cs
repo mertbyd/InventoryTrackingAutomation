@@ -36,7 +36,7 @@ public class StockTransferManager : InventoryTrackingAutomationDomainService
 
         await _stockLocationManager.DecreaseAsync(model.SourceLocationType, model.SourceLocationId, model.ProductId, model.Quantity);
         await _stockLocationManager.IncreaseAsync(model.DestinationLocationType, model.DestinationLocationId, model.ProductId, model.Quantity);
-        
+
         return await _transactionManager.RecordAsync(model);
     }
 }

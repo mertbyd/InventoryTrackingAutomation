@@ -83,12 +83,12 @@ public class InventoryQueryManager : InventoryTrackingAutomationLazyService, ITr
         return locations
             .Select(location => new VehicleInventoryModel
             {
-            VehicleId = vehicleId,
-            ProductId = location.ProductId,
-            VehicleTaskId = activeVehicleTask?.Id,
-            TaskId = activeVehicleTask?.TaskId,
-            Quantity = location.Quantity,
-            ReservedQuantity = location.ReservedQuantity
+                VehicleId = vehicleId,
+                ProductId = location.ProductId,
+                VehicleTaskId = activeVehicleTask?.Id,
+                TaskId = activeVehicleTask?.TaskId,
+                Quantity = location.Quantity,
+                ReservedQuantity = location.ReservedQuantity
             })
             .ToList();
     }

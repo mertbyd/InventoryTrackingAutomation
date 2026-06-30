@@ -1,4 +1,4 @@
-using AutoMapper;
+﻿using InventoryTrackingAutomation.Application.Mappers.Movements;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -32,7 +32,7 @@ public class MovementApprovalAppService : InventoryTrackingAutomationAppService,
     private IRepository<MovementApproval, Guid> _repository => LazyGetRequiredService<IRepository<MovementApproval, Guid>>();
 
     // Tüm bağımlılıkları DI ile alır.
-    private IMapper _mapper => LazyGetRequiredService<IMapper>();
+    private static readonly MovementApprovalMapper _mapper = new MovementApprovalMapper();
 
 
     /// Onay işlemini gerçekleştirmek için kullanılır.
@@ -40,7 +40,7 @@ public class MovementApprovalAppService : InventoryTrackingAutomationAppService,
     public async Task<MovementApprovalDto> ProcessApprovalAsync(Guid movementRequestId, ProcessMovementApprovalDto input)
     {
         MovementApproval approval;
-        
+
         if (input.IsApproved)
         {
             approval = await _manager.ApproveAsync(movementRequestId, CurrentUser.GetId(), input.Note);
@@ -54,7 +54,7 @@ public class MovementApprovalAppService : InventoryTrackingAutomationAppService,
             }
             approval = await _manager.RejectAsync(movementRequestId, CurrentUser.GetId(), input.Note);
         }
-        
+
         return MapToDto(approval);
     }
 
@@ -69,14 +69,14 @@ public class MovementApprovalAppService : InventoryTrackingAutomationAppService,
     public async Task<List<PendingApprovalDto>> GetPendingApprovalsAsync()
     {
         var pending = await _manager.GetPendingApprovalsForUserAsync(CurrentUser.GetId());
-        return _mapper.Map<List<PendingApprovalModel>, List<PendingApprovalDto>>(pending);
+        return _mapper.MapToDto(pending);
     }
 
     /// Veriyi DTO modeline dönüştürmek için kullanılır.
     private MovementApprovalDto MapToDto(MovementApproval approval)
-        => _mapper.Map<MovementApproval, MovementApprovalDto>(approval);
+        => _mapper.MapToDto(approval);
 
     /// Veri listesini DTO listesine dönüştürmek için kullanılır.
     private List<MovementApprovalDto> MapToDtoList(List<MovementApproval> approvals)
-        => _mapper.Map<List<MovementApproval>, List<MovementApprovalDto>>(approvals);
+        => _mapper.MapToDto(approvals);
 }

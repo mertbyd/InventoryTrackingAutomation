@@ -38,12 +38,11 @@ public class EnumValidationManager : InventoryTrackingAutomationDomainService
         var allowedValuesStr = await _settingProvider.GetOrNullAsync(settingName);
         if (string.IsNullOrWhiteSpace(allowedValuesStr))
         {
-            throw new BusinessException(GeneralExceptionCodes.InvalidOperation)
-                .WithData("Message", $"Missing setting configuration for '{settingName}'");
+            throw new BusinessException(GeneralExceptionCodes.InvalidOperation);
         }
 
         var intValue = Convert.ToInt32(enumValue);
-        
+
         var allowedInts = allowedValuesStr
             .Split(',', StringSplitOptions.RemoveEmptyEntries)
             .Select(x => int.TryParse(x, out var parsed) ? parsed : (int?)null)
@@ -53,10 +52,8 @@ public class EnumValidationManager : InventoryTrackingAutomationDomainService
 
         if (!allowedInts.Contains(intValue))
         {
-            throw new BusinessException(GeneralExceptionCodes.InvalidEnumValue)
-                .WithData("EnumType", typeof(TEnum).Name)
-                .WithData("InvalidValue", enumValue.ToString())
-                .WithData("AllowedValues", allowedValuesStr);
+            throw new BusinessException(GeneralExceptionCodes.InvalidEnumValue);
         }
     }
 }
+

@@ -1,4 +1,3 @@
-using AutoMapper;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -17,7 +16,6 @@ namespace InventoryTrackingAutomation.Managers.Tasks;
 /// </summary>
 public class InventoryTaskManager : BaseManager<InventoryTask>
 {
-    private IMapper _mapper => LazyGetRequiredService<IMapper>();
     private IWarehouseRepository _warehouseRepository => LazyGetRequiredService<IWarehouseRepository>();
     private TaskLineManager _taskLineManager => LazyGetRequiredService<TaskLineManager>();
     private ITaskLineRepository _taskLineRepository => LazyGetRequiredService<ITaskLineRepository>();
@@ -30,78 +28,40 @@ public class InventoryTaskManager : BaseManager<InventoryTask>
     }
 
     /// <summary>
-    /// Envanter gorevini kalemleri ile birlikte atomik olarak olusturur.
+    /// Yeni bir envanter görevini oluşturmak için kullanılır.
     /// </summary>
-    public async Task<InventoryTask> CreateWithLinesAsync(CreateInventoryTaskModel model, List<CreateTaskLineModel> lines)
-    {
-        var task = await CreateAsync(model);
-        var insertedTask = await _inventoryTaskRepository.InsertAsync(task, autoSave: true);
-
-        if (lines != null)
-        {
-            foreach (var lineModel in lines)
-            {
-                var line = await _taskLineManager.CreateAsync(insertedTask.Id, lineModel);
-                await _taskLineRepository.InsertAsync(line, autoSave: true);
-            }
-        }
-
-        return insertedTask;
-    }
-
-    /// <summary>
-    /// Yeni bir envanter görevi oluşturmak için kullanılır.
-    /// </summary>
-    public async Task<InventoryTask> CreateAsync(CreateInventoryTaskModel model)
+    public async Task<CreateInventoryTaskModel> CreateAsync(CreateInventoryTaskModel model)
     {
         await ValidateCodeForCreateAsync(model.Code);
         ValidateDateRange(model.StartDate, model.EndDate);
         await ValidateRouteAsync(model.Type, model.SourceWarehouseId, model.TargetWarehouseId, model.ReturnWarehouseId);
 
-        var entity = new InventoryTask(GuidGenerator.Create());
-        _mapper.Map(model, entity);
-        return entity;
+        return model;
     }
 
     /// <summary>
     /// Mevcut bir envanter görevini güncellemek için kullanılır.
     /// </summary>
-    public async Task<InventoryTask> UpdateAsync(InventoryTask existing, UpdateInventoryTaskModel model)
+    public async Task<UpdateInventoryTaskModel> UpdateAsync(InventoryTask existing, UpdateInventoryTaskModel model)
     {
-        await ValidateCodeForUpdateAsync(existing, model.Code);
+        if (existing.Status == InventoryTrackingAutomation.Enums.Tasks.TaskStatusEnum.Completed ||
+            existing.Status == InventoryTrackingAutomation.Enums.Tasks.TaskStatusEnum.Cancelled)
+        {
+            throw new BusinessException(InventoryTaskExceptionCodes.CannotUpdateCompletedOrCancelled);
+        }
+
+        if (!string.IsNullOrWhiteSpace(model.Code) && existing.Code != model.Code)
+        {
+            await EnsureUniqueAsync(x => x.Code == model.Code, existing.Id);
+        }
+
         ValidateDateRange(model.StartDate, model.EndDate);
         await ValidateRouteAsync(model.Type, model.SourceWarehouseId, model.TargetWarehouseId, model.ReturnWarehouseId);
 
-        _mapper.Map(model, existing);
-        return existing;
+        return model;
     }
 
-    /// <summary>
-    /// Gorev guncellemesini ve status gecisini koordine eder.
-    /// </summary>
-    public async Task<InventoryTask> UpdateWithStatusAsync(
-        Guid id, 
-        UpdateInventoryTaskModel model, 
-        InventoryTrackingAutomation.Enums.Tasks.TaskStatusEnum targetStatus,
-        Volo.Abp.EventBus.Local.ILocalEventBus localEventBus,
-        Guid currentUserId,
-        Guid currentWorkerId)
-    {
-        var existing = await EnsureExistsAsync(id);
-        var updated = await UpdateAsync(existing, model);
 
-        if (updated.Status != targetStatus)
-        {
-            await TransitionStatusAsync(
-                updated,
-                targetStatus,
-                localEventBus,
-                currentUserId,
-                currentWorkerId);
-        }
-
-        return await _inventoryTaskRepository.UpdateAsync(updated, autoSave: true);
-    }
 
     /// <summary>
     /// Görev kodunu oluşturma aşamasında doğrulamak için kullanılır.
@@ -147,8 +107,7 @@ public class InventoryTaskManager : BaseManager<InventoryTask>
     {
         if (sourceWarehouseId == Guid.Empty)
         {
-            throw new BusinessException(WarehouseExceptionCodes.NotFound)
-                .WithData("SourceWarehouseId", sourceWarehouseId);
+            throw new BusinessException(WarehouseExceptionCodes.NotFound);
         }
 
         await EnsureExistsInAsync(_warehouseRepository, sourceWarehouseId);
@@ -172,9 +131,7 @@ public class InventoryTaskManager : BaseManager<InventoryTask>
 
             if (targetWarehouseId.Value == sourceWarehouseId)
             {
-                throw new BusinessException(InventoryTransactionExceptionCodes.InvalidLocationPair)
-                    .WithData("SourceWarehouseId", sourceWarehouseId)
-                    .WithData("TargetWarehouseId", targetWarehouseId.Value);
+                throw new BusinessException(InventoryTransactionExceptionCodes.InvalidLocationPair);
             }
         }
     }
@@ -203,8 +160,7 @@ public class InventoryTaskManager : BaseManager<InventoryTask>
         };
 
         if (!allowed)
-            throw new BusinessException(GeneralExceptionCodes.InvalidOperation)
-                .WithData("From", task.Status).WithData("To", target);
+            throw new BusinessException(GeneralExceptionCodes.InvalidOperation);
 
         task.Status = target;
 
@@ -218,3 +174,4 @@ public class InventoryTaskManager : BaseManager<InventoryTask>
         });
     }
 }
+

@@ -1,9 +1,9 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
-using AutoMapper;
+using InventoryTrackingAutomation.Application.Mappers.Auth;
 using InventoryTrackingAutomation.Dtos.Auth;
 
 using InventoryTrackingAutomation.Managers.Auth;
@@ -41,7 +41,7 @@ public class AuthAppService : InventoryTrackingAutomationAppService, IAuthAppSer
     // HTTP token akışındaki hataları loglamak için.
     private ILogger<AuthAppService> _logger => LazyGetRequiredService<ILogger<AuthAppService>>();
     // DTO ↔ Model dönüşümü için.
-    private IMapper _mapper => LazyGetRequiredService<IMapper>();
+    private static readonly AuthMapper _mapper = new AuthMapper();
 
     // Tüm bağımlılıkları DI ile alır.
 
@@ -51,12 +51,12 @@ public class AuthAppService : InventoryTrackingAutomationAppService, IAuthAppSer
     /// DTO → Model mapping, AuthManager.CreateUserAsync çağrısı, kullanıcı ID'sini döner.
     /// </summary>
     [UnitOfWork]
-//işlevi: İlgili iş senaryosunu (use-case) yürütür.
-//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
+    //işlevi: İlgili iş senaryosunu (use-case) yürütür.
+    //sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<Guid> RegisterAsync(RegisterDto input)
     {
         // DTO → Model mapping
-        var registerModel = _mapper.Map<RegisterModel>(input);
+        var registerModel = _mapper.MapToModel(input);
 
         // Domain servisi çağrı (CreateUserAsync)
         var user = await _authManager.CreateUserAsync(registerModel);
@@ -69,12 +69,12 @@ public class AuthAppService : InventoryTrackingAutomationAppService, IAuthAppSer
     /// Kullanıcı girişi (login) işlemini gerçekleştirir.
     /// Kimlik doğrulama (AuthManager) + OpenIddict token istek kombinasyonu.
     /// </summary>
-//işlevi: İlgili iş senaryosunu (use-case) yürütür.
-//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
+    //işlevi: İlgili iş senaryosunu (use-case) yürütür.
+    //sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<TokenResponse> LoginAsync(LoginDto input)
     {
         // DTO → Model mapping
-        var loginModel = _mapper.Map<LoginModel>(input);
+        var loginModel = _mapper.MapToModel(input);
         // Domain servisi çağrı (Kimlik doğrulama)
         var user = await _authManager.ValidateLoginAsync(loginModel);
         // OpenIddict token endpoint'i çağrısı
@@ -91,8 +91,8 @@ public class AuthAppService : InventoryTrackingAutomationAppService, IAuthAppSer
     /// <summary>
     /// Giriş yapmış mevcut kullanıcının ID'sini döner.
     /// </summary>
-//işlevi: İlgili iş senaryosunu (use-case) yürütür.
-//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
+    //işlevi: İlgili iş senaryosunu (use-case) yürütür.
+    //sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<Guid?> GetMeAsync()
     {
         return CurrentUser.Id;

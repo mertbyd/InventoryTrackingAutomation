@@ -15,6 +15,6 @@ public class CreateWorkflowDefinitionDto
     /// Version alanı.
     /// </summary>
     public int Version { get; set; }
-    
+
     public List<CreateWorkflowStepDefinitionDto> Steps { get; set; } = new();
 }

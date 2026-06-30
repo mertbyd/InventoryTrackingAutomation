@@ -1,4 +1,4 @@
-using AutoMapper;
+using InventoryTrackingAutomation.Application.Mappers.Inventory;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -34,76 +34,80 @@ public class StockLocationAppService : InventoryTrackingAutomationAppService, IS
     private ILocalEventBus _localEventBus => LazyGetRequiredService<ILocalEventBus>();
     private IValidator<CreateStockLocationDto> _createValidator => LazyGetRequiredService<IValidator<CreateStockLocationDto>>();
     private IValidator<UpdateStockLocationDto> _updateValidator => LazyGetRequiredService<IValidator<UpdateStockLocationDto>>();
-    private IMapper _mapper => LazyGetRequiredService<IMapper>();
+    private static readonly StockLocationMapper _mapper = new StockLocationMapper();
 
 
 
-//işlevi: İlgili iş senaryosunu (use-case) yürütür.
-//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
+    //işlevi: İlgili iş senaryosunu (use-case) yürütür.
+    //sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<StockLocationDto> GetAsync(Guid id)
     {
         var entity = await _manager.EnsureExistsAsync(id);
-        return _mapper.Map<StockLocation, StockLocationDto>(entity);
+        return _mapper.MapToDto(entity);
     }
 
-//işlevi: İlgili iş senaryosunu (use-case) yürütür.
-//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
+    //işlevi: İlgili iş senaryosunu (use-case) yürütür.
+    //sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<PagedResultDto<StockLocationDto>> GetListAsync(PagedResultRequestDto input)
     {
         var totalCount = await _repository.GetCountAsync();
         var entities = await _repository.GetPagedListAsync(input.SkipCount, input.MaxResultCount, sorting: string.Empty);
-        return new PagedResultDto<StockLocationDto>(totalCount, _mapper.Map<List<StockLocation>, List<StockLocationDto>>(entities));
+        return new PagedResultDto<StockLocationDto>(totalCount, _mapper.MapToDto(entities));
     }
 
     [UnitOfWork]
-//işlevi: İlgili iş senaryosunu (use-case) yürütür.
-//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
+    //işlevi: İlgili iş senaryosunu (use-case) yürütür.
+    //sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<StockLocationDto> CreateAsync(CreateStockLocationDto input)
     {
         await _createValidator.ValidateAndThrowAsync(input);
-        var model = _mapper.Map<CreateStockLocationDto, CreateStockLocationModel>(input);
+        var model = _mapper.MapToModel(input);
         var entity = await _manager.CreateAsync(model);
+        _mapper.MapToEntity(model, entity);
         var inserted = await _repository.InsertAsync(entity, autoSave: true);
         await InvalidateStockCacheAsync(inserted.ProductId, inserted.LocationType, inserted.LocationId);
-        return _mapper.Map<StockLocation, StockLocationDto>(inserted);
+        return _mapper.MapToDto(inserted);
     }
 
     [UnitOfWork]
-//işlevi: İlgili iş senaryosunu (use-case) yürütür.
-//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
+    //işlevi: İlgili iş senaryosunu (use-case) yürütür.
+    //sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<List<StockLocationDto>> CreateManyAsync(List<CreateStockLocationDto> inputs)
     {
         var entities = new List<StockLocation>();
         foreach (var dto in inputs)
         {
             await _createValidator.ValidateAndThrowAsync(dto);
-            var model = _mapper.Map<CreateStockLocationDto, CreateStockLocationModel>(dto);
-            entities.Add(await _manager.CreateAsync(model));
+            var model = _mapper.MapToModel(dto);
+            var entity = await _manager.CreateAsync(model);
+            _mapper.MapToEntity(model, entity);
+            entities.Add(entity);
         }
 
         var inserted = await _repository.InsertManyAndGetListAsync(entities);
         foreach (var e in inserted)
             await InvalidateStockCacheAsync(e.ProductId, e.LocationType, e.LocationId);
-        return _mapper.Map<List<StockLocation>, List<StockLocationDto>>(inserted);
+        return _mapper.MapToDto(inserted);
     }
 
     [UnitOfWork]
-//işlevi: İlgili iş senaryosunu (use-case) yürütür.
-//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
+    //işlevi: İlgili iş senaryosunu (use-case) yürütür.
+    //sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<StockLocationDto> UpdateAsync(Guid id, UpdateStockLocationDto input)
     {
         await _updateValidator.ValidateAndThrowAsync(input);
         var existing = await _manager.EnsureExistsAsync(id);
-        var model = _mapper.Map<UpdateStockLocationDto, UpdateStockLocationModel>(input);
+        var model = _mapper.MapToModel(input);
         var updated = await _manager.UpdateAsync(existing, model);
+        _mapper.MapToEntity(model, updated);
         var saved = await _repository.UpdateAsync(updated, autoSave: true);
         await InvalidateStockCacheAsync(saved.ProductId, saved.LocationType, saved.LocationId);
-        return _mapper.Map<StockLocation, StockLocationDto>(saved);
+        return _mapper.MapToDto(saved);
     }
 
     [UnitOfWork]
-//işlevi: İlgili iş senaryosunu (use-case) yürütür.
-//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
+    //işlevi: İlgili iş senaryosunu (use-case) yürütür.
+    //sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task DeleteAsync(Guid id)
     {
         // StockLocation silinmez; miktar degisiklikleri stok hareketi ve update akislariyla yonetilir.

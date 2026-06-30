@@ -1,4 +1,3 @@
-using AutoMapper;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -27,7 +26,6 @@ public class StockLocationManager : BaseManager<StockLocation>
     private IProductRepository _productRepository => LazyGetRequiredService<IProductRepository>();
     private IWarehouseRepository _warehouseRepository => LazyGetRequiredService<IWarehouseRepository>();
     private IVehicleRepository _vehicleRepository => LazyGetRequiredService<IVehicleRepository>();
-    private IMapper _mapper => LazyGetRequiredService<IMapper>();
 
     public StockLocationManager(IStockLocationRepository repository,
         IAbpLazyServiceProvider abpLazyServiceProvider)
@@ -43,7 +41,6 @@ public class StockLocationManager : BaseManager<StockLocation>
         ValidateQuantities(model.Quantity, model.ReservedQuantity);
 
         var entity = new StockLocation(GuidGenerator.Create());
-        _mapper.Map(model, entity);
         return entity;
     }
 
@@ -54,7 +51,6 @@ public class StockLocationManager : BaseManager<StockLocation>
         await ValidateUniqueLocationAsync(model.ProductId, model.LocationType, model.LocationId, existing.Id);
         ValidateQuantities(model.Quantity, model.ReservedQuantity);
 
-        _mapper.Map(model, existing);
         return existing;
     }
 
@@ -66,8 +62,7 @@ public class StockLocationManager : BaseManager<StockLocation>
     public async Task RejectDeleteAsync(Guid id)
     {
         await EnsureExistsAsync(id);
-        throw new BusinessException(StockLocationExceptionCodes.DeleteNotSupported)
-            .WithData("StockLocationId", id);
+        throw new BusinessException(StockLocationExceptionCodes.DeleteNotSupported);
     }
 
     /// Lokasyon referanslarını doğrulamak için kullanılır.
@@ -123,11 +118,8 @@ public class StockLocationManager : BaseManager<StockLocation>
             .FindAsync(x => x.LocationType == type && x.LocationId == locationId && x.ProductId == productId);
 
         if (stock == null || stock.Quantity < qty)
-            throw new BusinessException(StockLocationExceptionCodes.InsufficientStock)
-                .WithData("LocationType", type).WithData("LocationId", locationId)
-                .WithData("ProductId", productId).WithData("Requested", qty)
-                .WithData("Available", stock?.Quantity ?? 0);
-                
+            throw new BusinessException(StockLocationExceptionCodes.InsufficientStock);
+
         stock.Quantity -= qty;
         await Repository.UpdateAsync(stock, autoSave: true);
     }
@@ -143,10 +135,10 @@ public class StockLocationManager : BaseManager<StockLocation>
             await EnsureLocationExistsAsync(type, locationId);
             stock = new StockLocation(GuidGenerator.Create())
             {
-                LocationType = type, 
+                LocationType = type,
                 LocationId = locationId,
-                ProductId = productId, 
-                Quantity = qty, 
+                ProductId = productId,
+                Quantity = qty,
                 ReservedQuantity = 0
             };
             await Repository.InsertAsync(stock, autoSave: true);
@@ -162,13 +154,14 @@ public class StockLocationManager : BaseManager<StockLocation>
         switch (type)
         {
             case StockLocationTypeEnum.Warehouse:
-                await EnsureExistsInAsync(_warehouseRepository, locationId); 
+                await EnsureExistsInAsync(_warehouseRepository, locationId);
                 break;
             case StockLocationTypeEnum.Vehicle:
-                await EnsureExistsInAsync(_vehicleRepository, locationId); 
+                await EnsureExistsInAsync(_vehicleRepository, locationId);
                 break;
             default:
                 throw new BusinessException(StockLocationExceptionCodes.UnsupportedLocationType);
         }
     }
 }
+

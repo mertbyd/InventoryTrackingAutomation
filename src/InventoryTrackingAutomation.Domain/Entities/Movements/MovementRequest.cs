@@ -26,7 +26,7 @@ public class MovementRequest : FullAuditedEntity<Guid>
     public Guid? WorkflowInstanceId { get; set; } // Talebin bagli oldugu workflow sureci baglamini tasir.
 
     protected MovementRequest() { }
-    
+
     //işlevi: Aggregate root'u verilen ID ile ilklendirir.
     //sistemdeki görevii: Yeni talep kayitlarinin Entity Framework tarafindan ID bazli olusumunu saglar.
     public MovementRequest(Guid id) : base(id) { }

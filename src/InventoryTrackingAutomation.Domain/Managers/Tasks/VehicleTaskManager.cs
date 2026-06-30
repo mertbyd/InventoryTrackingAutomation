@@ -1,4 +1,3 @@
-using AutoMapper;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -24,7 +23,6 @@ public class VehicleTaskManager : BaseManager<VehicleTask>
     private IVehicleRepository _vehicleRepository => LazyGetRequiredService<IVehicleRepository>();
     private IInventoryTaskRepository _inventoryTaskRepository => LazyGetRequiredService<IInventoryTaskRepository>();
     private IWorkerRepository _workerRepository => LazyGetRequiredService<IWorkerRepository>();
-    private IMapper _mapper => LazyGetRequiredService<IMapper>();
 
     public VehicleTaskManager(IVehicleTaskRepository repository,
         IAbpLazyServiceProvider abpLazyServiceProvider)
@@ -33,26 +31,23 @@ public class VehicleTaskManager : BaseManager<VehicleTask>
     }
 
     /// Yeni bir araç görev ataması oluşturmak için kullanılır.
-    public async Task<VehicleTask> CreateAsync(CreateVehicleTaskModel model)
+    public async Task<CreateVehicleTaskModel> CreateAsync(CreateVehicleTaskModel model)
     {
         await ValidateReferencesAsync(model.VehicleId, model.TaskId, model.ResponsibleWorkerId);
         await ValidateVehicleActiveTaskAsync(model.VehicleId, null);
         ValidateDateRange(model.AssignedAt, model.ReleasedAt);
 
-        var entity = new VehicleTask(GuidGenerator.Create());
-        _mapper.Map(model, entity);
-        return entity;
+        return model;
     }
 
     /// Mevcut bir araç görev atamasını güncellemek için kullanılır.
-    public async Task<VehicleTask> UpdateAsync(VehicleTask existing, UpdateVehicleTaskModel model)
+    public async Task<UpdateVehicleTaskModel> UpdateAsync(VehicleTask existing, UpdateVehicleTaskModel model)
     {
         await ValidateReferencesAsync(model.VehicleId, model.TaskId, model.ResponsibleWorkerId);
         await ValidateVehicleActiveTaskAsync(model.VehicleId, existing.Id);
         ValidateDateRange(model.AssignedAt, model.ReleasedAt);
 
-        _mapper.Map(model, existing);
-        return existing;
+        return model;
     }
 
     /// Atama referanslarını doğrulamak için kullanılır.
@@ -97,14 +92,11 @@ public class VehicleTaskManager : BaseManager<VehicleTask>
             x.TaskId == taskId &&
             x.VehicleId == vehicleId &&
             !x.ReleasedAt.HasValue);
-
         if (existing != null)
         {
             return existing;
         }
-
         await ValidateVehicleActiveTaskAsync(vehicleId, null);
-
         var entity = new VehicleTask(GuidGenerator.Create())
         {
             TaskId = taskId,

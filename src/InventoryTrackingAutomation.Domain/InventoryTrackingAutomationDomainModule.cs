@@ -1,4 +1,3 @@
-using Microsoft.Extensions.DependencyInjection;
 using Volo.Abp.Domain;
 using Volo.Abp.Modularity;
 using Volo.Abp.PermissionManagement;
@@ -14,10 +13,9 @@ namespace InventoryTrackingAutomation;
 )]
 public class InventoryTrackingAutomationDomainModule : AbpModule
 {
-    public override void ConfigureServices(ServiceConfigurationContext context)
-    {
-        context.Services.AddAssemblyOf<InventoryTrackingAutomationDomainModule>();
-        context.Services.AddTransient<InventoryTrackingAutomation.Data.InventoryTrackingAutomationDataSeedContributor>();
-        context.Services.AddTransient<Volo.Abp.Data.IDataSeedContributor>(sp => sp.GetRequiredService<InventoryTrackingAutomation.Data.InventoryTrackingAutomationDataSeedContributor>());
-    }
+    // işlevi: Domain katmanı modül tanımıdır.
+    // sistemdeki görevi: Domain servislerinin, manager'ların ve event handler'ların ABP konvansiyonel DI
+    // mekanizması tarafından otomatik olarak kaydedilmesini sağlar.
+    // ITransientDependency implement eden tüm sınıflar (DataSeedContributor, Managers vb.)
+    // ABP tarafından otomatik olarak DI container'a eklenir — manuel AddTransient gerekmez.
 }
