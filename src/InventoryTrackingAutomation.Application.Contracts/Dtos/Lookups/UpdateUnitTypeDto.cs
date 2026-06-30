@@ -1,5 +1,5 @@
 namespace InventoryTrackingAutomation.Dtos.Lookups;
 
-public class UpdateUnitTypeDto : LookupCommonDto
+public class UpdateUnitTypeDto : LookupUpdateDto
 {
 }
