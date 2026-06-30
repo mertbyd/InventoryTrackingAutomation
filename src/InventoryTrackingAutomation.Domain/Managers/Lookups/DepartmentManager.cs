@@ -13,6 +13,8 @@ namespace InventoryTrackingAutomation.Managers.Lookups;
 //sistemdeki görevi: Domain katmanındaki iş kurallarının merkezi yönetimini ve validasyonunu sağlar.
 public class DepartmentManager : BaseManager<Department>
 {
+    protected override string AlreadyExistsErrorCode => DepartmentExceptionCodes.AlreadyExists;
+
     /// <summary>
     /// DepartmentManager constructor'ı.
     /// </summary>
@@ -35,6 +37,19 @@ public class DepartmentManager : BaseManager<Department>
             await EnsureUniqueAsync(x => x.Code == model.Code);
         }
         return model;
+    }
+
+    /// <summary>
+    /// Birden fazla departman oluşturur — Toplu Code unique kontrolü yapar.
+    /// </summary>
+    public async Task<System.Collections.Generic.List<CreateDepartmentModel>> CreateManyAsync(System.Collections.Generic.List<CreateDepartmentModel> models)
+    {
+        var codes = models.Where(x => !string.IsNullOrWhiteSpace(x.Code)).Select(x => x.Code).ToList();
+        if (codes.Any())
+        {
+            await EnsureUniqueBulkAsync(codes, x => x.Code);
+        }
+        return models;
     }
 
     /// <summary>

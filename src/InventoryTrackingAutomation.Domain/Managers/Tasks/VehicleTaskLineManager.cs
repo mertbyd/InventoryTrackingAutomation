@@ -15,6 +15,8 @@ namespace InventoryTrackingAutomation.Managers.Tasks;
 /// </summary>
 public class VehicleTaskLineManager : BaseManager<VehicleTaskLine>
 {
+    protected override string AlreadyExistsErrorCode => VehicleTaskLineExceptionCodes.AlreadyExists;
+
     private IVehicleTaskRepository _vehicleTaskRepository => LazyGetRequiredService<IVehicleTaskRepository>();
     private ITaskLineRepository _taskLineRepository => LazyGetRequiredService<ITaskLineRepository>();
     private IVehicleTaskLineRepository _vehicleTaskLineRepository => LazyGetRequiredService<IVehicleTaskLineRepository>();
@@ -47,6 +49,88 @@ public class VehicleTaskLineManager : BaseManager<VehicleTaskLine>
         await _taskLineManager.EnsureAllocationFitsAsync(taskLine, model.AllocatedQuantity);
 
         return model;
+    }
+
+    /// Toplu arac-gorev kalemi olusturma kurallarini minimum DB sorgusuyla uygular.
+    public async Task<List<CreateVehicleTaskLineModel>> CreateManyAsync(List<CreateVehicleTaskLineModel> models)
+    {
+        if (models.Count == 0)
+        {
+            return models;
+        }
+
+        var vehicleTaskIds = models.Select(x => x.VehicleTaskId).Distinct().ToList();
+        var taskLineIds = models.Select(x => x.TaskLineId).Distinct().ToList();
+        var vehicleTasks = await _vehicleTaskRepository.GetListAsync(x => vehicleTaskIds.Contains(x.Id));
+        var vehicleTaskById = vehicleTasks.ToDictionary(x => x.Id);
+        var missingVehicleTaskId = vehicleTaskIds.FirstOrDefault(id => !vehicleTaskById.ContainsKey(id));
+        if (missingVehicleTaskId != Guid.Empty || vehicleTaskById.Count != vehicleTaskIds.Count)
+        {
+            throw new BusinessException(VehicleTaskExceptionCodes.NotFound);
+        }
+
+        var taskLines = await _taskLineRepository.GetListAsync(x => taskLineIds.Contains(x.Id));
+        var taskLineById = taskLines.ToDictionary(x => x.Id);
+        var missingTaskLineId = taskLineIds.FirstOrDefault(id => !taskLineById.ContainsKey(id));
+        if (missingTaskLineId != Guid.Empty || taskLineById.Count != taskLineIds.Count)
+        {
+            throw new BusinessException(TaskLineExceptionCodes.NotFound);
+        }
+
+        var duplicateInput = models
+            .GroupBy(x => new { x.VehicleTaskId, x.TaskLineId })
+            .FirstOrDefault(x => x.Count() > 1);
+        if (duplicateInput != null)
+        {
+            throw new BusinessException(VehicleTaskLineExceptionCodes.AlreadyExists);
+        }
+
+        foreach (var model in models)
+        {
+            if (model.AllocatedQuantity <= 0)
+            {
+                throw new BusinessException(TaskLineExceptionCodes.InsufficientRemaining);
+            }
+
+            var vehicleTask = vehicleTaskById[model.VehicleTaskId];
+            var taskLine = taskLineById[model.TaskLineId];
+            if (taskLine.TaskId != vehicleTask.TaskId)
+            {
+                throw new BusinessException(TaskLineExceptionCodes.NotFound);
+            }
+        }
+
+        var existingLines = await _vehicleTaskLineRepository.GetListAsync(x =>
+            vehicleTaskIds.Contains(x.VehicleTaskId) &&
+            taskLineIds.Contains(x.TaskLineId));
+
+        if (existingLines.Any(existing => models.Any(model =>
+                model.VehicleTaskId == existing.VehicleTaskId &&
+                model.TaskLineId == existing.TaskLineId)))
+        {
+            throw new BusinessException(VehicleTaskLineExceptionCodes.AlreadyExists);
+        }
+
+        var existingAllocations = await _vehicleTaskLineRepository.GetByTaskLineIdsAsync(taskLineIds);
+        var existingAllocatedByTaskLineId = existingAllocations
+            .GroupBy(x => x.TaskLineId)
+            .ToDictionary(x => x.Key, x => x.Sum(y => y.AllocatedQuantity));
+
+        var requestedByTaskLineId = models
+            .GroupBy(x => x.TaskLineId)
+            .ToDictionary(x => x.Key, x => x.Sum(y => y.AllocatedQuantity));
+
+        foreach (var requested in requestedByTaskLineId)
+        {
+            var taskLine = taskLineById[requested.Key];
+            var existingAllocated = existingAllocatedByTaskLineId.GetValueOrDefault(requested.Key);
+            if (existingAllocated + requested.Value > taskLine.Quantity)
+            {
+                throw new BusinessException(TaskLineExceptionCodes.InsufficientRemaining);
+            }
+        }
+
+        return models;
     }
 
 

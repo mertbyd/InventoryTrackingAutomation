@@ -87,7 +87,7 @@ public class MovementRequestAppService : InventoryTrackingAutomationAppService, 
     {
         var currentUserId = CurrentUser.GetId();
         var currentWorkerId = await ResolveCurrentWorkerIdAsync();
-        // DTO listesini Model listesine map'le ve current worker bilgisini set et.
+
         var models = new List<CreateMovementRequestModel>();
         foreach (var dto in inputs)
         {
@@ -95,15 +95,17 @@ public class MovementRequestAppService : InventoryTrackingAutomationAppService, 
             model.RequestedByWorkerId = currentWorkerId;
             models.Add(model);
         }
+
+        var validatedModels = await _manager.CreateManyAsync(models);
+
         var entities = new List<MovementRequest>();
         var workflowInstances = new List<InventoryTrackingAutomation.Entities.Workflows.WorkflowInstance>();
 
-        foreach (var model in models)
+        foreach (var model in validatedModels)
         {
-            var validatedModel = await _manager.CreateAsync(model);
             var entity = new MovementRequest(GuidGenerator.Create());
             entity.Status = InventoryTrackingAutomation.Enums.MovementStatusEnum.Pending;
-            _mapper.MapToEntity(validatedModel, entity);
+            _mapper.MapToEntity(model, entity);
 
             var workflowInstance = await _manager.AssignWorkflowAsync(entity, currentUserId);
             if (workflowInstance != null)
@@ -220,10 +222,25 @@ public class MovementRequestAppService : InventoryTrackingAutomationAppService, 
 
     private async Task<List<MovementRequestDto>> MapToDtosAsync(IReadOnlyCollection<MovementRequest> entities)
     {
+        if (entities == null || entities.Count == 0)
+        {
+            return new List<MovementRequestDto>();
+        }
+
         var result = new List<MovementRequestDto>(entities.Count);
+        var requestIds = entities.Select(e => e.Id).Distinct().ToList();
+        
+        // Batch query to solve N+1 problem
+        var contextMap = await _repository.GetOperationalContextsAsync(requestIds);
+
         foreach (var entity in entities)
         {
-            result.Add(await MapToDtoAsync(entity));
+            var dto = _mapper.MapToDto(entity);
+            if (contextMap.TryGetValue(entity.Id, out var context))
+            {
+                dto.TaskId = context.TaskId;
+            }
+            result.Add(dto);
         }
 
         return result;

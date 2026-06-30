@@ -74,14 +74,20 @@ public class DepartmentAppService : InventoryTrackingAutomationAppService, IDepa
 
     public async Task<List<DepartmentDto>> CreateManyAsync(List<CreateDepartmentDto> inputs)
     {
-        var entities = new List<Department>();
+        var models = new List<CreateDepartmentModel>();
         foreach (var dto in inputs)
         {
             await _createValidator.ValidateAndThrowAsync(dto);
-            var model = _mapper.MapToModel(dto);
-            var validatedModel = await _manager.CreateAsync(model);
+            models.Add(_mapper.MapToModel(dto));
+        }
+
+        var validatedModels = await _manager.CreateManyAsync(models);
+        
+        var entities = new List<Department>();
+        foreach (var model in validatedModels)
+        {
             var entity = new Department(GuidGenerator.Create());
-            _mapper.MapToEntity(validatedModel, entity);
+            _mapper.MapToEntity(model, entity);
             entities.Add(entity);
         }
 

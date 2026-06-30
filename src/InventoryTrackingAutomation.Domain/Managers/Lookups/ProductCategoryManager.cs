@@ -13,6 +13,8 @@ namespace InventoryTrackingAutomation.Managers.Lookups;
 //sistemdeki görevi: Domain katmanındaki iş kurallarının merkezi yönetimini ve validasyonunu sağlar.
 public class ProductCategoryManager : BaseManager<ProductCategory>
 {
+    protected override string AlreadyExistsErrorCode => ProductCategoryExceptionCodes.AlreadyExists;
+
     /// <summary>
     /// ProductCategoryManager constructor'ı.
     /// </summary>
@@ -35,6 +37,19 @@ public class ProductCategoryManager : BaseManager<ProductCategory>
             await EnsureUniqueAsync(x => x.Code == model.Code);
         }
         return model;
+    }
+
+    /// <summary>
+    /// Birden fazla ürün kategorisi oluşturur — Toplu Code unique kontrolü yapar.
+    /// </summary>
+    public async Task<System.Collections.Generic.List<CreateProductCategoryModel>> CreateManyAsync(System.Collections.Generic.List<CreateProductCategoryModel> models)
+    {
+        var codes = models.Where(x => !string.IsNullOrWhiteSpace(x.Code)).Select(x => x.Code).ToList();
+        if (codes.Any())
+        {
+            await EnsureUniqueBulkAsync(codes, x => x.Code);
+        }
+        return models;
     }
 
     /// <summary>

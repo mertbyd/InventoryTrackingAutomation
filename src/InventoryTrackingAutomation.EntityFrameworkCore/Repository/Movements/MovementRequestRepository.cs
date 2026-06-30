@@ -52,6 +52,42 @@ public class MovementRequestRepository : BaseRepository<MovementRequest>, IMovem
                 Status = request.Status
             }).FirstOrDefaultAsync();
     }
+    
+    /// <summary>
+    /// Birden fazla hareket talebinin task ve vehicle-task bağlamını toplu olarak (batch) getirir.
+    /// N+1 sorgu problemini engellemek için kullanılır.
+    /// </summary>
+    public async Task<System.Collections.Generic.Dictionary<Guid, MovementRequestOperationalContextModel>> GetOperationalContextsAsync(System.Collections.Generic.IEnumerable<Guid> movementRequestIds)
+    {
+        var dbContext = await GetDbContextAsync();
+        var idList = movementRequestIds.ToList();
+
+        var query = from request in dbContext.MovementRequests
+            join vehicleTask in dbContext.VehicleTasks on request.VehicleTaskId equals vehicleTask.Id
+            join task in dbContext.InventoryTasks on vehicleTask.TaskId equals task.Id
+            where idList.Contains(request.Id)
+            select new MovementRequestOperationalContextModel
+            {
+                MovementRequestId = request.Id,
+                RequestedByWorkerId = request.RequestedByWorkerId,
+                SourceWarehouseId = task.SourceWarehouseId,
+                TargetWarehouseId = request.ParentMovementRequestId != null
+                    ? task.ReturnWarehouseId ?? task.SourceWarehouseId
+                    : task.TargetWarehouseId,
+                TaskId = task.Id,
+                TaskType = task.Type,
+                TaskStatus = task.Status,
+                ReturnWarehouseId = task.ReturnWarehouseId,
+                VehicleTaskId = vehicleTask.Id,
+                VehicleId = vehicleTask.VehicleId,
+                ResponsibleWorkerId = vehicleTask.ResponsibleWorkerId,
+                ParentMovementRequestId = request.ParentMovementRequestId,
+                Status = request.Status
+            };
+
+        var resultList = await query.ToListAsync();
+        return resultList.ToDictionary(x => x.MovementRequestId);
+    }
 
     /// <summary>
     /// Task iadesinde ana hareketle iliski kurmak icin en guncel parent movement'i bulur.

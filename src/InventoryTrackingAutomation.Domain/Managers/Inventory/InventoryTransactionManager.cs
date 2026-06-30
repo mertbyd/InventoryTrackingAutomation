@@ -40,6 +40,25 @@ public class InventoryTransactionManager : BaseManager<InventoryTransaction>
     }
 
     /// <summary>
+    /// Birden fazla stok hareket kaydı oluşturmak için toplu validasyon yapar.
+    /// </summary>
+    public async Task<System.Collections.Generic.List<CreateInventoryTransactionModel>> CreateManyAsync(System.Collections.Generic.List<CreateInventoryTransactionModel> models)
+    {
+        var productIds = models.Select(x => x.ProductId).Distinct().ToList();
+        if (productIds.Any()) await EnsureAllExistInAsync(_productRepository, productIds);
+
+        var movementIds = models.Where(x => x.RelatedMovementRequestId.HasValue).Select(x => x.RelatedMovementRequestId.Value).Distinct().ToList();
+        if (movementIds.Any()) await EnsureAllExistInAsync(_movementRequestRepository, movementIds);
+
+        foreach (var model in models)
+        {
+            ValidateQuantity(model.Quantity);
+        }
+
+        return models;
+    }
+
+    /// <summary>
     /// Mevcut stok hareketini guncelleme istegini append-only ledger kuralina gore reddeder.
     /// </summary>
     // islevi: Ledger kaydinin sonradan degistirilmesini engeller.

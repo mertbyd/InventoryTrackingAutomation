@@ -74,12 +74,19 @@ public class StockLocationAppService : InventoryTrackingAutomationAppService, IS
     //sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<List<StockLocationDto>> CreateManyAsync(List<CreateStockLocationDto> inputs)
     {
-        var entities = new List<StockLocation>();
+        var models = new List<CreateStockLocationModel>();
         foreach (var dto in inputs)
         {
             await _createValidator.ValidateAndThrowAsync(dto);
-            var model = _mapper.MapToModel(dto);
-            var entity = await _manager.CreateAsync(model);
+            models.Add(_mapper.MapToModel(dto));
+        }
+
+        var validatedModels = await _manager.CreateManyAsync(models);
+        
+        var entities = new List<StockLocation>();
+        foreach (var model in validatedModels)
+        {
+            var entity = new StockLocation(GuidGenerator.Create());
             _mapper.MapToEntity(model, entity);
             entities.Add(entity);
         }
