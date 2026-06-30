@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Abp.MultiTenancy;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.DataProtection;
@@ -69,7 +70,7 @@ namespace InventoryTrackingAutomation;
     typeof(InventoryTrackingAutomationApplicationModule),
     typeof(InventoryTrackingAutomationEntityFrameworkCoreModule),
     typeof(InventoryTrackingAutomationHttpApiModule),
-    
+
     // Framework modules
     typeof(AbpAutofacModule),
     typeof(AbpAspNetCoreMvcUiMultiTenancyModule),
@@ -78,43 +79,43 @@ namespace InventoryTrackingAutomation;
     typeof(AbpAspNetCoreSignalRModule),
     typeof(AbpSwashbuckleModule),
     typeof(AbpCachingStackExchangeRedisModule),
-   
+
     // Database
     typeof(AbpEntityFrameworkCorePostgreSqlModule),
-    
+
     // Account & Authentication - OpenIddict
     typeof(AbpAccountWebOpenIddictModule),
     typeof(AbpAccountHttpApiModule),
     typeof(AbpAccountApplicationModule),
-    
+
     // OpenIddict
     typeof(AbpOpenIddictEntityFrameworkCoreModule),
-    
+
     // Identity
     typeof(AbpIdentityEntityFrameworkCoreModule),
     typeof(AbpIdentityApplicationModule),
     typeof(AbpIdentityHttpApiModule),
-    
+
     // Permission Management
     typeof(AbpPermissionManagementEntityFrameworkCoreModule),
     typeof(AbpPermissionManagementApplicationModule),
     typeof(AbpPermissionManagementHttpApiModule),
     typeof(AbpPermissionManagementDomainIdentityModule),
     typeof(AbpPermissionManagementDomainOpenIddictModule),
-    
+
     // Setting Management
     typeof(AbpSettingManagementEntityFrameworkCoreModule),
     typeof(AbpSettingManagementApplicationModule),
     typeof(AbpSettingManagementHttpApiModule),
-    
+
     // Feature Management
     typeof(AbpFeatureManagementEntityFrameworkCoreModule),
     typeof(AbpFeatureManagementApplicationModule),
     typeof(AbpFeatureManagementHttpApiModule),
-    
+
     // Tenant Management
     typeof(AbpTenantManagementEntityFrameworkCoreModule),
-    
+
     // Audit Logging
     typeof(AbpAuditLoggingEntityFrameworkCoreModule)
 )]
@@ -134,7 +135,7 @@ public class InventoryTrackingAutomationHttpApiHostModule : AbpModule
     public override void PreConfigureServices(ServiceConfigurationContext context)
     {
         AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
-        
+
         PreConfigure<OpenIddictBuilder>(builder =>
         {
             builder.AddValidation(options =>
@@ -152,7 +153,7 @@ public class InventoryTrackingAutomationHttpApiHostModule : AbpModule
                 .DisableTransportSecurityRequirement();
         });
     }
-    
+
     public override void ConfigureServices(ServiceConfigurationContext context)
     {
         var hostingEnvironment = context.Services.GetHostingEnvironment();
@@ -197,31 +198,31 @@ public class InventoryTrackingAutomationHttpApiHostModule : AbpModule
         {
             options.UseNpgsql();
         });
-        
+
         Configure<AbpMultiTenancyOptions>(options =>
         {
-            options.IsEnabled = MultiTenancyConsts.IsEnabled;
+            options.IsEnabled = InventoryTrackingAutomation.MultiTenancy.MultiTenancyConsts.IsEnabled;
         });
-        
+
         if (hostingEnvironment.IsDevelopment())
         {
             Configure<AbpVirtualFileSystemOptions>(options =>
             {
                 options.FileSets.ReplaceEmbeddedByPhysical<InventoryTrackingAutomationDomainSharedModule>(
-                    Path.Combine(hostingEnvironment.ContentRootPath, 
+                    Path.Combine(hostingEnvironment.ContentRootPath,
                     $"..{Path.DirectorySeparatorChar}..{Path.DirectorySeparatorChar}src{Path.DirectorySeparatorChar}InventoryTrackingAutomation.Domain.Shared"));
                 options.FileSets.ReplaceEmbeddedByPhysical<InventoryTrackingAutomationDomainModule>(
-                    Path.Combine(hostingEnvironment.ContentRootPath, 
+                    Path.Combine(hostingEnvironment.ContentRootPath,
                     $"..{Path.DirectorySeparatorChar}..{Path.DirectorySeparatorChar}src{Path.DirectorySeparatorChar}InventoryTrackingAutomation.Domain"));
                 options.FileSets.ReplaceEmbeddedByPhysical<InventoryTrackingAutomationApplicationContractsModule>(
-                    Path.Combine(hostingEnvironment.ContentRootPath, 
+                    Path.Combine(hostingEnvironment.ContentRootPath,
                     $"..{Path.DirectorySeparatorChar}..{Path.DirectorySeparatorChar}src{Path.DirectorySeparatorChar}InventoryTrackingAutomation.Application.Contracts"));
                 options.FileSets.ReplaceEmbeddedByPhysical<InventoryTrackingAutomationApplicationModule>(
-                    Path.Combine(hostingEnvironment.ContentRootPath, 
+                    Path.Combine(hostingEnvironment.ContentRootPath,
                     $"..{Path.DirectorySeparatorChar}..{Path.DirectorySeparatorChar}src{Path.DirectorySeparatorChar}InventoryTrackingAutomation.Application"));
             });
         }
-        
+
         context.Services.AddAbpSwaggerGenWithOAuth(
             configuration["AuthServer:Authority"]!,
             new Dictionary<string, string>
@@ -248,7 +249,7 @@ public class InventoryTrackingAutomationHttpApiHostModule : AbpModule
                         options.IncludeXmlComments(xmlDocumentationPath, includeControllerXmlComments: true);
                     }
                 }
-                
+
                 // HTTP/Bearer scheme — Swagger UI 'Bearer ' prefix'ini OTOMATİK ekler
                 // Kullanıcı sadece access_token'ı yapıştırır, "Bearer" yazmasına gerek yok
                 options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
@@ -269,7 +270,7 @@ public class InventoryTrackingAutomationHttpApiHostModule : AbpModule
                     }
                 });
             });
-        
+
         Configure<AbpLocalizationOptions>(options =>
         {
             options.Languages.Add(new LanguageInfo("ar", "ar", "العربية"));
@@ -293,12 +294,12 @@ public class InventoryTrackingAutomationHttpApiHostModule : AbpModule
             options.Languages.Add(new LanguageInfo("es", "es", "Español"));
             options.Languages.Add(new LanguageInfo("el", "el", "Ελληνικά"));
         });
-        
+
         Configure<AbpDistributedCacheOptions>(options =>
         {
             options.KeyPrefix = "InventoryTrackingAutomation:";
         });
-        
+
         var dataProtectionBuilder = context.Services.AddDataProtection().SetApplicationName("InventoryTrackingAutomation");
         var redisConfiguration = configuration["Redis:Configuration"];
         if (!string.IsNullOrWhiteSpace(redisConfiguration))
@@ -314,7 +315,7 @@ public class InventoryTrackingAutomationHttpApiHostModule : AbpModule
                 context.Services.AddDistributedMemoryCache();
             }
         }
-        
+
         context.Services.AddCors(options =>
         {
             options.AddDefaultPolicy(builder =>
@@ -333,19 +334,19 @@ public class InventoryTrackingAutomationHttpApiHostModule : AbpModule
                     .AllowCredentials();
             });
         });
-        
+
         Configure<AbpAuditingOptions>(options =>
         {
             options.IsEnabled = true;
             options.EntityHistorySelectors.AddAllEntities();
         });
     }
-    
+
     public override async Task OnApplicationInitializationAsync(ApplicationInitializationContext context)
     {
         var app = context.GetApplicationBuilder();
         var env = context.GetEnvironment();
-        
+
         if (env.IsDevelopment())
         {
             app.UseDeveloperExceptionPage();
@@ -354,7 +355,7 @@ public class InventoryTrackingAutomationHttpApiHostModule : AbpModule
         {
             app.UseHsts();
         }
-        
+
         // app.UseHttpsRedirection(); // Geliştirme ortamında HTTP kullanıyoruz
         app.UseCorrelationId();
         app.UseSystemStandardsAspNetCore();
@@ -364,12 +365,12 @@ public class InventoryTrackingAutomationHttpApiHostModule : AbpModule
         app.UseAuthentication();
         app.UseSystemStandardsAbp(); // ABP spesifik zenginleştirmeler (örn. UserId, TenantId çekimi)
         app.UseAbpOpenIddictValidation();
-        
-        if (MultiTenancyConsts.IsEnabled)
+
+        if (InventoryTrackingAutomation.MultiTenancy.MultiTenancyConsts.IsEnabled)
         {
             app.UseMultiTenancy();
         }
-        
+
         app.UseAbpRequestLocalization();
         app.UseAuthorization();
         app.UseSwagger();
@@ -383,10 +384,10 @@ public class InventoryTrackingAutomationHttpApiHostModule : AbpModule
         app.UseAuditing();
         app.UseAbpSerilogEnrichers();
         app.UseConfiguredEndpoints();
-        
+
         await SeedDataAsync(context);
     }
-    
+
     private async Task SeedDataAsync(ApplicationInitializationContext context)
     {
         using (var scope = context.ServiceProvider.CreateScope())

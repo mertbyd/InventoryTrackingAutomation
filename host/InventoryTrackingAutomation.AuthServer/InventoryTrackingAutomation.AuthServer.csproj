@@ -50,7 +50,7 @@
     <PackageReference Include="Volo.Abp.TenantManagement.Application" Version="10.3.0" />
     <PackageReference Include="Volo.Abp.TenantManagement.HttpApi" Version="10.3.0" />
     <ProjectReference Include="..\..\src\InventoryTrackingAutomation.Application.Contracts\InventoryTrackingAutomation.Application.Contracts.csproj" />
-    <ProjectReference Include="..\InventoryTrackingAutomation.Host.Shared\InventoryTrackingAutomation.Host.Shared.csproj" />
+    <ProjectReference Include="..\..\src\InventoryTrackingAutomation.Domain.Shared\InventoryTrackingAutomation.Domain.Shared.csproj" />
   </ItemGroup>
 
   <ItemGroup>
