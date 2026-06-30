@@ -121,7 +121,7 @@ public class VehicleTaskAppService : InventoryTrackingAutomationAppService, IVeh
         var hasLines = (await _vehicleTaskLineRepository.GetByVehicleTaskIdAsync(id)).Any();
         if (hasLines)
         {
-            throw new BusinessException(InventoryTrackingAutomationErrorCodes.VehicleTasks.CannotDeleteWithLines)
+            throw new BusinessException(VehicleTaskExceptionCodes.CannotDeleteWithLines)
                 .WithData("VehicleTaskId", id);
         }
 

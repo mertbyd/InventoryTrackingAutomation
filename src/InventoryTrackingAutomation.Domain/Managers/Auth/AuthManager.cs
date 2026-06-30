@@ -46,7 +46,7 @@ public class AuthManager : InventoryTrackingAutomationDomainService
         // Şifre ve şifre tekrarı eşleşmeli.
         if (model.Password != model.PasswordConfirm)
         {
-            throw new BusinessException(InventoryTrackingAutomationErrorCodes.Auth.PasswordMismatch);
+            throw new BusinessException(AuthExceptionCodes.PasswordMismatch);
         }
 
         // IdentityUser entity'si oluştur ve ABP üzerinden persist et.
@@ -58,7 +58,7 @@ public class AuthManager : InventoryTrackingAutomationDomainService
         if (!result.Succeeded)
         {
             var errors = string.Join(", ", result.Errors.Select(e => e.Description));
-            throw new BusinessException(InventoryTrackingAutomationErrorCodes.Auth.UserCreationFailed)
+            throw new BusinessException(AuthExceptionCodes.UserCreationFailed)
                 .WithData("Errors", errors);
         }
 
@@ -75,12 +75,12 @@ public class AuthManager : InventoryTrackingAutomationDomainService
         // Username ile kullanıcıyı bul.
         var user = await _identityUserManager.FindByNameAsync(model.UserName);
         if (user == null)
-            throw new BusinessException(InventoryTrackingAutomationErrorCodes.Auth.InvalidCredentials);
+            throw new BusinessException(AuthExceptionCodes.InvalidCredentials);
 
         // Şifreyi doğrula.
         var isPasswordValid = await _identityUserManager.CheckPasswordAsync(user, model.Password);
         if (!isPasswordValid)
-            throw new BusinessException(InventoryTrackingAutomationErrorCodes.Auth.InvalidCredentials);
+            throw new BusinessException(AuthExceptionCodes.InvalidCredentials);
 
         return user;
     }
@@ -90,7 +90,7 @@ public class AuthManager : InventoryTrackingAutomationDomainService
     {
         var existingUser = await _identityUserManager.FindByEmailAsync(email);
         if (existingUser != null)
-            throw new BusinessException(InventoryTrackingAutomationErrorCodes.Auth.EmailAlreadyExists);
+            throw new BusinessException(AuthExceptionCodes.EmailAlreadyExists);
     }
 
     // Username'in sistem içinde benzersiz olduğunu doğrular.
@@ -98,6 +98,6 @@ public class AuthManager : InventoryTrackingAutomationDomainService
     {
         var existingUser = await _identityUserManager.FindByNameAsync(userName);
         if (existingUser != null)
-            throw new BusinessException(InventoryTrackingAutomationErrorCodes.Auth.UserNameAlreadyExists);
+            throw new BusinessException(AuthExceptionCodes.UserNameAlreadyExists);
     }
 }

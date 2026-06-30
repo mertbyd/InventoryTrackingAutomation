@@ -63,7 +63,7 @@ public abstract class MovementRequestAppService_Tests<TStartupModule> : Inventor
                 await _appService.DeleteAsync(request.Id);
             });
 
-            Assert.Equal(InventoryTrackingAutomationErrorCodes.MovementRequests.InvalidStateTransition, exception.Code);
+            Assert.Equal(MovementRequestExceptionCodes.InvalidStateTransition, exception.Code);
         });
     }
 

@@ -131,10 +131,10 @@ public class MovementRequestManager : BaseManager<MovementRequest>
 
         if (context.IsReturnFlow)
         {
-            throw new BusinessException(InventoryTrackingAutomationErrorCodes.MovementRequests.DispatchNotAllowed);
+            throw new BusinessException(MovementRequestExceptionCodes.DispatchNotAllowed);
         }
 
-        EnsureStatus(request, MovementStatusEnum.Approved, InventoryTrackingAutomationErrorCodes.MovementRequests.DispatchNotAllowed);
+        EnsureStatus(request, MovementStatusEnum.Approved, MovementRequestExceptionCodes.DispatchNotAllowed);
         await ValidateVehicleAvailableAsync(context.VehicleId);
         await ValidateDispatchTaskStatusAsync(context);
 
@@ -170,7 +170,7 @@ public class MovementRequestManager : BaseManager<MovementRequest>
     {
         var request = await EnsureExistsAsync(requestId);
         var context = await EnsureOperationalContextAsync(request.Id);
-        EnsureStatus(request, MovementStatusEnum.Shipped, InventoryTrackingAutomationErrorCodes.MovementRequests.ReceiveNotAllowed);
+        EnsureStatus(request, MovementStatusEnum.Shipped, MovementRequestExceptionCodes.ReceiveNotAllowed);
 
         if (context.IsReturnFlow)
         {
@@ -186,7 +186,7 @@ public class MovementRequestManager : BaseManager<MovementRequest>
 
         if (MissingId(context.TargetWarehouseId))
         {
-            throw new BusinessException(InventoryTrackingAutomationErrorCodes.MovementRequests.TargetRequired);
+            throw new BusinessException(MovementRequestExceptionCodes.TargetRequired);
         }
 
         var targetWarehouseId = context.TargetWarehouseId.GetValueOrDefault();
@@ -224,7 +224,7 @@ public class MovementRequestManager : BaseManager<MovementRequest>
     {
         if (MissingId(context.TargetWarehouseId))
         {
-            throw new BusinessException(InventoryTrackingAutomationErrorCodes.MovementRequests.TargetRequired);
+            throw new BusinessException(MovementRequestExceptionCodes.TargetRequired);
         }
 
         var targetWarehouseId = context.TargetWarehouseId.GetValueOrDefault();
@@ -287,7 +287,7 @@ public class MovementRequestManager : BaseManager<MovementRequest>
         var lines = await _vehicleTaskLineRepository.GetByVehicleTaskIdAsync(vehicleTaskId);
         if (lines.Count == 0)
         {
-            throw new BusinessException(InventoryTrackingAutomationErrorCodes.VehicleTaskLines.NotFound)
+            throw new BusinessException(VehicleTaskLineExceptionCodes.NotFound)
                 .WithData("VehicleTaskId", vehicleTaskId);
         }
 
@@ -298,7 +298,7 @@ public class MovementRequestManager : BaseManager<MovementRequest>
         var missingTaskLine = lines.FirstOrDefault(x => !productByTaskLineId.ContainsKey(x.TaskLineId));
         if (missingTaskLine != null)
         {
-            throw new BusinessException(InventoryTrackingAutomationErrorCodes.TaskLines.NotFound)
+            throw new BusinessException(TaskLineExceptionCodes.NotFound)
                 .WithData("TaskLineId", missingTaskLine.TaskLineId);
         }
 
@@ -324,7 +324,7 @@ public class MovementRequestManager : BaseManager<MovementRequest>
             return;
         }
 
-        throw new BusinessException(InventoryTrackingAutomationErrorCodes.MovementRequests.InvalidStateTransition);
+        throw new BusinessException(MovementRequestExceptionCodes.InvalidStateTransition);
     }
 
     /// Talebin belirli bir statüde olup olmadığını doğrulamak için kullanılır.
@@ -345,7 +345,7 @@ public class MovementRequestManager : BaseManager<MovementRequest>
         var context = await ((IMovementRequestRepository)Repository).GetOperationalContextAsync(movementRequestId);
         if (context == null)
         {
-            throw new BusinessException(InventoryTrackingAutomationErrorCodes.MovementRequests.NotFound);
+            throw new BusinessException(MovementRequestExceptionCodes.NotFound);
         }
 
         return context;
@@ -360,7 +360,7 @@ public class MovementRequestManager : BaseManager<MovementRequest>
         if (model.Lines.Count == 0)
         {
             throw new BusinessException(
-                InventoryTrackingAutomationErrorCodes.MovementRequests.ReturnReceiveLineRequired);
+                MovementRequestExceptionCodes.ReturnReceiveLineRequired);
         }
 
         var duplicateIds = model.Lines
@@ -371,7 +371,7 @@ public class MovementRequestManager : BaseManager<MovementRequest>
 
         if (duplicateIds.Count > 0)
         {
-            throw new BusinessException(InventoryTrackingAutomationErrorCodes.MovementRequests.QuantityMismatch);
+            throw new BusinessException(MovementRequestExceptionCodes.QuantityMismatch);
         }
 
         var expectedIds = expectedLines.Select(x => x.Line.Id).ToHashSet();
@@ -382,7 +382,7 @@ public class MovementRequestManager : BaseManager<MovementRequest>
 
         if (unexpectedIds.Count > 0)
         {
-            throw new BusinessException(InventoryTrackingAutomationErrorCodes.MovementRequests.QuantityMismatch);
+            throw new BusinessException(MovementRequestExceptionCodes.QuantityMismatch);
         }
 
         foreach (var vtl in expectedLines)
@@ -390,8 +390,7 @@ public class MovementRequestManager : BaseManager<MovementRequest>
             var receivedLine = model.Lines.SingleOrDefault(x => x.VehicleTaskLineId == vtl.Line.Id);
             if (receivedLine == null)
             {
-                throw new BusinessException(InventoryTrackingAutomationErrorCodes.MovementRequests
-                    .ReturnReceiveLineRequired);
+                throw new BusinessException(MovementRequestExceptionCodes.ReturnReceiveLineRequired);
             }
 
             if (receivedLine.ReceivedQuantity < 0 ||
@@ -399,7 +398,7 @@ public class MovementRequestManager : BaseManager<MovementRequest>
                 receivedLine.LostQuantity < 0 ||
                 receivedLine.ConsumedQuantity < 0)
             {
-                throw new BusinessException(InventoryTrackingAutomationErrorCodes.MovementRequests.QuantityMismatch);
+                throw new BusinessException(MovementRequestExceptionCodes.QuantityMismatch);
             }
 
             var total = receivedLine.ReceivedQuantity +
@@ -409,7 +408,7 @@ public class MovementRequestManager : BaseManager<MovementRequest>
 
             if (total != vtl.Line.AllocatedQuantity)
             {
-                throw new BusinessException(InventoryTrackingAutomationErrorCodes.MovementRequests.QuantityMismatch)
+                throw new BusinessException(MovementRequestExceptionCodes.QuantityMismatch)
                     .WithData("MovementRequestId", request.Id)
                     .WithData("VehicleTaskLineId", vtl.Line.Id)
                     .WithData("Expected", vtl.Line.AllocatedQuantity)
@@ -475,12 +474,12 @@ public class MovementRequestManager : BaseManager<MovementRequest>
         var vehicle = await _vehicleRepository.FindAsync(vehicleId);
         if (vehicle == null)
         {
-            throw new Volo.Abp.BusinessException(InventoryTrackingAutomationErrorCodes.Vehicles.NotFound);
+            throw new Volo.Abp.BusinessException(VehicleExceptionCodes.NotFound);
         }
 
         if (!vehicle.IsActive)
         {
-            throw new Volo.Abp.BusinessException(InventoryTrackingAutomationErrorCodes.General.InvalidOperation);
+            throw new Volo.Abp.BusinessException(GeneralExceptionCodes.InvalidOperation);
         }
     }
 
@@ -489,20 +488,20 @@ public class MovementRequestManager : BaseManager<MovementRequest>
     {
         if (vehicleTaskId == Guid.Empty)
         {
-            throw new BusinessException(InventoryTrackingAutomationErrorCodes.VehicleTasks.NotFound)
+            throw new BusinessException(VehicleTaskExceptionCodes.NotFound)
                 .WithData("VehicleTaskId", vehicleTaskId);
         }
 
         var vehicleTask = await _vehicleTaskRepository.FindAsync(vehicleTaskId);
         if (vehicleTask == null)
         {
-            throw new BusinessException(InventoryTrackingAutomationErrorCodes.VehicleTasks.NotFound)
+            throw new BusinessException(VehicleTaskExceptionCodes.NotFound)
                 .WithData("VehicleTaskId", vehicleTaskId);
         }
 
         if (vehicleTask.ReleasedAt.HasValue)
         {
-            throw new BusinessException(InventoryTrackingAutomationErrorCodes.General.InvalidOperation)
+            throw new BusinessException(GeneralExceptionCodes.InvalidOperation)
                 .WithData("VehicleTaskId", vehicleTaskId)
                 .WithData("Reason", "ReleasedVehicleTaskCannotCreateMovementRequest");
         }
@@ -516,7 +515,7 @@ public class MovementRequestManager : BaseManager<MovementRequest>
         var lines = await _vehicleTaskLineRepository.GetByVehicleTaskIdAsync(vehicleTaskId);
         if (lines.Count == 0)
         {
-            throw new BusinessException(InventoryTrackingAutomationErrorCodes.General.InvalidOperation)
+            throw new BusinessException(GeneralExceptionCodes.InvalidOperation)
                 .WithData("VehicleTaskId", vehicleTaskId)
                 .WithData("Reason", "VehicleTaskLineRequiredBeforeMovementRequest");
         }
@@ -539,7 +538,7 @@ public class MovementRequestManager : BaseManager<MovementRequest>
 
             if (task.TargetWarehouseId == task.SourceWarehouseId)
             {
-                throw new BusinessException(InventoryTrackingAutomationErrorCodes.InventoryTransactions.InvalidLocationPair)
+                throw new BusinessException(InventoryTransactionExceptionCodes.InvalidLocationPair)
                     .WithData("SourceWarehouseId", task.SourceWarehouseId)
                     .WithData("TargetWarehouseId", task.TargetWarehouseId);
             }
@@ -551,7 +550,7 @@ public class MovementRequestManager : BaseManager<MovementRequest>
     {
         if (vehicleId == Guid.Empty)
         {
-            throw new BusinessException(InventoryTrackingAutomationErrorCodes.MovementRequests.VehicleRequired);
+            throw new BusinessException(MovementRequestExceptionCodes.VehicleRequired);
         }
     }
 
@@ -560,7 +559,7 @@ public class MovementRequestManager : BaseManager<MovementRequest>
     {
         if (MissingId(targetWarehouseId))
         {
-            throw new BusinessException(InventoryTrackingAutomationErrorCodes.MovementRequests.TargetRequired);
+            throw new BusinessException(MovementRequestExceptionCodes.TargetRequired);
         }
     }
 
@@ -570,7 +569,7 @@ public class MovementRequestManager : BaseManager<MovementRequest>
         // Kural: Sadece Draft veya InProgress operasyonlar sevk edilebilir.
         if (context.TaskStatus != TaskStatusEnum.InProgress && context.TaskStatus != TaskStatusEnum.Draft)
         {
-            throw new BusinessException(InventoryTrackingAutomationErrorCodes.MovementRequests.DispatchNotAllowed)
+            throw new BusinessException(MovementRequestExceptionCodes.DispatchNotAllowed)
                 .WithData("MovementRequestId", context.MovementRequestId)
                 .WithData("TaskId", context.TaskId)
                 .WithData("TaskStatus", context.TaskStatus)
@@ -605,14 +604,14 @@ public class MovementRequestManager : BaseManager<MovementRequest>
     {
         if (taskId == Guid.Empty)
         {
-            throw new BusinessException(InventoryTrackingAutomationErrorCodes.InventoryTasks.NotFound)
+            throw new BusinessException(InventoryTaskExceptionCodes.NotFound)
                 .WithData("TaskId", taskId);
         }
 
         var task = await _inventoryTaskRepository.FindAsync(taskId);
         if (task == null)
         {
-            throw new BusinessException(InventoryTrackingAutomationErrorCodes.InventoryTasks.NotFound)
+            throw new BusinessException(InventoryTaskExceptionCodes.NotFound)
                 .WithData("TaskId", taskId);
         }
 

@@ -12,10 +12,10 @@ public class ProcessApprovalDtoValidator : AbstractValidator<ProcessApprovalDto>
     public ProcessApprovalDtoValidator()
     {
         RuleFor(x => x.InstanceStepId)
-            .NotEmpty().WithMessage("Adım Id boş olamaz.")
-            .NotEqual(Guid.Empty).WithMessage("Geçersiz Adım Id.");
+            .NotEmpty().WithMessage(WorkflowExceptionCodes.ValidationExceptions.ProcessApproval.StepIdCannotEmpty)
+            .NotEqual(Guid.Empty).WithMessage(WorkflowExceptionCodes.ValidationExceptions.ProcessApproval.StepIdInvalid);
 
         RuleFor(x => x.Note)
-            .MaximumLength(500).WithMessage("Not en fazla 500 karakter olabilir.");
+            .MaximumLength(500).WithMessage(WorkflowExceptionCodes.ValidationExceptions.ProcessApproval.NoteMaxLength);
     }
 }

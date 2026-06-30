@@ -136,18 +136,18 @@ public class WorkflowManager : InventoryTrackingAutomationDomainService
 
         if (definition == null)
         {
-            throw new BusinessException(InventoryTrackingAutomationErrorCodes.Workflows.DefinitionNotFound)
+            throw new BusinessException(WorkflowExceptionCodes.DefinitionNotFound)
                 .WithData("DefinitionId", definitionId);
         }
 
         if (!definition.IsActive)
         {
-            throw new BusinessException(InventoryTrackingAutomationErrorCodes.General.InvalidOperation);
+            throw new BusinessException(GeneralExceptionCodes.InvalidOperation);
         }
 
         if (!definition.Steps.Any())
         {
-            throw new BusinessException(InventoryTrackingAutomationErrorCodes.General.InvalidOperation);
+            throw new BusinessException(GeneralExceptionCodes.InvalidOperation);
         }
 
         return definition;
@@ -163,7 +163,7 @@ public class WorkflowManager : InventoryTrackingAutomationDomainService
 
         if (step == null)
         {
-            throw new BusinessException(InventoryTrackingAutomationErrorCodes.Workflows.StepNotFound);
+            throw new BusinessException(WorkflowExceptionCodes.StepNotFound);
         }
 
         return step;
@@ -172,13 +172,13 @@ public class WorkflowManager : InventoryTrackingAutomationDomainService
     private void ValidateWorkflowIsActive(WorkflowInstance instance)
     {
         if (instance.State != WorkflowState.Active)
-            throw new BusinessException(InventoryTrackingAutomationErrorCodes.Workflows.InstanceNotActive);
+            throw new BusinessException(WorkflowExceptionCodes.InstanceNotActive);
     }
 
     private void ValidateStepIsPending(WorkflowInstanceStep step)
     {
         if (step.ActionTaken != WorkflowActionType.Pending)
-            throw new BusinessException(InventoryTrackingAutomationErrorCodes.MovementApprovals.AlreadyDecided);
+            throw new BusinessException(MovementApprovalExceptionCodes.AlreadyDecided);
     }
 
     // Mevcut kullanıcının bu adımı onaylama yetkisinin olup olmadığını doğrular.
@@ -188,13 +188,13 @@ public class WorkflowManager : InventoryTrackingAutomationDomainService
         if (step.AssignedUserId.HasValue)
         {
             if (step.AssignedUserId.Value != currentUserId)
-                throw new BusinessException(InventoryTrackingAutomationErrorCodes.Workflows.UnauthorizedApproval);
+                throw new BusinessException(WorkflowExceptionCodes.UnauthorizedApproval);
         }
         else
         {
             var requiredRole = step.WorkflowStepDefinition.RequiredRoleName;
             if (!string.IsNullOrEmpty(requiredRole) && !currentUserRoles.Contains(requiredRole))
-                throw new BusinessException(InventoryTrackingAutomationErrorCodes.Workflows.UnauthorizedApproval);
+                throw new BusinessException(WorkflowExceptionCodes.UnauthorizedApproval);
             
         }
     }
