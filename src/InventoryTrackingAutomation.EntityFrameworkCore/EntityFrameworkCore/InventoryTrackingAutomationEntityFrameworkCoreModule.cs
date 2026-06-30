@@ -138,28 +138,11 @@ public class InventoryTrackingAutomationEntityFrameworkCoreModule : AbpModule
         {
             options.AddDefaultRepositories(includeAllEntities: true);
 
-            options.AddRepository<ProductCategory, ProductCategoryRepository>();
-            options.AddRepository<Department, DepartmentRepository>();
 
-            options.AddRepository<Product, ProductRepository>();
-            options.AddRepository<Warehouse, WarehouseRepository>();
-            options.AddRepository<Vehicle, VehicleRepository>();
-            options.AddRepository<Worker, WorkerRepository>();
 
-            options.AddRepository<StockLocation, StockLocationRepository>();
-            options.AddRepository<InventoryTransaction, InventoryTransactionRepository>();
 
-            options.AddRepository<MovementRequest, MovementRequestRepository>();
-            options.AddRepository<MovementApproval, MovementApprovalRepository>();
 
-            options.AddRepository<InventoryTask, InventoryTaskRepository>();
-            options.AddRepository<VehicleTask, VehicleTaskRepository>();
-            options.AddRepository<TaskLine, TaskLineRepository>();
-            options.AddRepository<VehicleTaskLine, VehicleTaskLineRepository>();
 
-            options.AddRepository<WorkflowDefinition, WorkflowDefinitionRepository>();
-            options.AddRepository<WorkflowInstance, WorkflowInstanceRepository>();
-            options.AddRepository<WorkflowInstanceStep, WorkflowInstanceStepRepository>();
         });
     }
 }
