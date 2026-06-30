@@ -27,6 +27,8 @@ namespace InventoryTrackingAutomation.Managers.Movements;
 // Hareket talebi domain manager'i - MovementRequest icin is kurallari, FK validasyonu ve workflow tetikleme.
 public class MovementRequestManager : BaseManager<MovementRequest>
 {
+    protected override string AlreadyExistsErrorCode => MovementRequestExceptionCodes.RequestNumberNotUnique;
+
     private IWarehouseRepository _warehouseRepository => LazyGetRequiredService<IWarehouseRepository>();
     private IWorkerRepository _workerRepository => LazyGetRequiredService<IWorkerRepository>();
     private IVehicleRepository _vehicleRepository => LazyGetRequiredService<IVehicleRepository>();
@@ -56,6 +58,104 @@ public class MovementRequestManager : BaseManager<MovementRequest>
         await ValidatePriorityAsync(model.Priority);
 
         return model;
+    }
+
+    /// <summary>
+    /// Birden fazla hareket talebini toplu olarak doğrulamak için kullanılır.
+    /// </summary>
+    public async Task<System.Collections.Generic.List<CreateMovementRequestModel>> CreateManyAsync(System.Collections.Generic.List<CreateMovementRequestModel> models)
+    {
+        if (models.Count == 0)
+        {
+            return models;
+        }
+
+        var requestNumbers = models.Where(x => !string.IsNullOrWhiteSpace(x.RequestNumber)).Select(x => x.RequestNumber).ToList();
+        if (requestNumbers.Any())
+        {
+            await EnsureUniqueBulkAsync(requestNumbers, x => x.RequestNumber);
+        }
+
+        var workerIds = models.Select(x => x.RequestedByWorkerId).Distinct().ToList();
+        if (workerIds.Any())
+        {
+            await EnsureAllExistInAsync(_workerRepository, workerIds);
+        }
+
+        foreach (var priority in models.Select(x => x.Priority).Distinct())
+        {
+            await ValidatePriorityAsync(priority);
+        }
+
+        var vehicleTaskIds = models.Select(x => x.VehicleTaskId).Distinct().ToList();
+        if (vehicleTaskIds.Any(x => x == Guid.Empty))
+        {
+            throw new BusinessException(VehicleTaskExceptionCodes.NotFound);
+        }
+
+        var vehicleTasks = await _vehicleTaskRepository.GetListAsync(x => vehicleTaskIds.Contains(x.Id));
+        var vehicleTaskById = vehicleTasks.ToDictionary(x => x.Id);
+        foreach (var vehicleTaskId in vehicleTaskIds)
+        {
+            if (!vehicleTaskById.TryGetValue(vehicleTaskId, out var vehicleTask))
+            {
+                throw new BusinessException(VehicleTaskExceptionCodes.NotFound);
+            }
+
+            if (vehicleTask.ReleasedAt.HasValue)
+            {
+                throw new BusinessException(GeneralExceptionCodes.InvalidOperation);
+            }
+        }
+
+        var taskIds = vehicleTasks.Select(x => x.TaskId).Distinct().ToList();
+        var tasks = await _inventoryTaskRepository.GetListAsync(x => taskIds.Contains(x.Id));
+        var taskById = tasks.ToDictionary(x => x.Id);
+        foreach (var taskId in taskIds)
+        {
+            if (!taskById.ContainsKey(taskId))
+            {
+                throw new BusinessException(InventoryTaskExceptionCodes.NotFound);
+            }
+        }
+
+        var vehicleIds = vehicleTasks.Select(x => x.VehicleId).Distinct().ToList();
+        var vehicles = await _vehicleRepository.GetListAsync(x => vehicleIds.Contains(x.Id));
+        var vehicleById = vehicles.ToDictionary(x => x.Id);
+        foreach (var vehicleId in vehicleIds)
+        {
+            if (!vehicleById.TryGetValue(vehicleId, out var vehicle))
+            {
+                throw new BusinessException(VehicleExceptionCodes.NotFound);
+            }
+
+            if (!vehicle.IsActive)
+            {
+                throw new BusinessException(GeneralExceptionCodes.InvalidOperation);
+            }
+        }
+
+        var warehouseIds = new HashSet<Guid>();
+        foreach (var vehicleTask in vehicleTasks)
+        {
+            var task = taskById[vehicleTask.TaskId];
+            EnsureVehicleRequested(vehicleTask.VehicleId);
+            CollectAndValidateTaskRoute(task, warehouseIds);
+        }
+
+        await EnsureAllExistInAsync(_warehouseRepository, warehouseIds);
+
+        var transferLines = await _vehicleTaskLineRepository.GetListAsync(x => vehicleTaskIds.Contains(x.VehicleTaskId));
+        var vehicleTaskIdsWithLines = transferLines.Select(x => x.VehicleTaskId).ToHashSet();
+        foreach (var vehicleTaskId in vehicleTaskIds)
+        {
+            if (!vehicleTaskIdsWithLines.Contains(vehicleTaskId))
+            {
+                throw new BusinessException(GeneralExceptionCodes.InvalidOperation);
+            }
+        }
+
+        return models;
     }
 
     /// Mevcut bir hareket talebini güncellemek için kullanılır.
@@ -456,6 +556,32 @@ public class MovementRequestManager : BaseManager<MovementRequest>
         if (lines.Count == 0)
         {
             throw new BusinessException(GeneralExceptionCodes.InvalidOperation);
+        }
+    }
+
+    /// Hareket rotasinin gecerliligini dogrulamak icin kullanilir.
+    private static void CollectAndValidateTaskRoute(
+        InventoryTrackingAutomation.Entities.Tasks.InventoryTask task,
+        ISet<Guid> warehouseIds)
+    {
+        if (task.SourceWarehouseId == Guid.Empty)
+        {
+            throw new BusinessException(WarehouseExceptionCodes.NotFound);
+        }
+
+        warehouseIds.Add(task.SourceWarehouseId);
+
+        if (task.Type != InventoryTaskTypeEnum.WarehouseTransfer)
+        {
+            return;
+        }
+
+        EnsureTargetWarehouseRequested(task.TargetWarehouseId);
+        warehouseIds.Add(task.TargetWarehouseId!.Value);
+
+        if (task.TargetWarehouseId == task.SourceWarehouseId)
+        {
+            throw new BusinessException(InventoryTransactionExceptionCodes.InvalidLocationPair);
         }
     }
 

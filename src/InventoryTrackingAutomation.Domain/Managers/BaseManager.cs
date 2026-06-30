@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
+using InventoryTrackingAutomation.ExceptionCodes;
 using InventoryTrackingAutomation.Interface;
 using Volo.Abp;
 using Volo.Abp.DependencyInjection;
@@ -11,17 +12,16 @@ using Volo.Abp.Domain.Repositories;
 
 namespace InventoryTrackingAutomation.Managers;
 
-// Tüm domain manager'larının türeyeceği generic base — varlık/unique/mapping/enum doğrulama helper'larını merkezileştirir.
-// Türetilmiş manager'lar tekrarlı kontrolleri buradan kullanır, sadece kendine özgü iş kurallarını ekler.
-//işlevi: Base etki alanı (domain) kurallarını ve karmaşık veri bütünlüğünü sağlar.
-//sistemdeki görevi: Domain katmanındaki iş kurallarının merkezi yönetimini ve validasyonunu sağlar.
+// islevi: Domain manager'lar icin ortak varlik, benzersizlik ve enum dogrulama yardimcilarini toplar.
+// sistemdeki gorevi: Tekil ve toplu validasyonlarda ayni kurallarin tekrar yazilmasini engeller.
 public abstract class BaseManager<TEntity> : InventoryTrackingAutomationDomainService
     where TEntity : class, IEntity<Guid>
 {
-    // Yönetilen entity tipinin temel repository'si (alt sınıflara açık).
     protected readonly IBaseRepository<TEntity> Repository;
 
-    // Yönetilen entity'nin repository'sini DI ile alır.
+    // Tureyen manager kendi modulune ait exception code'u ezmelidir.
+    protected virtual string AlreadyExistsErrorCode => GeneralExceptionCodes.InvalidOperation;
+
     protected BaseManager(IBaseRepository<TEntity> repository)
     {
         Repository = repository;
@@ -35,11 +35,7 @@ public abstract class BaseManager<TEntity> : InventoryTrackingAutomationDomainSe
         Repository = repository;
     }
 
-    // ════════════════════════════════════════════════════════
-    //  VARLIK KONTROL HELPER'LARI
-    // ════════════════════════════════════════════════════════
-
-    /// Entity'nin varlığını doğrulamak ve getirmek için kullanılır.
+    /// Entity'nin varligini dogrulamak ve getirmek icin kullanilir.
     public async Task<TEntity> EnsureExistsAsync(Guid id)
     {
         var entity = await Repository.FindAsync(id);
@@ -51,7 +47,7 @@ public abstract class BaseManager<TEntity> : InventoryTrackingAutomationDomainSe
         return entity;
     }
 
-    /// Belirli bir repository'de entity varlığını doğrulamak için kullanılır.
+    /// Belirli bir repository'de entity varligini dogrulamak icin kullanilir.
     public async Task EnsureExistsInAsync<TOther>(
         IBaseRepository<TOther> otherRepository,
         Guid id)
@@ -77,7 +73,7 @@ public abstract class BaseManager<TEntity> : InventoryTrackingAutomationDomainSe
         }
     }
 
-    /// Opsiyonel entity varlığını doğrulamak için kullanılır.
+    /// Opsiyonel entity varligini dogrulamak icin kullanilir.
     public async Task EnsureExistsInAsync<TOther>(
         IBaseRepository<TOther> otherRepository,
         Guid? id)
@@ -101,71 +97,122 @@ public abstract class BaseManager<TEntity> : InventoryTrackingAutomationDomainSe
         }
     }
 
-    /// Verilen tüm ID'lerin varlığını topluca doğrulamak için kullanılır.
+    /// Verilen tum ID'lerin varligini tek async repository sorgusu ile dogrular.
     public async Task EnsureAllExistInAsync<TOther>(
         IBaseRepository<TOther> otherRepository,
         IEnumerable<Guid> ids)
         where TOther : class, IEntity<Guid>
     {
-        // Distinct id listesi.
         var idList = ids.Distinct().ToList();
-        // Mevcut id'leri tek query ile çek.
-        var queryable = await otherRepository.GetQueryableAsync();
-        var foundIds = queryable
-            .Where(x => idList.Contains(x.Id))
-            .Select(x => x.Id)
-            .ToHashSet();
-
-        // Listede olup DB'de olmayan ilk id'yi bul ve onu raporla.
-        var missingId = idList.FirstOrDefault(id => !foundIds.Contains(id));
-        if (missingId != Guid.Empty || foundIds.Count != idList.Count)
+        if (idList.Count == 0)
         {
-            throw new EntityNotFoundException(typeof(TOther), missingId);
+            return;
         }
+
+        if (idList.Contains(Guid.Empty))
+        {
+            throw new EntityNotFoundException(typeof(TOther), Guid.Empty);
+        }
+
+        var foundEntities = await otherRepository.GetListAsync(x => idList.Contains(x.Id));
+        EnsureAllIdsFound<TOther>(idList, foundEntities.Select(x => x.Id));
     }
 
-    // ════════════════════════════════════════════════════════
-    //  UNIQUE KONTROL HELPER'LARI
-    // ════════════════════════════════════════════════════════
+    /// Verilen tum ID'lerin varligini tek async ABP repository sorgusu ile dogrular.
+    public async Task EnsureAllExistInAsync<TOther>(
+        IRepository<TOther, Guid> otherRepository,
+        IEnumerable<Guid> ids)
+        where TOther : class, IEntity<Guid>
+    {
+        var idList = ids.Distinct().ToList();
+        if (idList.Count == 0)
+        {
+            return;
+        }
 
-    /// Yeni kayıt için benzersizlik kontrolü yapmak için kullanılır.
+        if (idList.Contains(Guid.Empty))
+        {
+            throw new EntityNotFoundException(typeof(TOther), Guid.Empty);
+        }
+
+        var foundEntities = await otherRepository.GetListAsync(x => idList.Contains(x.Id));
+        EnsureAllIdsFound<TOther>(idList, foundEntities.Select(x => x.Id));
+    }
+
+    /// Yeni kayit icin benzersizlik kontrolu yapar.
     public async Task EnsureUniqueAsync(
         Expression<Func<TEntity, bool>> predicate)
     {
-        var queryable = await Repository.GetQueryableAsync();
-        if (queryable.Any(predicate))
+        var exists = (await Repository.GetListAsync(predicate)).Any();
+        if (exists)
         {
-            throw new BusinessException(BuildAlreadyExistsErrorCode());
+            throw new BusinessException(AlreadyExistsErrorCode);
         }
     }
 
-    /// Güncelleme için benzersizlik kontrolü yapmak için kullanılır.
+    /// Yeni kayitlar icin input ici ve DB'deki benzersizlik kurallarini toplu kontrol eder.
+    public async Task EnsureUniqueBulkAsync<TValue>(
+        IEnumerable<TValue> values,
+        Expression<Func<TEntity, TValue>> propertySelector)
+    {
+        var rawValues = values.Where(v => v != null).ToList();
+        if (rawValues.Count == 0)
+        {
+            return;
+        }
+
+        var duplicateValue = rawValues
+            .GroupBy(v => v)
+            .FirstOrDefault(g => g.Count() > 1);
+
+        if (duplicateValue != null)
+        {
+            throw new BusinessException(AlreadyExistsErrorCode)
+                .WithData("Value", duplicateValue.Key!);
+        }
+
+        var valueList = rawValues.Distinct().ToList();
+        var parameter = propertySelector.Parameters[0];
+        var containsMethod = typeof(List<TValue>).GetMethod(nameof(List<TValue>.Contains), new[] { typeof(TValue) });
+        var containsExpression = Expression.Call(Expression.Constant(valueList), containsMethod!, propertySelector.Body);
+        var lambda = Expression.Lambda<Func<TEntity, bool>>(containsExpression, parameter);
+
+        var exists = (await Repository.GetListAsync(lambda)).Any();
+        if (exists)
+        {
+            throw new BusinessException(AlreadyExistsErrorCode);
+        }
+    }
+
+    /// Guncelleme icin benzersizlik kontrolu yapar.
     public async Task EnsureUniqueAsync(
         Expression<Func<TEntity, bool>> predicate,
         Guid excludeId)
     {
-        var queryable = await Repository.GetQueryableAsync();
-        var exists = queryable
-            .Where(predicate)
+        var exists = (await Repository.GetListAsync(predicate))
             .Any(e => !e.Id.Equals(excludeId));
+
         if (exists)
         {
-            throw new BusinessException(BuildAlreadyExistsErrorCode());
+            throw new BusinessException(AlreadyExistsErrorCode);
         }
     }
 
-    /// 'Zaten mevcut' hata kodunu oluşturmak için kullanılır.
-    private static string BuildAlreadyExistsErrorCode()
-        => $"InventoryTrackingAutomation:{typeof(TEntity).Name}.AlreadyExists";
-
-    // ════════════════════════════════════════════════════════
-    //  ENUM VALIDASYON HELPER'LARI
-    // ════════════════════════════════════════════════════════
-
-    /// Enum değerinin geçerliliğini doğrulamak için kullanılır.
+    /// Enum degerinin gecerliligini dogrulamak icin kullanilir.
     protected async Task EnsureValidEnumAsync<TEnum>(TEnum value, string settingName) where TEnum : struct, Enum
     {
         var enumValidationManager = LazyGetRequiredService<InventoryTrackingAutomation.Managers.Shared.EnumValidationManager>();
         await enumValidationManager.ValidateAllowedEnumAsync(value, settingName);
+    }
+
+    private static void EnsureAllIdsFound<TOther>(IReadOnlyCollection<Guid> expectedIds, IEnumerable<Guid> foundIds)
+        where TOther : class, IEntity<Guid>
+    {
+        var foundIdSet = foundIds.ToHashSet();
+        var missingId = expectedIds.FirstOrDefault(id => !foundIdSet.Contains(id));
+        if (missingId != Guid.Empty || foundIdSet.Count != expectedIds.Count)
+        {
+            throw new EntityNotFoundException(typeof(TOther), missingId);
+        }
     }
 }

@@ -44,6 +44,37 @@ public class StockLocationManager : BaseManager<StockLocation>
         return entity;
     }
 
+    /// <summary>
+    /// Birden fazla stok lokasyon kaydı oluşturmak için toplu validasyon yapar.
+    /// </summary>
+    public async Task<System.Collections.Generic.List<CreateStockLocationModel>> CreateManyAsync(System.Collections.Generic.List<CreateStockLocationModel> models)
+    {
+        var productIds = models.Select(x => x.ProductId).Distinct().ToList();
+        if (productIds.Any()) await EnsureAllExistInAsync(_productRepository, productIds);
+
+        var warehouseIds = models.Where(x => x.LocationType == StockLocationTypeEnum.Warehouse).Select(x => x.LocationId).Distinct().ToList();
+        if (warehouseIds.Any()) await EnsureAllExistInAsync(_warehouseRepository, warehouseIds);
+
+        var vehicleIds = models.Where(x => x.LocationType == StockLocationTypeEnum.Vehicle).Select(x => x.LocationId).Distinct().ToList();
+        if (vehicleIds.Any()) await EnsureAllExistInAsync(_vehicleRepository, vehicleIds);
+
+        var existingLocations = await ((IStockLocationRepository)Repository).GetListAsync(x => productIds.Contains(x.ProductId));
+        
+        foreach (var model in models)
+        {
+            ValidateQuantities(model.Quantity, model.ReservedQuantity);
+            if (existingLocations.Any(x => x.ProductId == model.ProductId && x.LocationType == model.LocationType && x.LocationId == model.LocationId))
+            {
+                throw new BusinessException(StockLocationExceptionCodes.DuplicateLocation);
+            }
+        }
+        
+        var duplicateInInput = models.GroupBy(x => new { x.ProductId, x.LocationType, x.LocationId }).Any(g => g.Count() > 1);
+        if (duplicateInInput) throw new BusinessException(StockLocationExceptionCodes.DuplicateLocation);
+
+        return models;
+    }
+
     /// Mevcut bir stok lokasyon kaydını güncellemek için kullanılır.
     public async Task<StockLocation> UpdateAsync(StockLocation existing, UpdateStockLocationModel model)
     {
