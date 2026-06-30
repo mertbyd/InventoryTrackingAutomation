@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using InventoryTrackingAutomation.Dtos.Lookups;
 using InventoryTrackingAutomation.Entities.Lookups;
@@ -36,6 +37,20 @@ public class VehicleTypeAppService : LookupCrudAppService<VehicleType, VehicleTy
         var entity = new VehicleType(GuidGenerator.Create(), validatedModel.Code, validatedModel.Name);
         _mapper.MapToEntity(validatedModel, entity);
         return entity;
+    }
+
+    protected override async Task<List<VehicleType>> CreateEntitiesAsync(List<CreateVehicleTypeModel> models)
+    {
+        var validatedModels = await _manager.CreateManyAsync(models);
+        var entities = new List<VehicleType>();
+        foreach (var model in validatedModels)
+        {
+            var entity = new VehicleType(GuidGenerator.Create(), model.Code, model.Name);
+            _mapper.MapToEntity(model, entity);
+            entities.Add(entity);
+        }
+
+        return entities;
     }
 
     protected override async Task<VehicleType> UpdateEntityAsync(VehicleType entity, UpdateVehicleTypeModel model)

@@ -56,6 +56,38 @@ public class WorkerManager : BaseManager<Worker>
     }
 
     /// <summary>
+    /// Birden fazla çalışan oluşturur — Toplu DepartmentId, DefaultWarehouseId ve ManagerId varlık kontrolleri yapar.
+    /// </summary>
+    public async Task<System.Collections.Generic.List<CreateWorkerModel>> CreateManyAsync(System.Collections.Generic.List<CreateWorkerModel> models)
+    {
+        var departmentIds = models.Where(x => x.DepartmentId.HasValue).Select(x => x.DepartmentId.Value).ToList();
+        if (departmentIds.Any())
+        {
+            await EnsureAllExistInAsync(_departmentRepository, departmentIds);
+        }
+
+        var warehouseIds = models.Where(x => x.DefaultWarehouseId.HasValue).Select(x => x.DefaultWarehouseId.Value).ToList();
+        if (warehouseIds.Any())
+        {
+            await EnsureAllExistInAsync(_warehouseRepository, warehouseIds);
+        }
+
+        var managerIds = models.Where(x => x.ManagerId.HasValue).Select(x => x.ManagerId.Value).ToList();
+        if (managerIds.Any())
+        {
+            await EnsureAllExistInAsync(Repository, managerIds);
+        }
+
+        var workerTypeIds = models.Select(x => x.WorkerTypeId).ToList();
+        if (workerTypeIds.Any())
+        {
+            await EnsureAllExistInAsync(_workerTypeRepository, workerTypeIds);
+        }
+
+        return models;
+    }
+
+    /// <summary>
     /// Çalışanı günceller — DepartmentId, DefaultWarehouseId ve ManagerId varlık kontrolleri ile kendi kendini yönetici atamama kurallarını işletir.
     /// </summary>
     //işlevi: Etki alanı kuralını veya validasyonunu işletir.

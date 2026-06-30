@@ -16,6 +16,8 @@ namespace InventoryTrackingAutomation.Managers.Masters;
 //sistemdeki görevi: Domain katmanındaki iş kurallarının merkezi yönetimini ve validasyonunu sağlar.
 public class ProductManager : BaseManager<Product>
 {
+    protected override string AlreadyExistsErrorCode => ProductExceptionCodes.CodeNotUnique;
+
     private IProductCategoryRepository _categoryRepository => LazyGetRequiredService<IProductCategoryRepository>();  // CategoryId FK validasyonu için
     private IRepository<UnitType, System.Guid> _unitTypeRepository => LazyGetRequiredService<IRepository<UnitType, System.Guid>>();
 
@@ -52,6 +54,32 @@ public class ProductManager : BaseManager<Product>
         await EnsureExistsInAsync(_unitTypeRepository, model.UnitTypeId);
 
         return model;
+    }
+
+    /// <summary>
+    /// Birden fazla ürün oluşturur — Toplu Code unique ve category/unit varlık kontrolü yapar.
+    /// </summary>
+    public async Task<System.Collections.Generic.List<CreateProductModel>> CreateManyAsync(System.Collections.Generic.List<CreateProductModel> models)
+    {
+        var codes = models.Where(x => !string.IsNullOrWhiteSpace(x.Code)).Select(x => x.Code).ToList();
+        if (codes.Any())
+        {
+            await EnsureUniqueBulkAsync(codes, x => x.Code);
+        }
+
+        var categoryIds = models.Where(x => x.CategoryId.HasValue).Select(x => x.CategoryId.Value).ToList();
+        if (categoryIds.Any())
+        {
+            await EnsureAllExistInAsync(_categoryRepository, categoryIds);
+        }
+
+        var unitTypeIds = models.Select(x => x.UnitTypeId).ToList();
+        if (unitTypeIds.Any())
+        {
+            await EnsureAllExistInAsync(_unitTypeRepository, unitTypeIds);
+        }
+
+        return models;
     }
 
     /// <summary>

@@ -14,7 +14,12 @@ public interface IMovementRequestRepository : IBaseRepository<MovementRequest>
     /// Hareket talebinin task ve vehicle-task baglamini tek repository sorgusunda getirir.
     /// </summary>
     Task<MovementRequestOperationalContextModel?> GetOperationalContextAsync(Guid movementRequestId);
-
+    
+    /// <summary>
+    /// Birden fazla hareket talebinin task ve vehicle-task bağlamını toplu olarak (batch) getirir.
+    /// N+1 sorgu problemini engellemek için kullanılır.
+    /// </summary>
+    Task<System.Collections.Generic.Dictionary<Guid, MovementRequestOperationalContextModel>> GetOperationalContextsAsync(System.Collections.Generic.IEnumerable<Guid> movementRequestIds);
     /// <summary>
     /// Iade talebi icin ayni vehicle-task'a ait son ana movement'i bulur.
     /// </summary>

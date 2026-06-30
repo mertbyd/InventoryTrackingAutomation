@@ -16,6 +16,8 @@ namespace InventoryTrackingAutomation.Managers.Tasks;
 /// </summary>
 public class InventoryTaskManager : BaseManager<InventoryTask>
 {
+    protected override string AlreadyExistsErrorCode => InventoryTaskExceptionCodes.CodeNotUnique;
+
     private IWarehouseRepository _warehouseRepository => LazyGetRequiredService<IWarehouseRepository>();
     private TaskLineManager _taskLineManager => LazyGetRequiredService<TaskLineManager>();
     private ITaskLineRepository _taskLineRepository => LazyGetRequiredService<ITaskLineRepository>();
@@ -37,6 +39,44 @@ public class InventoryTaskManager : BaseManager<InventoryTask>
         await ValidateRouteAsync(model.Type, model.SourceWarehouseId, model.TargetWarehouseId, model.ReturnWarehouseId);
 
         return model;
+    }
+
+    /// <summary>
+    /// Birden fazla envanter görevini toplu oluşturmak ve doğrulamak için kullanılır.
+    /// </summary>
+    public async Task<System.Collections.Generic.List<CreateInventoryTaskModel>> CreateManyAsync(System.Collections.Generic.List<CreateInventoryTaskModel> models)
+    {
+        var codes = models.Where(x => !string.IsNullOrWhiteSpace(x.Code)).Select(x => x.Code).ToList();
+        if (codes.Any())
+        {
+            await EnsureUniqueBulkAsync(codes, x => x.Code);
+        }
+
+        var warehouseIds = new HashSet<Guid>();
+        foreach (var model in models)
+        {
+            ValidateDateRange(model.StartDate, model.EndDate);
+            if (model.SourceWarehouseId == Guid.Empty) throw new BusinessException(WarehouseExceptionCodes.NotFound);
+            
+            warehouseIds.Add(model.SourceWarehouseId);
+            if (model.TargetWarehouseId.HasValue && model.TargetWarehouseId.Value != Guid.Empty) warehouseIds.Add(model.TargetWarehouseId.Value);
+            if (model.ReturnWarehouseId.HasValue && model.ReturnWarehouseId.Value != Guid.Empty) warehouseIds.Add(model.ReturnWarehouseId.Value);
+
+            if (model.Type == InventoryTaskTypeEnum.WarehouseTransfer)
+            {
+                if (!model.TargetWarehouseId.HasValue || model.TargetWarehouseId.Value == Guid.Empty)
+                    throw new BusinessException(MovementRequestExceptionCodes.TargetRequired);
+                if (model.TargetWarehouseId.Value == model.SourceWarehouseId)
+                    throw new BusinessException(InventoryTransactionExceptionCodes.InvalidLocationPair);
+            }
+        }
+
+        if (warehouseIds.Any())
+        {
+            await EnsureAllExistInAsync(_warehouseRepository, warehouseIds);
+        }
+
+        return models;
     }
 
     /// <summary>

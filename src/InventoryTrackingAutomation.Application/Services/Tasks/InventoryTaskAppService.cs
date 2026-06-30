@@ -1,6 +1,7 @@
 using InventoryTrackingAutomation.Application.Mappers.Tasks;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using InventoryTrackingAutomation.Application.Caching;
 using InventoryTrackingAutomation.Dtos.Tasks;
@@ -33,11 +34,14 @@ public class InventoryTaskAppService : InventoryTrackingAutomationAppService, II
     }
 
     private IInventoryTaskRepository _repository => LazyGetRequiredService<IInventoryTaskRepository>();
+    private ITaskLineRepository _taskLineRepository => LazyGetRequiredService<ITaskLineRepository>();
     private InventoryTaskManager _manager => LazyGetRequiredService<InventoryTaskManager>();
+    private TaskLineManager _taskLineManager => LazyGetRequiredService<TaskLineManager>();
     private ITaskLineAppService _taskLineAppService => LazyGetRequiredService<ITaskLineAppService>();
     private InventoryQueryManager _inventoryQueryManager => LazyGetRequiredService<InventoryQueryManager>();
     private ILocalEventBus _localEventBus => LazyGetRequiredService<ILocalEventBus>();
     private IValidator<CreateInventoryTaskDto> _createValidator => LazyGetRequiredService<IValidator<CreateInventoryTaskDto>>();
+    private IValidator<CreateTaskLineDto> _createTaskLineValidator => LazyGetRequiredService<IValidator<CreateTaskLineDto>>();
     private IValidator<UpdateInventoryTaskDto> _updateValidator => LazyGetRequiredService<IValidator<UpdateInventoryTaskDto>>();
     private static readonly InventoryTaskMapper _mapper = new InventoryTaskMapper();
     private static readonly TaskLineMapper _taskLineMapper = new TaskLineMapper();
@@ -116,31 +120,55 @@ public class InventoryTaskAppService : InventoryTrackingAutomationAppService, II
     [UnitOfWork]
     public async Task<List<InventoryTaskDto>> CreateManyAsync(List<CreateInventoryTaskDto> inputs)
     {
-        var result = new List<InventoryTask>();
+        var models = new List<CreateInventoryTaskModel>();
         foreach (var dto in inputs)
         {
             await _createValidator.ValidateAndThrowAsync(dto);
-
-            var model = _mapper.MapToModel(dto);
-            var lines = _mapper.MapToModel(dto.Lines ?? new List<CreateTaskLineDto>());
-
-            var validatedModel = await _manager.CreateAsync(model);
-            var taskEntity = new InventoryTask(GuidGenerator.Create());
-            _mapper.MapToEntity(validatedModel, taskEntity);
-            var insertedTask = await _repository.InsertAsync(taskEntity, autoSave: true);
-
-            if (lines != null)
-            {
-                foreach (var lineDto in dto.Lines ?? new List<CreateTaskLineDto>())
-                {
-                    await _taskLineAppService.CreateForTaskAsync(insertedTask.Id, lineDto);
-                }
-            }
-            
-            result.Add(insertedTask);
+            models.Add(_mapper.MapToModel(dto));
         }
 
-        return _mapper.MapToDto(result);
+        var validatedModels = await _manager.CreateManyAsync(models);
+
+        var taskEntities = new List<InventoryTask>();
+        foreach (var model in validatedModels)
+        {
+            var taskEntity = new InventoryTask(GuidGenerator.Create());
+            _mapper.MapToEntity(model, taskEntity);
+            taskEntities.Add(taskEntity);
+        }
+
+        var insertedTasks = await _repository.InsertManyAndGetListAsync(taskEntities);
+        var lineModels = new List<CreateTaskLineModel>();
+        for (var i = 0; i < inputs.Count; i++)
+        {
+            var taskId = insertedTasks[i].Id;
+            foreach (var lineDto in inputs[i].Lines ?? new List<CreateTaskLineDto>())
+            {
+                await _createTaskLineValidator.ValidateAndThrowAsync(lineDto);
+
+                var lineModel = _taskLineMapper.MapToModel(lineDto);
+                lineModel.TaskId = taskId;
+                lineModels.Add(lineModel);
+            }
+        }
+
+        var insertedLines = new List<TaskLine>();
+        if (lineModels.Count > 0)
+        {
+            var validatedLineModels = await _taskLineManager.CreateManyAsync(lineModels);
+            var lineEntities = new List<TaskLine>();
+            foreach (var lineModel in validatedLineModels)
+            {
+                var lineEntity = new TaskLine(GuidGenerator.Create());
+                lineEntity.TaskId = lineModel.TaskId;
+                _taskLineMapper.MapToEntity(lineModel, lineEntity);
+                lineEntities.Add(lineEntity);
+            }
+
+            insertedLines = await _taskLineRepository.InsertManyAndGetListAsync(lineEntities);
+        }
+
+        return MapTasksWithLines(insertedTasks, insertedLines);
     }
 
     /// <summary>
@@ -272,6 +300,23 @@ public class InventoryTaskAppService : InventoryTrackingAutomationAppService, II
         var dto = _mapper.MapToDto(entity);
         dto.Lines = await _taskLineAppService.GetByTaskAsync(entity.Id);
         return dto;
+    }
+
+    private List<InventoryTaskDto> MapTasksWithLines(List<InventoryTask> tasks, List<TaskLine> lines)
+    {
+        var lineDtosByTaskId = lines
+            .GroupBy(x => x.TaskId)
+            .ToDictionary(x => x.Key, x => _taskLineMapper.MapToDto(x.ToList()));
+
+        var dtos = _mapper.MapToDto(tasks);
+        foreach (var dto in dtos)
+        {
+            dto.Lines = lineDtosByTaskId.TryGetValue(dto.Id, out var lineDtos)
+                ? lineDtos
+                : new List<TaskLineDto>();
+        }
+
+        return dtos;
     }
 
     private async Task<UpdateInventoryTaskModel> BuildCurrentModelAsync(Guid id)

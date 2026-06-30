@@ -29,14 +29,17 @@ public class VehicleTaskAppService : InventoryTrackingAutomationAppService, IVeh
 
     private IVehicleTaskRepository _repository => LazyGetRequiredService<IVehicleTaskRepository>();
     private IVehicleTaskLineRepository _vehicleTaskLineRepository => LazyGetRequiredService<IVehicleTaskLineRepository>();
+    private ITaskLineRepository _taskLineRepository => LazyGetRequiredService<ITaskLineRepository>();
     private VehicleTaskManager _manager => LazyGetRequiredService<VehicleTaskManager>();
     private VehicleTaskLineManager _vehicleTaskLineManager => LazyGetRequiredService<VehicleTaskLineManager>();
     private IVehicleTaskLineAppService _vehicleTaskLineAppService => LazyGetRequiredService<IVehicleTaskLineAppService>();
     // Task-arac cache anahtarlari degisince local event ile temizlenir.
     private ILocalEventBus _localEventBus => LazyGetRequiredService<ILocalEventBus>();
     private IValidator<CreateVehicleTaskDto> _createValidator => LazyGetRequiredService<IValidator<CreateVehicleTaskDto>>();
+    private IValidator<CreateVehicleTaskLineDto> _createLineValidator => LazyGetRequiredService<IValidator<CreateVehicleTaskLineDto>>();
     private IValidator<UpdateVehicleTaskDto> _updateValidator => LazyGetRequiredService<IValidator<UpdateVehicleTaskDto>>();
     private static readonly VehicleTaskMapper _mapper = new VehicleTaskMapper();
+    private static readonly VehicleTaskLineMapper _lineMapper = new VehicleTaskLineMapper();
 
     public async Task<VehicleTaskDto> GetAsync(Guid id)
     {
@@ -76,30 +79,57 @@ public class VehicleTaskAppService : InventoryTrackingAutomationAppService, IVeh
     [UnitOfWork]
     public async Task<List<VehicleTaskDto>> CreateManyAsync(List<CreateVehicleTaskDto> inputs)
     {
-        var entities = new List<VehicleTask>();
+        var models = new List<CreateVehicleTaskModel>();
         foreach (var dto in inputs)
         {
             await _createValidator.ValidateAndThrowAsync(dto);
-            var model = _mapper.MapToModel(dto);
-            var validatedModel = await _manager.CreateAsync(model);
-            var entity = new VehicleTask(GuidGenerator.Create());
-            _mapper.MapToEntity(validatedModel, entity);
-            var inserted = await _repository.InsertAsync(entity, autoSave: true);
-
-            if (dto.Lines is { Count: > 0 })
-            {
-                foreach (var lineDto in dto.Lines)
-                {
-                    await _vehicleTaskLineAppService.CreateForVehicleTaskAsync(inserted.Id, lineDto);
-                }
-            }
-
-            entities.Add(inserted);
+            models.Add(_mapper.MapToModel(dto));
         }
 
-        var taskKeys = entities.Select(e => CacheKeys.TaskVehicles(e.TaskId)).Distinct().ToArray();
+        var validatedModels = await _manager.CreateManyAsync(models);
+        
+        var entities = new List<VehicleTask>();
+        foreach (var model in validatedModels)
+        {
+            var entity = new VehicleTask(GuidGenerator.Create());
+            _mapper.MapToEntity(model, entity);
+            entities.Add(entity);
+        }
+
+        var inserted = await _repository.InsertManyAndGetListAsync(entities);
+        var lineModels = new List<CreateVehicleTaskLineModel>();
+        for (var i = 0; i < inputs.Count; i++)
+        {
+            var vehicleTaskId = inserted[i].Id;
+            foreach (var lineDto in inputs[i].Lines ?? new List<CreateVehicleTaskLineDto>())
+            {
+                await _createLineValidator.ValidateAndThrowAsync(lineDto);
+
+                var lineModel = _lineMapper.MapToModel(lineDto);
+                lineModel.VehicleTaskId = vehicleTaskId;
+                lineModels.Add(lineModel);
+            }
+        }
+
+        var insertedLines = new List<VehicleTaskLine>();
+        if (lineModels.Count > 0)
+        {
+            var validatedLineModels = await _vehicleTaskLineManager.CreateManyAsync(lineModels);
+            var lineEntities = new List<VehicleTaskLine>();
+            foreach (var lineModel in validatedLineModels)
+            {
+                var lineEntity = new VehicleTaskLine(GuidGenerator.Create());
+                lineEntity.VehicleTaskId = lineModel.VehicleTaskId;
+                _lineMapper.MapToEntity(lineModel, lineEntity);
+                lineEntities.Add(lineEntity);
+            }
+
+            insertedLines = await _vehicleTaskLineRepository.InsertManyAndGetListAsync(lineEntities);
+        }
+
+        var taskKeys = inserted.Select(e => CacheKeys.TaskVehicles(e.TaskId)).Distinct().ToArray();
         await _localEventBus.PublishAsync(CacheInvalidationEto.ForKeys(taskKeys));
-        return _mapper.MapToDto(entities);
+        return await MapVehicleTasksWithLinesAsync(inserted, insertedLines);
     }
 
     [UnitOfWork]
@@ -166,5 +196,35 @@ public class VehicleTaskAppService : InventoryTrackingAutomationAppService, IVeh
         var dto = _mapper.MapToDto(entity);
         dto.Lines = await _vehicleTaskLineAppService.GetByVehicleTaskAsync(entity.Id);
         return dto;
+    }
+
+    private async Task<List<VehicleTaskDto>> MapVehicleTasksWithLinesAsync(List<VehicleTask> vehicleTasks, List<VehicleTaskLine> lines)
+    {
+        var taskLineIds = lines.Select(x => x.TaskLineId).Distinct().ToList();
+        var productByTaskLineId = taskLineIds.Count == 0
+            ? new Dictionary<Guid, Guid>()
+            : (await _taskLineRepository.GetListAsync(x => taskLineIds.Contains(x.Id)))
+                .ToDictionary(x => x.Id, x => x.ProductId);
+
+        var lineDtosByVehicleTaskId = lines
+            .GroupBy(x => x.VehicleTaskId)
+            .ToDictionary(
+                x => x.Key,
+                x => x.Select(line =>
+                {
+                    var dto = _lineMapper.MapToDto(line);
+                    dto.ProductId = productByTaskLineId.GetValueOrDefault(line.TaskLineId);
+                    return dto;
+                }).ToList());
+
+        var dtos = _mapper.MapToDto(vehicleTasks);
+        foreach (var dto in dtos)
+        {
+            dto.Lines = lineDtosByVehicleTaskId.TryGetValue(dto.Id, out var lineDtos)
+                ? lineDtos
+                : new List<VehicleTaskLineDto>();
+        }
+
+        return dtos;
     }
 }

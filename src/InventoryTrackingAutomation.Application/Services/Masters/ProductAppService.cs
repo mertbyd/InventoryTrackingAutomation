@@ -97,14 +97,20 @@ public class ProductAppService : InventoryTrackingAutomationAppService, IProduct
     //sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<List<ProductDto>> CreateManyAsync(List<CreateProductDto> inputs)
     {
-        var entities = new List<Product>();
+        var models = new List<CreateProductModel>();
         foreach (var dto in inputs)
         {
             await _createValidator.ValidateAndThrowAsync(dto);
-            var model = _mapper.MapToModel(dto);
-            var validatedModel = await _manager.CreateAsync(model);
+            models.Add(_mapper.MapToModel(dto));
+        }
+
+        var validatedModels = await _manager.CreateManyAsync(models);
+        
+        var entities = new List<Product>();
+        foreach (var model in validatedModels)
+        {
             var entity = new Product(GuidGenerator.Create());
-            _mapper.MapToEntity(validatedModel, entity);
+            _mapper.MapToEntity(model, entity);
             entities.Add(entity);
         }
 

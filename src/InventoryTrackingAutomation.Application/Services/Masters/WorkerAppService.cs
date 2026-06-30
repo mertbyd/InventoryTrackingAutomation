@@ -79,14 +79,20 @@ public class WorkerAppService : InventoryTrackingAutomationAppService, IWorkerAp
     //sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<List<WorkerDto>> CreateManyAsync(List<CreateWorkerDto> inputs)
     {
-        var entities = new List<Worker>();
+        var models = new List<CreateWorkerModel>();
         foreach (var dto in inputs)
         {
             await _createValidator.ValidateAndThrowAsync(dto);
-            var model = _mapper.MapToModel(dto);
-            var validatedModel = await _manager.CreateAsync(model);
+            models.Add(_mapper.MapToModel(dto));
+        }
+
+        var validatedModels = await _manager.CreateManyAsync(models);
+        
+        var entities = new List<Worker>();
+        foreach (var model in validatedModels)
+        {
             var entity = new Worker(GuidGenerator.Create());
-            _mapper.MapToEntity(validatedModel, entity);
+            _mapper.MapToEntity(model, entity);
             entities.Add(entity);
         }
 

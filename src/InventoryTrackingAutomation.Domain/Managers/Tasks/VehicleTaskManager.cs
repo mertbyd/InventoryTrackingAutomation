@@ -40,6 +40,37 @@ public class VehicleTaskManager : BaseManager<VehicleTask>
         return model;
     }
 
+    /// <summary>
+    /// Birden fazla araç görev ataması oluşturmak için toplu validasyon yapar.
+    /// </summary>
+    public async Task<System.Collections.Generic.List<CreateVehicleTaskModel>> CreateManyAsync(System.Collections.Generic.List<CreateVehicleTaskModel> models)
+    {
+        var vehicleIds = models.Select(x => x.VehicleId).Distinct().ToList();
+        if (vehicleIds.Any()) await EnsureAllExistInAsync(_vehicleRepository, vehicleIds);
+
+        var taskIds = models.Select(x => x.TaskId).Distinct().ToList();
+        if (taskIds.Any()) await EnsureAllExistInAsync(_inventoryTaskRepository, taskIds);
+
+        var workerIds = models.Select(x => x.ResponsibleWorkerId).Distinct().ToList();
+        if (workerIds.Any()) await EnsureAllExistInAsync(_workerRepository, workerIds);
+
+        var activeVehicleTasks = await Repository.GetListAsync(x => vehicleIds.Contains(x.VehicleId) && !x.ReleasedAt.HasValue);
+
+        foreach (var model in models)
+        {
+            ValidateDateRange(model.AssignedAt, model.ReleasedAt);
+            if (activeVehicleTasks.Any(x => x.VehicleId == model.VehicleId))
+            {
+                throw new BusinessException(VehicleTaskExceptionCodes.VehicleAlreadyAssigned);
+            }
+        }
+        
+        var duplicateInInput = models.Where(x => !x.ReleasedAt.HasValue).GroupBy(x => x.VehicleId).Any(g => g.Count() > 1);
+        if (duplicateInInput) throw new BusinessException(VehicleTaskExceptionCodes.VehicleAlreadyAssigned);
+
+        return models;
+    }
+
     /// Mevcut bir araç görev atamasını güncellemek için kullanılır.
     public async Task<UpdateVehicleTaskModel> UpdateAsync(VehicleTask existing, UpdateVehicleTaskModel model)
     {
