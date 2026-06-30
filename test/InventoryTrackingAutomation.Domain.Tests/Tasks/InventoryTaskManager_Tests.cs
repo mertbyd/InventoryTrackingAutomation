@@ -61,7 +61,7 @@ public abstract class InventoryTaskManager_Tests<TStartupModule> : InventoryTrac
             var targetWarehouse = await InsertWarehouseAsync("DUP-TRG");
             var code = $"TSK-UNQ-{Guid.NewGuid():N}"[..30];
 
-            var firstTask = await _manager.CreateAsync(new CreateInventoryTaskModel
+            var firstTaskModel = await _manager.CreateAsync(new CreateInventoryTaskModel
             {
                 Code = code,
                 Name = "Ilk gorev",
@@ -71,6 +71,15 @@ public abstract class InventoryTaskManager_Tests<TStartupModule> : InventoryTrac
                 TargetWarehouseId = targetWarehouse.Id,
                 StartDate = DateTime.UtcNow
             });
+
+            var firstTask = new InventoryTask(Guid.NewGuid());
+            firstTask.Code = firstTaskModel.Code;
+            firstTask.Name = firstTaskModel.Name;
+            firstTask.Type = firstTaskModel.Type;
+            firstTask.Status = firstTaskModel.Status;
+            firstTask.SourceWarehouseId = firstTaskModel.SourceWarehouseId;
+            firstTask.TargetWarehouseId = firstTaskModel.TargetWarehouseId;
+            firstTask.StartDate = firstTaskModel.StartDate;
 
             await _repository.InsertAsync(firstTask, autoSave: true);
 

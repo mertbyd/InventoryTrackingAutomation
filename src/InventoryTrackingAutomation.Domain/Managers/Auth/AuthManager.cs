@@ -1,8 +1,8 @@
-using AutoMapper;
 using InventoryTrackingAutomation.Managers;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using InventoryTrackingAutomation.ExceptionCodes;
 using Microsoft.Extensions.Logging;
 using Volo.Abp.Identity;
 using Volo.Abp;
@@ -31,12 +31,9 @@ public class AuthManager : InventoryTrackingAutomationDomainService
     // Operasyonel log için.
     private ILogger<AuthManager> _logger => LazyGetRequiredService<ILogger<AuthManager>>();
 
-    // Tüm bağımlılıkları DI ile alır.
-    private IMapper _mapper => LazyGetRequiredService<IMapper>();
-
     // Yeni kullanıcı oluşturur — email/username uniqueness kontrolü, şifre eşleşme doğrulaması ve varsayılan rol ataması yapar.
-//işlevi: Etki alanı kuralını veya validasyonunu işletir.
-//sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
+    //işlevi: Etki alanı kuralını veya validasyonunu işletir.
+    //sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
     public async Task<IdentityUser> CreateUserAsync(RegisterModel model)
     {
         // Email ve username uniqueness kontrolü.
@@ -58,8 +55,7 @@ public class AuthManager : InventoryTrackingAutomationDomainService
         if (!result.Succeeded)
         {
             var errors = string.Join(", ", result.Errors.Select(e => e.Description));
-            throw new BusinessException(AuthExceptionCodes.UserCreationFailed)
-                .WithData("Errors", errors);
+            throw new BusinessException(AuthExceptionCodes.UserCreationFailed);
         }
 
         // Varsayılan rolü ata (FieldWorker).
@@ -68,15 +64,14 @@ public class AuthManager : InventoryTrackingAutomationDomainService
     }
 
     // Kullanıcı giriş bilgilerini doğrular — username + password eşleşmesi yoksa InvalidCredentials atar.
-//işlevi: Etki alanı kuralını veya validasyonunu işletir.
-//sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
+    //işlevi: Etki alanı kuralını veya validasyonunu işletir.
+    //sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
     public async Task<IdentityUser> ValidateLoginAsync(LoginModel model)
     {
         // Username ile kullanıcıyı bul.
         var user = await _identityUserManager.FindByNameAsync(model.UserName);
         if (user == null)
             throw new BusinessException(AuthExceptionCodes.InvalidCredentials);
-
         // Şifreyi doğrula.
         var isPasswordValid = await _identityUserManager.CheckPasswordAsync(user, model.Password);
         if (!isPasswordValid)
@@ -101,3 +96,4 @@ public class AuthManager : InventoryTrackingAutomationDomainService
             throw new BusinessException(AuthExceptionCodes.UserNameAlreadyExists);
     }
 }
+

@@ -1,5 +1,4 @@
 using System.Threading.Tasks;
-using AutoMapper;
 using InventoryTrackingAutomation.Entities.Lookups;
 using InventoryTrackingAutomation.Interface.Lookups;
 using InventoryTrackingAutomation.Models.Lookups;
@@ -11,7 +10,7 @@ namespace InventoryTrackingAutomation.Managers.Lookups;
 // sistemdeki gorevi: Calisan tipi lookup kayitlarinda Code benzersizligini merkezi olarak garanti eder.
 public class WorkerTypeManager : BaseManager<WorkerType>
 {
-    private IMapper _mapper => LazyGetRequiredService<IMapper>();
+
 
     public WorkerTypeManager(
         IWorkerTypeRepository repository,
@@ -20,23 +19,18 @@ public class WorkerTypeManager : BaseManager<WorkerType>
     {
     }
 
-    public async Task<WorkerType> CreateAsync(CreateWorkerTypeModel model)
+    public async Task<CreateWorkerTypeModel> CreateAsync(CreateWorkerTypeModel model)
     {
         await EnsureUniqueAsync(x => x.Code == model.Code);
-
-        var entity = new WorkerType(GuidGenerator.Create(), model.Code, model.Name);
-        _mapper.Map(model, entity);
-        return entity;
+        return model;
     }
 
-    public async Task<WorkerType> UpdateAsync(WorkerType existing, UpdateWorkerTypeModel model)
+    public async Task<UpdateWorkerTypeModel> UpdateAsync(WorkerType existing, UpdateWorkerTypeModel model)
     {
         if (existing.Code != model.Code)
         {
             await EnsureUniqueAsync(x => x.Code == model.Code, existing.Id);
         }
-
-        _mapper.Map(model, existing);
-        return existing;
+        return model;
     }
 }

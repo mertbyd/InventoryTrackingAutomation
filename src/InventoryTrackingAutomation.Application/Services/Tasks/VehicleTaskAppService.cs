@@ -1,4 +1,4 @@
-using AutoMapper;
+using InventoryTrackingAutomation.Application.Mappers.Tasks;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -36,7 +36,7 @@ public class VehicleTaskAppService : InventoryTrackingAutomationAppService, IVeh
     private ILocalEventBus _localEventBus => LazyGetRequiredService<ILocalEventBus>();
     private IValidator<CreateVehicleTaskDto> _createValidator => LazyGetRequiredService<IValidator<CreateVehicleTaskDto>>();
     private IValidator<UpdateVehicleTaskDto> _updateValidator => LazyGetRequiredService<IValidator<UpdateVehicleTaskDto>>();
-    private IMapper _mapper => LazyGetRequiredService<IMapper>();
+    private static readonly VehicleTaskMapper _mapper = new VehicleTaskMapper();
 
     public async Task<VehicleTaskDto> GetAsync(Guid id)
     {
@@ -48,22 +48,25 @@ public class VehicleTaskAppService : InventoryTrackingAutomationAppService, IVeh
     {
         var totalCount = await _repository.GetCountAsync();
         var entities = await _repository.GetPagedListAsync(input.SkipCount, input.MaxResultCount, sorting: string.Empty);
-        return new PagedResultDto<VehicleTaskDto>(totalCount, _mapper.Map<List<VehicleTask>, List<VehicleTaskDto>>(entities));
+        return new PagedResultDto<VehicleTaskDto>(totalCount, _mapper.MapToDto(entities));
     }
 
     [UnitOfWork]
     public async Task<VehicleTaskDto> CreateAsync(CreateVehicleTaskDto input)
     {
         await _createValidator.ValidateAndThrowAsync(input);
-        var model = _mapper.Map<CreateVehicleTaskDto, CreateVehicleTaskModel>(input);
-        var entity = await _manager.CreateAsync(model);
+        var model = _mapper.MapToModel(input);
+        var validatedModel = await _manager.CreateAsync(model);
+        var entity = new VehicleTask(GuidGenerator.Create());
+        _mapper.MapToEntity(validatedModel, entity);
         var inserted = await _repository.InsertAsync(entity, autoSave: true);
 
         if (input.Lines is { Count: > 0 })
         {
-            var lineModels = _mapper.Map<List<CreateVehicleTaskLineDto>, List<CreateVehicleTaskLineModel>>(input.Lines);
-            var lineEntities = await _vehicleTaskLineManager.CreateManyAsync(inserted.Id, lineModels);
-            await _vehicleTaskLineRepository.InsertManyAsync(lineEntities, autoSave: true);
+            foreach (var lineDto in input.Lines)
+            {
+                await _vehicleTaskLineAppService.CreateForVehicleTaskAsync(inserted.Id, lineDto);
+            }
         }
 
         await _localEventBus.PublishAsync(CacheInvalidationEto.ForKeys(CacheKeys.TaskVehicles(inserted.TaskId)));
@@ -77,27 +80,26 @@ public class VehicleTaskAppService : InventoryTrackingAutomationAppService, IVeh
         foreach (var dto in inputs)
         {
             await _createValidator.ValidateAndThrowAsync(dto);
-            var model = _mapper.Map<CreateVehicleTaskDto, CreateVehicleTaskModel>(dto);
-            entities.Add(await _manager.CreateAsync(model));
-        }
+            var model = _mapper.MapToModel(dto);
+            var validatedModel = await _manager.CreateAsync(model);
+            var entity = new VehicleTask(GuidGenerator.Create());
+            _mapper.MapToEntity(validatedModel, entity);
+            var inserted = await _repository.InsertAsync(entity, autoSave: true);
 
-        var inserted = await _repository.InsertManyAndGetListAsync(entities);
-
-        for (var i = 0; i < inputs.Count; i++)
-        {
-            var dto = inputs[i];
-            var insertedTask = inserted[i];
             if (dto.Lines is { Count: > 0 })
             {
-                var lineModels = _mapper.Map<List<CreateVehicleTaskLineDto>, List<CreateVehicleTaskLineModel>>(dto.Lines);
-                var lineEntities = await _vehicleTaskLineManager.CreateManyAsync(insertedTask.Id, lineModels);
-                await _vehicleTaskLineRepository.InsertManyAsync(lineEntities, autoSave: true);
+                foreach (var lineDto in dto.Lines)
+                {
+                    await _vehicleTaskLineAppService.CreateForVehicleTaskAsync(inserted.Id, lineDto);
+                }
             }
+
+            entities.Add(inserted);
         }
 
-        var taskKeys = inserted.Select(e => CacheKeys.TaskVehicles(e.TaskId)).Distinct().ToArray();
+        var taskKeys = entities.Select(e => CacheKeys.TaskVehicles(e.TaskId)).Distinct().ToArray();
         await _localEventBus.PublishAsync(CacheInvalidationEto.ForKeys(taskKeys));
-        return _mapper.Map<List<VehicleTask>, List<VehicleTaskDto>>(inserted);
+        return _mapper.MapToDto(entities);
     }
 
     [UnitOfWork]
@@ -105,11 +107,12 @@ public class VehicleTaskAppService : InventoryTrackingAutomationAppService, IVeh
     {
         await _updateValidator.ValidateAndThrowAsync(input);
         var existing = await _manager.EnsureExistsAsync(id);
-        var model = _mapper.Map<UpdateVehicleTaskDto, UpdateVehicleTaskModel>(input);
-        var updated = await _manager.UpdateAsync(existing, model);
-        var saved = await _repository.UpdateAsync(updated, autoSave: true);
+        var model = _mapper.MapToModel(input);
+        var validatedModel = await _manager.UpdateAsync(existing, model);
+        _mapper.MapToEntity(validatedModel, existing);
+        var saved = await _repository.UpdateAsync(existing, autoSave: true);
         await _localEventBus.PublishAsync(CacheInvalidationEto.ForKeys(CacheKeys.TaskVehicles(saved.TaskId)));
-        return _mapper.Map<VehicleTask, VehicleTaskDto>(saved);
+        return _mapper.MapToDto(saved);
     }
 
     [UnitOfWork]
@@ -160,7 +163,7 @@ public class VehicleTaskAppService : InventoryTrackingAutomationAppService, IVeh
 
     private async Task<VehicleTaskDto> MapVehicleTaskWithLinesAsync(VehicleTask entity)
     {
-        var dto = _mapper.Map<VehicleTask, VehicleTaskDto>(entity);
+        var dto = _mapper.MapToDto(entity);
         dto.Lines = await _vehicleTaskLineAppService.GetByVehicleTaskAsync(entity.Id);
         return dto;
     }

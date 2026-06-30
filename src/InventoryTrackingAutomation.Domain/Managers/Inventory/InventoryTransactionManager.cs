@@ -1,4 +1,3 @@
-using AutoMapper;
 using System.Threading.Tasks;
 using InventoryTrackingAutomation.Entities.Inventory;
 using InventoryTrackingAutomation.Enums.Inventory;
@@ -23,7 +22,6 @@ public class InventoryTransactionManager : BaseManager<InventoryTransaction>
 {
     private IProductRepository _productRepository => LazyGetRequiredService<IProductRepository>();
     private IMovementRequestRepository _movementRequestRepository => LazyGetRequiredService<IMovementRequestRepository>();
-    private IMapper _mapper => LazyGetRequiredService<IMapper>();
 
     public InventoryTransactionManager(IInventoryTransactionRepository repository,
         IAbpLazyServiceProvider abpLazyServiceProvider)
@@ -38,7 +36,6 @@ public class InventoryTransactionManager : BaseManager<InventoryTransaction>
         ValidateQuantity(model.Quantity);
 
         var entity = new InventoryTransaction(GuidGenerator.Create());
-        _mapper.Map(model, entity);
         return entity;
     }
 
@@ -89,8 +86,7 @@ public class InventoryTransactionManager : BaseManager<InventoryTransaction>
     // sistemdeki gorevi: API, log ve UI tarafinda stok defteri mutasyon hatalarinin ayni kodla izlenmesini saglar.
     private static BusinessException CreateImmutableLedgerException(string operation)
     {
-        return new BusinessException(InventoryTransactionExceptionCodes.ImmutableLedger)
-            .WithData("Operation", operation);
+        return new BusinessException(InventoryTransactionExceptionCodes.ImmutableLedger);
     }
 
     /// Stok hareketini ledger'a kaydetmek için kullanılır.
@@ -136,3 +132,4 @@ public class InventoryTransactionManager : BaseManager<InventoryTransaction>
         return entity;
     }
 }
+

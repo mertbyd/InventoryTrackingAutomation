@@ -24,8 +24,8 @@ public class InitiatorManagerApproverStrategy : InventoryTrackingAutomationLazyS
 
     public string Key => WorkflowResolverKeys.InitiatorManager;
 
-//işlevi: Etki alanı kuralını veya validasyonunu işletir.
-//sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
+    //işlevi: Etki alanı kuralını veya validasyonunu işletir.
+    //sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
     public Task<Guid?> ResolveAsync(ApproverContext context)
         => _workerManager.GetManagerUserIdAsync(context.InitiatorUserId);
 }

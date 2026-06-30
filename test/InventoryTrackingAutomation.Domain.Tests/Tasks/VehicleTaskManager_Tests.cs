@@ -31,6 +31,8 @@ public abstract class VehicleTaskManager_Tests<TStartupModule> : InventoryTracki
     private readonly IRepository<Warehouse, Guid> _warehouseRepository;
     private readonly IInventoryTaskRepository _taskRepository;
     private readonly IRepository<Worker, Guid> _workerRepository;
+    private readonly IRepository<InventoryTrackingAutomation.Entities.Lookups.VehicleType, Guid> _vehicleTypeRepository;
+    private readonly IRepository<InventoryTrackingAutomation.Entities.Lookups.WorkerType, Guid> _workerTypeRepository;
 
     protected VehicleTaskManager_Tests()
     {
@@ -40,6 +42,8 @@ public abstract class VehicleTaskManager_Tests<TStartupModule> : InventoryTracki
         _warehouseRepository = GetRequiredService<IRepository<Warehouse, Guid>>();
         _taskRepository = GetRequiredService<IInventoryTaskRepository>();
         _workerRepository = GetRequiredService<IRepository<Worker, Guid>>();
+        _vehicleTypeRepository = GetRequiredService<IRepository<InventoryTrackingAutomation.Entities.Lookups.VehicleType, Guid>>();
+        _workerTypeRepository = GetRequiredService<IRepository<InventoryTrackingAutomation.Entities.Lookups.WorkerType, Guid>>();
     }
 
     // ───────────────────────────────────────────────
@@ -56,11 +60,14 @@ public abstract class VehicleTaskManager_Tests<TStartupModule> : InventoryTracki
         var sourceWarehouse = await InsertWarehouseAsync("VT-SRC-001");
         var targetWarehouse = await InsertWarehouseAsync("VT-TRG-001");
 
+        var vehicleType = await _vehicleTypeRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Lookups.VehicleType(Guid.NewGuid(), "FORKLIFT", "Forklift"), autoSave: true);
+        var workerType = await _workerTypeRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Lookups.WorkerType(Guid.NewGuid(), "DRIVER", "Driver"), autoSave: true);
+
         // Test verileri oluştur.
         var vehicle = await _vehicleRepository.InsertAsync(new Vehicle(Guid.NewGuid())
         {
             PlateNumber = "34-VT-001",
-            VehicleTypeId = System.Guid.NewGuid(),
+            VehicleTypeId = vehicleType.Id,
             IsActive = true
         }, autoSave: true);
 
@@ -68,8 +75,7 @@ public abstract class VehicleTaskManager_Tests<TStartupModule> : InventoryTracki
         {
             UserId = Guid.NewGuid(),
             RegistrationNumber = "VT-WRK-001",
-            WorkerTypeId = System.Guid.NewGuid(),
-            DefaultWarehouseId = sourceWarehouse.Id,
+            WorkerTypeId = workerType.Id,
             IsActive = true
         }, autoSave: true);
 
@@ -117,10 +123,13 @@ public abstract class VehicleTaskManager_Tests<TStartupModule> : InventoryTracki
         var sourceWarehouse = await InsertWarehouseAsync("VT-SRC-002");
         var targetWarehouse = await InsertWarehouseAsync("VT-TRG-002");
 
+        var vehicleType = await _vehicleTypeRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Lookups.VehicleType(Guid.NewGuid(), "FORKLIFT2", "Forklift 2"), autoSave: true);
+        var workerType = await _workerTypeRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Lookups.WorkerType(Guid.NewGuid(), "DRIVER2", "Driver 2"), autoSave: true);
+
         var vehicle = await _vehicleRepository.InsertAsync(new Vehicle(Guid.NewGuid())
         {
             PlateNumber = "34-VT-002",
-            VehicleTypeId = System.Guid.NewGuid(),
+            VehicleTypeId = vehicleType.Id,
             IsActive = true
         }, autoSave: true);
 
@@ -128,8 +137,7 @@ public abstract class VehicleTaskManager_Tests<TStartupModule> : InventoryTracki
         {
             UserId = Guid.NewGuid(),
             RegistrationNumber = "VT-WRK-002",
-            WorkerTypeId = System.Guid.NewGuid(),
-            DefaultWarehouseId = sourceWarehouse.Id,
+            WorkerTypeId = workerType.Id,
             IsActive = true
         }, autoSave: true);
 

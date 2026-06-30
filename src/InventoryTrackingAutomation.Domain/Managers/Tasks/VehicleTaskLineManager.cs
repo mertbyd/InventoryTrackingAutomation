@@ -1,4 +1,3 @@
-using AutoMapper;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -29,107 +28,68 @@ public class VehicleTaskLineManager : BaseManager<VehicleTaskLine>
     /// <summary>
     /// Arac-gorev kalemi olusturmak icin kullanilir. Urun bilgisi TaskLine iliskisinden cozulur.
     /// </summary>
-    public async Task<VehicleTaskLine> CreateAsync(Guid vehicleTaskId, CreateVehicleTaskLineModel model)
+    public async Task<CreateVehicleTaskLineModel> CreateAsync(Guid vehicleTaskId, CreateVehicleTaskLineModel model)
     {
         await EnsureVehicleTaskExistsAsync(vehicleTaskId);
 
         var taskLine = await _taskLineRepository.FindAsync(model.TaskLineId);
         if (taskLine == null)
         {
-            throw new BusinessException(TaskLineExceptionCodes.NotFound)
-                .WithData("TaskLineId", model.TaskLineId);
+            throw new BusinessException(TaskLineExceptionCodes.NotFound);
         }
 
         if (taskLine.TaskId != (await _vehicleTaskRepository.GetAsync(vehicleTaskId)).TaskId)
         {
-            throw new BusinessException(TaskLineExceptionCodes.NotFound)
-                .WithData("VehicleTaskId", vehicleTaskId)
-                .WithData("TaskLineId", model.TaskLineId);
+            throw new BusinessException(TaskLineExceptionCodes.NotFound);
         }
 
         await EnsureUniqueAsync(x => x.VehicleTaskId == vehicleTaskId && x.TaskLineId == model.TaskLineId);
         await _taskLineManager.EnsureAllocationFitsAsync(taskLine, model.AllocatedQuantity);
 
-        var entity = new VehicleTaskLine(GuidGenerator.Create())
-        {
-            VehicleTaskId = vehicleTaskId,
-            TaskLineId = taskLine.Id,
-            AllocatedQuantity = model.AllocatedQuantity
-        };
-        return entity;
+        return model;
     }
 
-    /// <summary>
-    /// Birden fazla arac-gorev kalemi toplu olusturmak icin kullanilir.
-    /// </summary>
-    public async Task<List<VehicleTaskLine>> CreateManyAsync(Guid vehicleTaskId, List<CreateVehicleTaskLineModel> models)
-    {
-        var result = new List<VehicleTaskLine>();
-        foreach (var model in models)
-        {
-            result.Add(await CreateAsync(vehicleTaskId, model));
-        }
 
-        return result;
-    }
 
     /// <summary>
     /// Iade teslim uzlasmasi icin arac-gorev kalemini guncellemek icin kullanilir.
     /// </summary>
-    public async Task<VehicleTaskLine> ReceiveAsync(VehicleTaskLine existing, ReceiveVehicleTaskLineModel model)
+    public async Task<ReceiveVehicleTaskLineModel> ReceiveAsync(VehicleTaskLine existing, ReceiveVehicleTaskLineModel model)
     {
         ValidateReceiveQuantities(existing, model);
-
-        existing.ReceivedQuantity = model.ReceivedQuantity;
-        existing.DamagedQuantity = model.DamagedQuantity;
-        existing.LostQuantity = model.LostQuantity;
-        existing.ConsumedQuantity = model.ConsumedQuantity;
-        existing.ReceiveNote = model.ReceiveNote;
-        return existing;
+        return model;
     }
 
     /// <summary>
     /// Arac-gorev kaleminin tahsis miktarini guncellemek icin kullanilir.
     /// </summary>
-    public async Task<VehicleTaskLine> UpdateAsync(VehicleTaskLine existing, UpdateVehicleTaskLineModel model)
+    public async Task<UpdateVehicleTaskLineModel> UpdateAsync(VehicleTaskLine existing, UpdateVehicleTaskLineModel model)
     {
-        if (existing.ReceivedQuantity > 0 ||
-            existing.DamagedQuantity > 0 ||
-            existing.LostQuantity > 0 ||
-            existing.ConsumedQuantity > 0)
-        {
-            throw new BusinessException(VehicleTaskLineExceptionCodes.CannotDeleteReceived)
-                .WithData("VehicleTaskLineId", existing.Id);
-        }
+        EnsureNotReceived(existing);
 
         var taskLine = await _taskLineRepository.FindAsync(existing.TaskLineId);
         if (taskLine == null)
         {
-            throw new BusinessException(TaskLineExceptionCodes.NotFound)
-                .WithData("TaskLineId", existing.TaskLineId);
+            throw new BusinessException(TaskLineExceptionCodes.NotFound);
         }
 
         await _taskLineManager.EnsureAllocationFitsAsync(taskLine, model.AllocatedQuantity, existing.Id);
 
-        existing.AllocatedQuantity = model.AllocatedQuantity;
-        return existing;
+        return model;
     }
 
-    /// <summary>
-    /// Arac-gorev kalemini silmek icin kullanilir. Teslim alinmis satir silinemez.
-    /// </summary>
-    // islevi: Henuz teslim/iade uzlasmasi almamis tahsis satirini fiziksel olarak kaldirir.
-    // sistemdeki gorevi: Operasyonel miktar bilgisi olusan satirlarin silinmesini engelleyerek hareket gecmisini korur.
-    public async Task DeleteAsync(Guid lineId)
+    public async Task EnsureCanDeleteAsync(Guid lineId)
     {
         var line = await EnsureExistsAsync(lineId);
+        EnsureNotReceived(line);
+    }
+
+    private static void EnsureNotReceived(VehicleTaskLine line)
+    {
         if (line.ReceivedQuantity > 0 || line.DamagedQuantity > 0 || line.LostQuantity > 0 || line.ConsumedQuantity > 0)
         {
-            throw new BusinessException(VehicleTaskLineExceptionCodes.CannotDeleteReceived)
-                .WithData("VehicleTaskLineId", lineId);
+            throw new BusinessException(VehicleTaskLineExceptionCodes.CannotDeleteReceived);
         }
-
-        await Repository.DeleteAsync(line);
     }
 
     /// <summary>
@@ -139,7 +99,7 @@ public class VehicleTaskLineManager : BaseManager<VehicleTaskLine>
     {
         var entity = await EnsureExistsAsync(id);
         var taskLine = await _taskLineRepository.GetAsync(entity.TaskLineId);
-        
+
         return new VehicleTaskLineWithProductModel(entity, taskLine.ProductId);
     }
 
@@ -156,7 +116,7 @@ public class VehicleTaskLineManager : BaseManager<VehicleTaskLine>
         var productByTaskLineId = taskLines.ToDictionary(x => x.Id, x => x.ProductId);
 
         return entities.Select(e => new VehicleTaskLineWithProductModel(
-            e, 
+            e,
             productByTaskLineId.TryGetValue(e.TaskLineId, out var pid) ? pid : Guid.Empty)
         ).ToList();
     }
@@ -169,8 +129,7 @@ public class VehicleTaskLineManager : BaseManager<VehicleTaskLine>
         var vehicleTask = await _vehicleTaskRepository.FindAsync(vehicleTaskId);
         if (vehicleTask == null)
         {
-            throw new BusinessException(VehicleTaskExceptionCodes.NotFound)
-                .WithData("VehicleTaskId", vehicleTaskId);
+            throw new BusinessException(VehicleTaskExceptionCodes.NotFound);
         }
         return vehicleTask;
     }
@@ -183,9 +142,7 @@ public class VehicleTaskLineManager : BaseManager<VehicleTaskLine>
         var existing = await EnsureExistsAsync(lineId);
         if (existing.VehicleTaskId != vehicleTaskId)
         {
-            throw new BusinessException(VehicleTaskLineExceptionCodes.NotFound)
-                .WithData("VehicleTaskId", vehicleTaskId)
-                .WithData("VehicleTaskLineId", lineId);
+            throw new BusinessException(VehicleTaskLineExceptionCodes.NotFound);
         }
         return existing;
     }
@@ -204,8 +161,7 @@ public class VehicleTaskLineManager : BaseManager<VehicleTaskLine>
         var taskLine = await _taskLineRepository.FindAsync(taskLineId);
         if (taskLine == null)
         {
-            throw new BusinessException(TaskLineExceptionCodes.NotFound)
-                .WithData("TaskLineId", taskLineId);
+            throw new BusinessException(TaskLineExceptionCodes.NotFound);
         }
 
         await _taskLineManager.EnsureAllocationFitsAsync(taskLine, allocatedQuantity);
@@ -226,17 +182,15 @@ public class VehicleTaskLineManager : BaseManager<VehicleTaskLine>
     {
         if (model.ReceivedQuantity < 0 || model.DamagedQuantity < 0 || model.LostQuantity < 0 || model.ConsumedQuantity < 0)
         {
-            throw new BusinessException(VehicleTaskLineExceptionCodes.QuantityMismatch)
-                .WithData("VehicleTaskLineId", line.Id);
+            throw new BusinessException(VehicleTaskLineExceptionCodes.QuantityMismatch);
         }
 
         var total = model.ReceivedQuantity + model.DamagedQuantity + model.LostQuantity + model.ConsumedQuantity;
         if (total != line.AllocatedQuantity)
         {
-            throw new BusinessException(VehicleTaskLineExceptionCodes.QuantityMismatch)
-                .WithData("VehicleTaskLineId", line.Id)
-                .WithData("Expected", line.AllocatedQuantity)
-                .WithData("Actual", total);
+            throw new BusinessException(VehicleTaskLineExceptionCodes.QuantityMismatch);
         }
     }
 }
+
+

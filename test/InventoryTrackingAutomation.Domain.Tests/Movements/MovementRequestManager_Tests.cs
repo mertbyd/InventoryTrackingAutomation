@@ -2,6 +2,7 @@ using System;
 using System.Threading.Tasks;
 using InventoryTrackingAutomation.Entities.Masters;
 using InventoryTrackingAutomation.Entities.Tasks;
+using InventoryTrackingAutomation.Entities.Movements;
 using InventoryTrackingAutomation.Entities.Workflows;
 using InventoryTrackingAutomation.Enums;
 using InventoryTrackingAutomation.Enums.Tasks;
@@ -33,6 +34,9 @@ public abstract class MovementRequestManager_Tests<TStartupModule> : InventoryTr
     private readonly ITaskLineRepository _taskLineRepository;
     private readonly IVehicleTaskLineRepository _vehicleTaskLineRepository;
     private readonly IWorkflowDefinitionRepository _workflowDefinitionRepository;
+    private readonly IRepository<InventoryTrackingAutomation.Entities.Lookups.WorkerType, Guid> _workerTypeRepository;
+    private readonly IRepository<InventoryTrackingAutomation.Entities.Lookups.VehicleType, Guid> _vehicleTypeRepository;
+    private readonly IRepository<InventoryTrackingAutomation.Entities.Lookups.UnitType, Guid> _unitTypeRepository;
 
     protected MovementRequestManager_Tests()
     {
@@ -47,6 +51,9 @@ public abstract class MovementRequestManager_Tests<TStartupModule> : InventoryTr
         _taskLineRepository = GetRequiredService<ITaskLineRepository>();
         _vehicleTaskLineRepository = GetRequiredService<IVehicleTaskLineRepository>();
         _workflowDefinitionRepository = GetRequiredService<IWorkflowDefinitionRepository>();
+        _workerTypeRepository = GetRequiredService<IRepository<InventoryTrackingAutomation.Entities.Lookups.WorkerType, Guid>>();
+        _vehicleTypeRepository = GetRequiredService<IRepository<InventoryTrackingAutomation.Entities.Lookups.VehicleType, Guid>>();
+        _unitTypeRepository = GetRequiredService<IRepository<InventoryTrackingAutomation.Entities.Lookups.UnitType, Guid>>();
     }
 
     [Fact]
@@ -70,18 +77,22 @@ public abstract class MovementRequestManager_Tests<TStartupModule> : InventoryTr
                 IsActive = true
             }, autoSave: true);
 
+            var workerType = await _workerTypeRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Lookups.WorkerType(Guid.NewGuid(), "MGR-WT", "WT"), autoSave: true);
+            var vehicleType = await _vehicleTypeRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Lookups.VehicleType(Guid.NewGuid(), "MGR-VT", "VT"), autoSave: true);
+            var unitType = await _unitTypeRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Lookups.UnitType(Guid.NewGuid(), "MGR-UT", "UT"), autoSave: true);
+
             var worker = await _workerRepository.InsertAsync(new Worker(Guid.NewGuid())
             {
                 UserId = currentUserId,
                 RegistrationNumber = $"MGR-WRK-{Guid.NewGuid():N}"[..30],
-                WorkerTypeId = System.Guid.NewGuid(),
+                WorkerTypeId = workerType.Id,
                 IsActive = true
             }, autoSave: true);
 
             var vehicle = await _vehicleRepository.InsertAsync(new Vehicle(Guid.NewGuid())
             {
                 PlateNumber = $"34-MGR-{Guid.NewGuid():N}"[..16],
-                VehicleTypeId = System.Guid.NewGuid(),
+                VehicleTypeId = vehicleType.Id,
                 IsActive = true
             }, autoSave: true);
 
@@ -100,7 +111,7 @@ public abstract class MovementRequestManager_Tests<TStartupModule> : InventoryTr
             {
                 Code = $"PRD-MGR-{Guid.NewGuid():N}"[..30],
                 Name = "Movement Manager Product",
-                UnitTypeId = System.Guid.NewGuid(),
+                UnitTypeId = unitType.Id,
                 IsActive = true
             }, autoSave: true);
 
@@ -156,15 +167,29 @@ public abstract class MovementRequestManager_Tests<TStartupModule> : InventoryTr
                 PlannedDate = DateTime.UtcNow.AddHours(1)
             };
 
-            // Act
-            var request = await _movementRequestManager.CreateWithWorkflowAsync(model, currentUserId);
+            var validatedModel = await _movementRequestManager.CreateAsync(model);
+            var request = new MovementRequest(Guid.NewGuid());
+            request.RequestNumber = validatedModel.RequestNumber;
+            request.Priority = validatedModel.Priority;
+            request.RequestedByWorkerId = validatedModel.RequestedByWorkerId;
+            request.VehicleTaskId = validatedModel.VehicleTaskId;
+            request.RequestNote = validatedModel.RequestNote;
+            request.PlannedDate = validatedModel.PlannedDate;
+            request.Status = MovementStatusEnum.Pending;
+
+            var workflowInstance = await _movementRequestManager.AssignWorkflowAsync(request, currentUserId);
+            var inserted = await _movementRequestRepository.InsertAsync(request, autoSave: true);
+            if (workflowInstance != null)
+            {
+                await _movementRequestManager.PublishInitialWorkflowStepAssignedAsync(workflowInstance);
+            }
 
             // Assert
             request.ShouldNotBeNull();
             request.RequestNumber.ShouldBe("REQ-MGR-001");
             request.Status.ShouldBe(MovementStatusEnum.InReview); // Should be InReview if workflow started
             request.VehicleTaskId.ShouldNotBe(Guid.Empty);
-            
+
             var savedRequest = await _movementRequestRepository.GetAsync(request.Id);
             savedRequest.WorkflowInstanceId.ShouldNotBeNull();
         });

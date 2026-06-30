@@ -1,4 +1,4 @@
-using AutoMapper;
+using InventoryTrackingAutomation.Application.Mappers.Masters;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -33,21 +33,21 @@ public class WorkerAppService : InventoryTrackingAutomationAppService, IWorkerAp
     private IValidator<UpdateWorkerDto> _updateValidator => LazyGetRequiredService<IValidator<UpdateWorkerDto>>();
 
     // Tüm bağımlılıkları DI ile alır.
-    private IMapper _mapper => LazyGetRequiredService<IMapper>();
+    private static readonly WorkerMapper _mapper = new WorkerMapper();
 
 
     // Id ile çalışanı getirir; yoksa EntityNotFoundException.
-//işlevi: İlgili iş senaryosunu (use-case) yürütür.
-//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
+    //işlevi: İlgili iş senaryosunu (use-case) yürütür.
+    //sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<WorkerDto> GetAsync(Guid id)
     {
         var entity = await _manager.EnsureExistsAsync(id);
-        return _mapper.Map<Worker, WorkerDto>(entity);
+        return _mapper.MapToDto(entity);
     }
 
     // Çalışanları sayfalı listeler.
-//işlevi: İlgili iş senaryosunu (use-case) yürütür.
-//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
+    //işlevi: İlgili iş senaryosunu (use-case) yürütür.
+    //sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<PagedResultDto<WorkerDto>> GetListAsync(PagedResultRequestDto input)
     {
         var totalCount = await _repository.GetCountAsync();
@@ -55,58 +55,64 @@ public class WorkerAppService : InventoryTrackingAutomationAppService, IWorkerAp
             input.SkipCount, input.MaxResultCount, sorting: string.Empty);
         return new PagedResultDto<WorkerDto>(
             totalCount,
-            _mapper.Map<List<Worker>, List<WorkerDto>>(entities));
+            _mapper.MapToDto(entities));
     }
 
     // Yeni çalışan oluşturur — manager iş kurallarını uygular, repository persist eder.
     [UnitOfWork]
-//işlevi: İlgili iş senaryosunu (use-case) yürütür.
-//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
+    //işlevi: İlgili iş senaryosunu (use-case) yürütür.
+    //sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<WorkerDto> CreateAsync(CreateWorkerDto input)
     {
         await _createValidator.ValidateAndThrowAsync(input);
-        var model = _mapper.Map<CreateWorkerDto, CreateWorkerModel>(input);
-        var entity = await _manager.CreateAsync(model);
+        var model = _mapper.MapToModel(input);
+        var validatedModel = await _manager.CreateAsync(model);
+        var entity = new Worker(GuidGenerator.Create());
+        _mapper.MapToEntity(validatedModel, entity);
         var inserted = await _repository.InsertAsync(entity, autoSave: true);
-        return _mapper.Map<Worker, WorkerDto>(inserted);
+        return _mapper.MapToDto(inserted);
     }
 
     // Birden fazla çalışanı toplu oluşturur.
     [UnitOfWork]
-//işlevi: İlgili iş senaryosunu (use-case) yürütür.
-//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
+    //işlevi: İlgili iş senaryosunu (use-case) yürütür.
+    //sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<List<WorkerDto>> CreateManyAsync(List<CreateWorkerDto> inputs)
     {
         var entities = new List<Worker>();
         foreach (var dto in inputs)
         {
             await _createValidator.ValidateAndThrowAsync(dto);
-            var model = _mapper.Map<CreateWorkerDto, CreateWorkerModel>(dto);
-            entities.Add(await _manager.CreateAsync(model));
+            var model = _mapper.MapToModel(dto);
+            var validatedModel = await _manager.CreateAsync(model);
+            var entity = new Worker(GuidGenerator.Create());
+            _mapper.MapToEntity(validatedModel, entity);
+            entities.Add(entity);
         }
 
         var inserted = await _repository.InsertManyAndGetListAsync(entities);
-        return _mapper.Map<List<Worker>, List<WorkerDto>>(inserted);
+        return _mapper.MapToDto(inserted);
     }
 
     // Çalışanı günceller — manager iş kurallarını uygular, repository persist eder.
     [UnitOfWork]
-//işlevi: İlgili iş senaryosunu (use-case) yürütür.
-//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
+    //işlevi: İlgili iş senaryosunu (use-case) yürütür.
+    //sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<WorkerDto> UpdateAsync(Guid id, UpdateWorkerDto input)
     {
         await _updateValidator.ValidateAndThrowAsync(input);
         var existing = await _manager.EnsureExistsAsync(id);
-        var model = _mapper.Map<UpdateWorkerDto, UpdateWorkerModel>(input);
-        var updated = await _manager.UpdateAsync(existing, model);
-        var saved = await _repository.UpdateAsync(updated, autoSave: true);
-        return _mapper.Map<Worker, WorkerDto>(saved);
+        var model = _mapper.MapToModel(input);
+        var validatedModel = await _manager.UpdateAsync(existing, model);
+        _mapper.MapToEntity(validatedModel, existing);
+        var saved = await _repository.UpdateAsync(existing, autoSave: true);
+        return _mapper.MapToDto(saved);
     }
 
     // Calisani silmek yerine pasife alir; gorev, talep ve onay gecmisi korunur.
     [UnitOfWork]
-//işlevi: İlgili iş senaryosunu (use-case) yürütür.
-//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
+    //işlevi: İlgili iş senaryosunu (use-case) yürütür.
+    //sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task DeleteAsync(Guid id)
     {
         var existing = await _manager.EnsureExistsAsync(id);

@@ -16,7 +16,7 @@ public class WorkerType : Entity<Guid>, IPassivable
     public bool IsActive { get; set; } // Bu çalışan tipinin sistemde aktif olup olmadığını belirler.
 
     protected WorkerType() { }
-    
+
     public WorkerType(Guid id, string code, string name) : base(id)
     {
         Code = code;
