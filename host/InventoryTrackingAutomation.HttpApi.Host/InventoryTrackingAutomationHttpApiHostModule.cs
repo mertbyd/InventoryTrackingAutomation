@@ -161,7 +161,6 @@ public class InventoryTrackingAutomationHttpApiHostModule : AbpModule
         // SystemStandards services are now registered via SystemStandardsAbpModule
 
         context.Services.AddSingleton<InventorySignalRDebugNotificationStore>();
-        context.Services.AddTransient<InventoryTrackingAutomation.OpenIddict.OpenIddictDataSeedContributor>();
 
         // CRITICAL: API isteklerinde Bearer kullanıldığı için CSRF/Antiforgery filtresini kapatıyoruz
         Configure<AbpAntiForgeryOptions>(options =>
