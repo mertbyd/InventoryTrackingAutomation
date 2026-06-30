@@ -68,4 +68,9 @@
     <None Remove="Logs\**" />
   </ItemGroup>
 
+<ItemGroup>
+    <Using Include="InventoryTrackingAutomation.ExceptionCodes" />
+  </ItemGroup>
+
 </Project>
+

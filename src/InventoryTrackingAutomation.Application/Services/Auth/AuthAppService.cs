@@ -5,6 +5,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using AutoMapper;
 using InventoryTrackingAutomation.Dtos.Auth;
+
 using InventoryTrackingAutomation.Managers.Auth;
 using InventoryTrackingAutomation.Models.Auth;
 using InventoryTrackingAutomation.Services.Auth;
@@ -80,7 +81,7 @@ public class AuthAppService : InventoryTrackingAutomationAppService, IAuthAppSer
         var tokenResponse = await GetTokenFromOpenIddictAsync(input.UserName, input.Password);
         if (tokenResponse == null)
         {
-            throw new BusinessException(InventoryTrackingAutomationErrorCodes.Auth.TokenRequestFailed);
+            throw new BusinessException(AuthExceptionCodes.TokenRequestFailed);
         }
         // Token response'a kullanıcı ID'sini ekle
         tokenResponse.UserId = user.Id;

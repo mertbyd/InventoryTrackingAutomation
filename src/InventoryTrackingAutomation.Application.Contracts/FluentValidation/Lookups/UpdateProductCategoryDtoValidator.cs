@@ -1,6 +1,6 @@
 using FluentValidation;
 using InventoryTrackingAutomation.Dtos.Lookups;
-using InventoryTrackingAutomation.ExceptionCodes.ProductCategories;
+
 
 namespace InventoryTrackingAutomation.FluentValidation.Lookups;
 

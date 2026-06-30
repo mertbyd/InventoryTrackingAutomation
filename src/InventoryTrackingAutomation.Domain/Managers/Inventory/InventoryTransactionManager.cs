@@ -2,6 +2,7 @@ using AutoMapper;
 using System.Threading.Tasks;
 using InventoryTrackingAutomation.Entities.Inventory;
 using InventoryTrackingAutomation.Enums.Inventory;
+using InventoryTrackingAutomation.ExceptionCodes;
 using InventoryTrackingAutomation.Interface.Inventory;
 using InventoryTrackingAutomation.Interface.Masters;
 using InventoryTrackingAutomation.Interface.Movements;
@@ -77,7 +78,7 @@ public class InventoryTransactionManager : BaseManager<InventoryTransaction>
         // Sifir veya negatif transfer miktari kaydedilmez.
         if (quantity <= 0)
         {
-            throw new BusinessException(InventoryTrackingAutomationErrorCodes.InventoryTransactions.InvalidTransfer);
+            throw new BusinessException(InventoryTransactionExceptionCodes.InvalidTransfer);
         }
     }
 
@@ -88,7 +89,7 @@ public class InventoryTransactionManager : BaseManager<InventoryTransaction>
     // sistemdeki gorevi: API, log ve UI tarafinda stok defteri mutasyon hatalarinin ayni kodla izlenmesini saglar.
     private static BusinessException CreateImmutableLedgerException(string operation)
     {
-        return new BusinessException(InventoryTrackingAutomationErrorCodes.InventoryTransactions.ImmutableLedger)
+        return new BusinessException(InventoryTransactionExceptionCodes.ImmutableLedger)
             .WithData("Operation", operation);
     }
 

@@ -74,7 +74,7 @@ public class VehicleTaskManager : BaseManager<VehicleTask>
 
         if (activeVehicleTasks.Any(x => !excludeId.HasValue || x.Id != excludeId.Value))
         {
-            throw new BusinessException(InventoryTrackingAutomationErrorCodes.VehicleTasks.VehicleAlreadyAssigned);
+            throw new BusinessException(VehicleTaskExceptionCodes.VehicleAlreadyAssigned);
         }
     }
 
@@ -84,7 +84,7 @@ public class VehicleTaskManager : BaseManager<VehicleTask>
         // Birakma zamani atama zamanindan once olamaz.
         if (releasedAt.HasValue && releasedAt.Value < assignedAt)
         {
-            throw new BusinessException(InventoryTrackingAutomationErrorCodes.General.InvalidOperation);
+            throw new BusinessException(GeneralExceptionCodes.InvalidOperation);
         }
     }
 

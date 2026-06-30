@@ -1,6 +1,7 @@
 using System.Threading.Tasks;
 using InventoryTrackingAutomation.Managers;
 using InventoryTrackingAutomation.Entities.Inventory;
+using InventoryTrackingAutomation.ExceptionCodes;
 using InventoryTrackingAutomation.Models.Inventory;
 using Volo.Abp;
 using Volo.Abp.Domain.Services;
@@ -29,9 +30,9 @@ public class StockTransferManager : InventoryTrackingAutomationDomainService
     public async Task<InventoryTransaction> ExecuteAsync(StockTransferModel model)
     {
         if (model.Quantity <= 0)
-            throw new BusinessException(InventoryTrackingAutomationErrorCodes.InventoryTransactions.QuantityMustBePositive);
+            throw new BusinessException(InventoryTransactionExceptionCodes.QuantityMustBePositive);
         if (model.SourceLocationType == model.DestinationLocationType && model.SourceLocationId == model.DestinationLocationId)
-            throw new BusinessException(InventoryTrackingAutomationErrorCodes.InventoryTransactions.InvalidLocationPair);
+            throw new BusinessException(InventoryTransactionExceptionCodes.InvalidLocationPair);
 
         await _stockLocationManager.DecreaseAsync(model.SourceLocationType, model.SourceLocationId, model.ProductId, model.Quantity);
         await _stockLocationManager.IncreaseAsync(model.DestinationLocationType, model.DestinationLocationId, model.ProductId, model.Quantity);

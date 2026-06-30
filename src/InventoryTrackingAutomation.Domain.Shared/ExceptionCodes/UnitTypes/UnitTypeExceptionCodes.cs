@@ -1,4 +1,4 @@
-namespace InventoryTrackingAutomation.ExceptionCodes.UnitTypes;
+namespace InventoryTrackingAutomation.ExceptionCodes;
 
 public static class UnitTypeExceptionCodes
 {

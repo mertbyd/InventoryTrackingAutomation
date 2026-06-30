@@ -7,6 +7,7 @@ using FluentValidation;
 using InventoryTrackingAutomation.Dtos.Tasks;
 using InventoryTrackingAutomation.Entities.Tasks;
 using InventoryTrackingAutomation.Events.Cache;
+using InventoryTrackingAutomation.ExceptionCodes;
 using InventoryTrackingAutomation.Interface.Tasks;
 using InventoryTrackingAutomation.Managers.Tasks;
 using InventoryTrackingAutomation.Models.Tasks;
@@ -98,7 +99,7 @@ public class TaskLineAppService : InventoryTrackingAutomationAppService, ITaskLi
         var task = await _taskRepository.FindAsync(taskId);
         if (task == null)
         {
-            throw new BusinessException(InventoryTrackingAutomationErrorCodes.InventoryTasks.NotFound)
+            throw new BusinessException(InventoryTaskExceptionCodes.NotFound)
                 .WithData("TaskId", taskId);
         }
     }
@@ -108,7 +109,7 @@ public class TaskLineAppService : InventoryTrackingAutomationAppService, ITaskLi
         var existing = await _manager.EnsureExistsAsync(lineId);
         if (existing.TaskId != taskId)
         {
-            throw new BusinessException(InventoryTrackingAutomationErrorCodes.TaskLines.NotFound)
+            throw new BusinessException(TaskLineExceptionCodes.NotFound)
                 .WithData("TaskId", taskId)
                 .WithData("TaskLineId", lineId);
         }
