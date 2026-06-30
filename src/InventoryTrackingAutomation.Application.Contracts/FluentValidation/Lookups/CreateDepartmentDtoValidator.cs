@@ -1,20 +1,16 @@
 using FluentValidation;
 using InventoryTrackingAutomation.Dtos.Lookups;
+using InventoryTrackingAutomation.ExceptionCodes.Departments;
 
 namespace InventoryTrackingAutomation.FluentValidation.Lookups;
 
-/// <summary>
-/// CreateDepartmentDto için sade validation kuralları.
-/// </summary>
 public class CreateDepartmentDtoValidator : AbstractValidator<CreateDepartmentDto>
 {
     public CreateDepartmentDtoValidator()
     {
-        RuleFor(x => x.Name)
-            .NotEmpty()
-            .MaximumLength(100);
-
-        RuleFor(x => x.Code)
-            .MaximumLength(50);
+        RuleFor(x => x.Code).NotEmpty().WithMessage(DepartmentExceptionCodes.ValidationExceptions.Code.CannotEmpty)
+                            .MaximumLength(50).WithMessage(DepartmentExceptionCodes.ValidationExceptions.Code.MaxLength);
+        RuleFor(x => x.Name).NotEmpty().WithMessage(DepartmentExceptionCodes.ValidationExceptions.Name.CannotEmpty)
+                            .MaximumLength(100).WithMessage(DepartmentExceptionCodes.ValidationExceptions.Name.MaxLength);
     }
 }
