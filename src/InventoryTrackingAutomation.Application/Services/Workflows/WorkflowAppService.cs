@@ -95,7 +95,7 @@ public class WorkflowAppService : InventoryTrackingAutomationAppService, IWorkfl
 
         if (!pendingSteps.Any())
         {
-            throw new BusinessException(InventoryTrackingAutomationErrorCodes.Workflows.StepNotFound)
+            throw new BusinessException(WorkflowExceptionCodes.StepNotFound)
                 .WithData("WorkflowInstanceId", instanceId);
         }
 

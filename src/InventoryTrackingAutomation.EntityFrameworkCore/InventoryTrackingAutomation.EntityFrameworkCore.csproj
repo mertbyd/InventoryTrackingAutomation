@@ -22,4 +22,9 @@
     <ProjectReference Include="..\InventoryTrackingAutomation.Domain\InventoryTrackingAutomation.Domain.csproj" />
   </ItemGroup>
 
+<ItemGroup>
+    <Using Include="InventoryTrackingAutomation.ExceptionCodes" />
+  </ItemGroup>
+
 </Project>
+

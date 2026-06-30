@@ -51,7 +51,7 @@ public class TaskLineManager : BaseManager<TaskLine>
         {
             if (allocatedQuantity > 0)
             {
-                throw new BusinessException(InventoryTrackingAutomationErrorCodes.TaskLines.CannotChangeProductAllocated)
+                throw new BusinessException(TaskLineExceptionCodes.CannotChangeProductAllocated)
                     .WithData("TaskLineId", existing.Id)
                     .WithData("AllocatedQuantity", allocatedQuantity);
             }
@@ -61,7 +61,7 @@ public class TaskLineManager : BaseManager<TaskLine>
 
         if (model.Quantity < allocatedQuantity)
         {
-            throw new BusinessException(InventoryTrackingAutomationErrorCodes.TaskLines.QuantityBelowAllocated)
+            throw new BusinessException(TaskLineExceptionCodes.QuantityBelowAllocated)
                 .WithData("TaskLineId", existing.Id)
                 .WithData("Quantity", model.Quantity)
                 .WithData("AllocatedQuantity", allocatedQuantity);
@@ -77,7 +77,7 @@ public class TaskLineManager : BaseManager<TaskLine>
     {
         if (vehicleLineQuantity <= 0)
         {
-            throw new BusinessException(InventoryTrackingAutomationErrorCodes.TaskLines.InsufficientRemaining)
+            throw new BusinessException(TaskLineExceptionCodes.InsufficientRemaining)
                 .WithData("TaskLineId", line.Id);
         }
 
@@ -88,7 +88,7 @@ public class TaskLineManager : BaseManager<TaskLine>
 
         if (allocatedExceptCurrent + vehicleLineQuantity > line.Quantity)
         {
-            throw new BusinessException(InventoryTrackingAutomationErrorCodes.TaskLines.InsufficientRemaining)
+            throw new BusinessException(TaskLineExceptionCodes.InsufficientRemaining)
                 .WithData("TaskLineId", line.Id)
                 .WithData("Requested", vehicleLineQuantity)
                 .WithData("Remaining", line.Quantity - allocatedExceptCurrent);
@@ -104,7 +104,7 @@ public class TaskLineManager : BaseManager<TaskLine>
         var allocatedQuantity = await _vehicleTaskLineRepository.GetAllocatedQuantityByTaskLineIdAsync(line.Id);
         if (allocatedQuantity > 0)
         {
-            throw new BusinessException(InventoryTrackingAutomationErrorCodes.TaskLines.CannotDeleteAllocated)
+            throw new BusinessException(TaskLineExceptionCodes.CannotDeleteAllocated)
                 .WithData("TaskLineId", lineId)
                 .WithData("AllocatedQuantity", allocatedQuantity);
         }

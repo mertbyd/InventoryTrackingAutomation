@@ -1,4 +1,4 @@
-﻿namespace InventoryTrackingAutomation.Samples;
+namespace InventoryTrackingAutomation.Samples;
 
 public class SampleDto
 {

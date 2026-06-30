@@ -1,6 +1,7 @@
 using System.Threading.Tasks;
 using InventoryTrackingAutomation.Managers;
 using InventoryTrackingAutomation.Entities.Inventory;
+using InventoryTrackingAutomation.ExceptionCodes;
 using InventoryTrackingAutomation.Models.Inventory;
 using Volo.Abp;
 using Volo.Abp.Domain.Services;
@@ -28,7 +29,7 @@ public class StockAdjustmentManager : InventoryTrackingAutomationDomainService
     {
         if (model.Quantity <= 0)
         {
-            throw new BusinessException(InventoryTrackingAutomationErrorCodes.InventoryTransactions.QuantityMustBePositive);
+            throw new BusinessException(InventoryTransactionExceptionCodes.QuantityMustBePositive);
         }
 
         await _stockLocationManager.DecreaseAsync(

@@ -2,12 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using InventoryTrackingAutomation.ExceptionCodes;
 using InventoryTrackingAutomation.Interface;
 using Volo.Abp;
 using Volo.Abp.Data;
 using Volo.Abp.Domain.Entities;
 using Volo.Abp.Domain.Repositories.EntityFrameworkCore;
 using Volo.Abp.EntityFrameworkCore;
+using InventoryTrackingAutomation.ExceptionCodes;
 
 namespace InventoryTrackingAutomation.Repository;
 
@@ -39,7 +41,7 @@ public class BaseRepository<T> : EfCoreRepository<InventoryTrackingAutomationDbC
     {
         if (!typeof(ISoftDelete).IsAssignableFrom(typeof(T)))
         {
-            throw new BusinessException("Entity:SoftDeleteNotSupported")
+            throw new BusinessException(GeneralExceptionCodes.SoftDeleteNotSupported)
                 .WithData("EntityType", typeof(T).Name);
         }
 
@@ -53,7 +55,7 @@ public class BaseRepository<T> : EfCoreRepository<InventoryTrackingAutomationDbC
     {
         if (!typeof(ISoftDelete).IsAssignableFrom(typeof(T)))
         {
-            throw new BusinessException("Entity:SoftDeleteNotSupported")
+            throw new BusinessException(GeneralExceptionCodes.SoftDeleteNotSupported)
                 .WithData("EntityType", typeof(T).Name);
         }
 

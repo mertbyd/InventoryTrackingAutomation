@@ -36,13 +36,13 @@ public class VehicleTaskLineManager : BaseManager<VehicleTaskLine>
         var taskLine = await _taskLineRepository.FindAsync(model.TaskLineId);
         if (taskLine == null)
         {
-            throw new BusinessException(InventoryTrackingAutomationErrorCodes.TaskLines.NotFound)
+            throw new BusinessException(TaskLineExceptionCodes.NotFound)
                 .WithData("TaskLineId", model.TaskLineId);
         }
 
         if (taskLine.TaskId != (await _vehicleTaskRepository.GetAsync(vehicleTaskId)).TaskId)
         {
-            throw new BusinessException(InventoryTrackingAutomationErrorCodes.TaskLines.NotFound)
+            throw new BusinessException(TaskLineExceptionCodes.NotFound)
                 .WithData("VehicleTaskId", vehicleTaskId)
                 .WithData("TaskLineId", model.TaskLineId);
         }
@@ -98,14 +98,14 @@ public class VehicleTaskLineManager : BaseManager<VehicleTaskLine>
             existing.LostQuantity > 0 ||
             existing.ConsumedQuantity > 0)
         {
-            throw new BusinessException(InventoryTrackingAutomationErrorCodes.VehicleTaskLines.CannotDeleteReceived)
+            throw new BusinessException(VehicleTaskLineExceptionCodes.CannotDeleteReceived)
                 .WithData("VehicleTaskLineId", existing.Id);
         }
 
         var taskLine = await _taskLineRepository.FindAsync(existing.TaskLineId);
         if (taskLine == null)
         {
-            throw new BusinessException(InventoryTrackingAutomationErrorCodes.TaskLines.NotFound)
+            throw new BusinessException(TaskLineExceptionCodes.NotFound)
                 .WithData("TaskLineId", existing.TaskLineId);
         }
 
@@ -125,7 +125,7 @@ public class VehicleTaskLineManager : BaseManager<VehicleTaskLine>
         var line = await EnsureExistsAsync(lineId);
         if (line.ReceivedQuantity > 0 || line.DamagedQuantity > 0 || line.LostQuantity > 0 || line.ConsumedQuantity > 0)
         {
-            throw new BusinessException(InventoryTrackingAutomationErrorCodes.VehicleTaskLines.CannotDeleteReceived)
+            throw new BusinessException(VehicleTaskLineExceptionCodes.CannotDeleteReceived)
                 .WithData("VehicleTaskLineId", lineId);
         }
 
@@ -169,7 +169,7 @@ public class VehicleTaskLineManager : BaseManager<VehicleTaskLine>
         var vehicleTask = await _vehicleTaskRepository.FindAsync(vehicleTaskId);
         if (vehicleTask == null)
         {
-            throw new BusinessException(InventoryTrackingAutomationErrorCodes.VehicleTasks.NotFound)
+            throw new BusinessException(VehicleTaskExceptionCodes.NotFound)
                 .WithData("VehicleTaskId", vehicleTaskId);
         }
         return vehicleTask;
@@ -183,7 +183,7 @@ public class VehicleTaskLineManager : BaseManager<VehicleTaskLine>
         var existing = await EnsureExistsAsync(lineId);
         if (existing.VehicleTaskId != vehicleTaskId)
         {
-            throw new BusinessException(InventoryTrackingAutomationErrorCodes.VehicleTaskLines.NotFound)
+            throw new BusinessException(VehicleTaskLineExceptionCodes.NotFound)
                 .WithData("VehicleTaskId", vehicleTaskId)
                 .WithData("VehicleTaskLineId", lineId);
         }
@@ -204,7 +204,7 @@ public class VehicleTaskLineManager : BaseManager<VehicleTaskLine>
         var taskLine = await _taskLineRepository.FindAsync(taskLineId);
         if (taskLine == null)
         {
-            throw new BusinessException(InventoryTrackingAutomationErrorCodes.TaskLines.NotFound)
+            throw new BusinessException(TaskLineExceptionCodes.NotFound)
                 .WithData("TaskLineId", taskLineId);
         }
 
@@ -226,14 +226,14 @@ public class VehicleTaskLineManager : BaseManager<VehicleTaskLine>
     {
         if (model.ReceivedQuantity < 0 || model.DamagedQuantity < 0 || model.LostQuantity < 0 || model.ConsumedQuantity < 0)
         {
-            throw new BusinessException(InventoryTrackingAutomationErrorCodes.VehicleTaskLines.QuantityMismatch)
+            throw new BusinessException(VehicleTaskLineExceptionCodes.QuantityMismatch)
                 .WithData("VehicleTaskLineId", line.Id);
         }
 
         var total = model.ReceivedQuantity + model.DamagedQuantity + model.LostQuantity + model.ConsumedQuantity;
         if (total != line.AllocatedQuantity)
         {
-            throw new BusinessException(InventoryTrackingAutomationErrorCodes.VehicleTaskLines.QuantityMismatch)
+            throw new BusinessException(VehicleTaskLineExceptionCodes.QuantityMismatch)
                 .WithData("VehicleTaskLineId", line.Id)
                 .WithData("Expected", line.AllocatedQuantity)
                 .WithData("Actual", total);

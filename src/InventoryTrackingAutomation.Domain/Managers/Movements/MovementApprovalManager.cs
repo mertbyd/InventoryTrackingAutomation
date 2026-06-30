@@ -216,7 +216,7 @@ public class MovementApprovalManager : InventoryTrackingAutomationDomainService
     {
         // Step'e atanmış kullanıcı varsa sadece o onaylayabilir
         if (step.AssignedUserId.HasValue && step.AssignedUserId != approvingUserId)
-            throw new BusinessException(InventoryTrackingAutomationErrorCodes.MovementApprovals.UnauthorizedApprover);
+            throw new BusinessException(MovementApprovalExceptionCodes.UnauthorizedApprover);
 
         // Step definition'ı manuel yükle — navigation property eager load yok.
         var stepDefinition = await _workflowStepDefinitionRepository.GetAsync(step.WorkflowStepDefinitionId);
@@ -227,7 +227,7 @@ public class MovementApprovalManager : InventoryTrackingAutomationDomainService
             var user = await _identityUserManager.GetByIdAsync(approvingUserId);
             var roles = await _identityUserManager.GetRolesAsync(user);
             if (!roles.Contains(stepDefinition.RequiredRoleName))
-                throw new BusinessException(InventoryTrackingAutomationErrorCodes.MovementApprovals.UnauthorizedApprover);
+                throw new BusinessException(MovementApprovalExceptionCodes.UnauthorizedApprover);
         }
     }
 
@@ -236,10 +236,10 @@ public class MovementApprovalManager : InventoryTrackingAutomationDomainService
     {
         var movementRequest = await _movementRequestRepository.GetAsync(movementRequestId);
         if (movementRequest == null)
-            throw new BusinessException(InventoryTrackingAutomationErrorCodes.MovementRequests.NotFound);
+            throw new BusinessException(MovementRequestExceptionCodes.NotFound);
 
         if (movementRequest.Status != MovementStatusEnum.InReview)
-            throw new BusinessException(InventoryTrackingAutomationErrorCodes.MovementApprovals.InvalidMovementStatus);
+            throw new BusinessException(MovementApprovalExceptionCodes.InvalidMovementStatus);
 
         return movementRequest;
     }
@@ -248,11 +248,11 @@ public class MovementApprovalManager : InventoryTrackingAutomationDomainService
     private async Task<WorkflowInstance> ValidateWorkflowInstanceAsync(MovementRequest movementRequest)
     {
         if (!movementRequest.WorkflowInstanceId.HasValue)
-            throw new BusinessException(InventoryTrackingAutomationErrorCodes.MovementApprovals.WorkflowNotFound);
+            throw new BusinessException(MovementApprovalExceptionCodes.WorkflowNotFound);
 
         var workflowInstance = await _workflowInstanceRepository.GetAsync(movementRequest.WorkflowInstanceId.Value);
         if (workflowInstance == null || workflowInstance.State != WorkflowState.Active)
-            throw new BusinessException(InventoryTrackingAutomationErrorCodes.MovementApprovals.WorkflowNotFound);
+            throw new BusinessException(MovementApprovalExceptionCodes.WorkflowNotFound);
 
         return workflowInstance;
     }
@@ -264,7 +264,7 @@ public class MovementApprovalManager : InventoryTrackingAutomationDomainService
             x => x.WorkflowInstanceId == workflowInstanceId && x.ActionTaken == WorkflowActionType.Pending);
 
         if (!pendingSteps.Any())
-            throw new BusinessException(InventoryTrackingAutomationErrorCodes.MovementApprovals.NoPendingApprovalStep);
+            throw new BusinessException(MovementApprovalExceptionCodes.NoPendingApprovalStep);
 
         var orderedPendingSteps = new List<(WorkflowInstanceStep Step, int StepOrder)>();
         foreach (var pendingStep in pendingSteps)

@@ -91,7 +91,7 @@ public class WorkerManager : BaseManager<Worker>
     {
         if (assignedManagerId.HasValue && assignedManagerId.Value == existingWorkerId)
         {
-            throw new Volo.Abp.BusinessException(InventoryTrackingAutomationErrorCodes.Workers.SelfAssignmentNotAllowed);
+            throw new Volo.Abp.BusinessException(WorkerExceptionCodes.SelfAssignmentNotAllowed);
         }
     }
 
