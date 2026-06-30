@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using InventoryTrackingAutomation.Entities.Tasks;
 using InventoryTrackingAutomation.Interface.Masters;
@@ -15,6 +16,8 @@ namespace InventoryTrackingAutomation.Managers.Tasks;
 /// </summary>
 public class TaskLineManager : BaseManager<TaskLine>
 {
+    protected override string AlreadyExistsErrorCode => TaskLineExceptionCodes.AlreadyExists;
+
     private IProductRepository _productRepository => LazyGetRequiredService<IProductRepository>();
     private IInventoryTaskRepository _inventoryTaskRepository => LazyGetRequiredService<IInventoryTaskRepository>();
     private ITaskLineRepository _taskLineRepository => LazyGetRequiredService<ITaskLineRepository>();
@@ -36,6 +39,47 @@ public class TaskLineManager : BaseManager<TaskLine>
         await EnsureUniqueAsync(x => x.TaskId == taskId && x.ProductId == model.ProductId);
 
         return model;
+    }
+
+    /// Toplu gorev kalemi olusturma kurallarini minimum DB sorgusuyla uygular.
+    public async Task<List<CreateTaskLineModel>> CreateManyAsync(List<CreateTaskLineModel> models)
+    {
+        if (models.Count == 0)
+        {
+            return models;
+        }
+
+        foreach (var model in models)
+        {
+            ValidateQuantity(model.Quantity);
+        }
+
+        var taskIds = models.Select(x => x.TaskId).Distinct().ToList();
+        await EnsureAllExistInAsync(_inventoryTaskRepository, taskIds);
+
+        var productIds = models.Select(x => x.ProductId).Distinct().ToList();
+        await EnsureAllExistInAsync(_productRepository, productIds);
+
+        var duplicateInput = models
+            .GroupBy(x => new { x.TaskId, x.ProductId })
+            .FirstOrDefault(x => x.Count() > 1);
+        if (duplicateInput != null)
+        {
+            throw new BusinessException(TaskLineExceptionCodes.AlreadyExists);
+        }
+
+        var existingLines = await _taskLineRepository.GetListAsync(x =>
+            taskIds.Contains(x.TaskId) &&
+            productIds.Contains(x.ProductId));
+
+        if (existingLines.Any(existing => models.Any(model =>
+                model.TaskId == existing.TaskId &&
+                model.ProductId == existing.ProductId)))
+        {
+            throw new BusinessException(TaskLineExceptionCodes.AlreadyExists);
+        }
+
+        return models;
     }
 
     /// <summary>

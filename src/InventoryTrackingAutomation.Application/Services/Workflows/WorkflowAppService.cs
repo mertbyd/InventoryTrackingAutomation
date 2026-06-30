@@ -1,4 +1,4 @@
-﻿using InventoryTrackingAutomation.Application.Mappers.Workflows;
+using InventoryTrackingAutomation.Application.Mappers.Workflows;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -99,11 +99,17 @@ public class WorkflowAppService : InventoryTrackingAutomationAppService, IWorkfl
                 .WithData("WorkflowInstanceId", instanceId);
         }
 
+        var stepDefinitionIds = pendingSteps.Select(x => x.WorkflowStepDefinitionId).Distinct().ToList();
+        var stepDefinitions = await _stepDefinitionRepository.GetListAsync(x => stepDefinitionIds.Contains(x.Id));
+        var stepDefDict = stepDefinitions.ToDictionary(x => x.Id);
+
         var orderedPendingSteps = new List<(WorkflowInstanceStep Step, int StepOrder)>();
         foreach (var pendingStep in pendingSteps)
         {
-            var stepDefinition = await _stepDefinitionRepository.GetAsync(pendingStep.WorkflowStepDefinitionId);
-            orderedPendingSteps.Add((pendingStep, stepDefinition.StepOrder));
+            if (stepDefDict.TryGetValue(pendingStep.WorkflowStepDefinitionId, out var stepDefinition))
+            {
+                orderedPendingSteps.Add((pendingStep, stepDefinition.StepOrder));
+            }
         }
 
         var currentStep = orderedPendingSteps.OrderBy(x => x.StepOrder).First().Step;
@@ -123,19 +129,26 @@ public class WorkflowAppService : InventoryTrackingAutomationAppService, IWorkfl
     {
         var currentUserId = CurrentUser.Id.Value;
 
-        // Kullanıcıya atanmış ve henüz karar verilmemiş step'leri bul
         var pendingSteps = await _workflowInstanceStepRepository.GetListAsync(
             x => x.AssignedUserId == currentUserId &&
                  x.ActionTaken == InventoryTrackingAutomation.Enums.Workflows.WorkflowActionType.Pending);
 
         var result = new List<PendingWorkflowStepDto>();
+        if (!pendingSteps.Any()) return result;
+
+        var instanceIds = pendingSteps.Select(x => x.WorkflowInstanceId).Distinct().ToList();
+        var instances = await _workflowInstanceRepository.GetListAsync(x => instanceIds.Contains(x.Id));
+        var instanceDict = instances.ToDictionary(x => x.Id);
+
+        var stepDefIds = pendingSteps.Select(x => x.WorkflowStepDefinitionId).Distinct().ToList();
+        var stepDefs = await _stepDefinitionRepository.GetListAsync(x => stepDefIds.Contains(x.Id));
+        var stepDefDict = stepDefs.ToDictionary(x => x.Id);
 
         foreach (var step in pendingSteps)
         {
-            var instance = await _workflowInstanceRepository.FindAsync(step.WorkflowInstanceId);
-            if (instance == null) continue;
-
-            var stepDef = await _stepDefinitionRepository.FindAsync(step.WorkflowStepDefinitionId);
+            if (!instanceDict.TryGetValue(step.WorkflowInstanceId, out var instance)) continue;
+            
+            stepDefDict.TryGetValue(step.WorkflowStepDefinitionId, out var stepDef);
 
             result.Add(new PendingWorkflowStepDto
             {

@@ -15,6 +15,8 @@ namespace InventoryTrackingAutomation.Managers.Masters;
 //sistemdeki görevi: Domain katmanındaki iş kurallarının merkezi yönetimini ve validasyonunu sağlar.
 public class VehicleManager : BaseManager<Vehicle>
 {
+    protected override string AlreadyExistsErrorCode => VehicleExceptionCodes.AlreadyExists;
+
     private IRepository<VehicleType, System.Guid> _vehicleTypeRepository => LazyGetRequiredService<IRepository<VehicleType, System.Guid>>();
 
     /// <summary>
@@ -43,6 +45,26 @@ public class VehicleManager : BaseManager<Vehicle>
         await EnsureExistsInAsync(_vehicleTypeRepository, model.VehicleTypeId);
 
         return model;
+    }
+
+    /// <summary>
+    /// Birden fazla araç oluşturur — Toplu PlateNumber unique kontrolü yapar.
+    /// </summary>
+    public async Task<System.Collections.Generic.List<CreateVehicleModel>> CreateManyAsync(System.Collections.Generic.List<CreateVehicleModel> models)
+    {
+        var plates = models.Where(x => !string.IsNullOrWhiteSpace(x.PlateNumber)).Select(x => x.PlateNumber).ToList();
+        if (plates.Any())
+        {
+            await EnsureUniqueBulkAsync(plates, x => x.PlateNumber);
+        }
+
+        var vehicleTypeIds = models.Select(x => x.VehicleTypeId).ToList();
+        if (vehicleTypeIds.Any())
+        {
+            await EnsureAllExistInAsync(_vehicleTypeRepository, vehicleTypeIds);
+        }
+
+        return models;
     }
 
     /// <summary>

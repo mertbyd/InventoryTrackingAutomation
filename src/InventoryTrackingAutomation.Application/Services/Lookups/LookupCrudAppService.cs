@@ -62,15 +62,18 @@ public abstract class LookupCrudAppService<TEntity, TDto, TCreateDto, TUpdateDto
         return MapToDto(inserted);
     }
 
+    protected abstract Task<List<TEntity>> CreateEntitiesAsync(List<TCreateModel> models);
+
     public virtual async Task<List<TDto>> CreateManyAsync(List<TCreateDto> inputs)
     {
-        var entities = new List<TEntity>();
+        var models = new List<TCreateModel>();
         foreach (var dto in inputs)
         {
             await CreateValidator.ValidateAndThrowAsync(dto);
-            var model = MapToCreateModel(dto);
-            entities.Add(await CreateEntityAsync(model));
+            models.Add(MapToCreateModel(dto));
         }
+
+        var entities = await CreateEntitiesAsync(models);
 
         await Repository.InsertManyAsync(entities, autoSave: true);
         return MapToDto(entities);

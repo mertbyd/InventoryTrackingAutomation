@@ -13,6 +13,8 @@ namespace InventoryTrackingAutomation.Managers.Masters;
 //sistemdeki görevi: Domain katmanındaki iş kurallarının merkezi yönetimini ve validasyonunu sağlar.
 public class WarehouseManager : BaseManager<Warehouse>
 {
+    protected override string AlreadyExistsErrorCode => WarehouseExceptionCodes.AlreadyExists;
+
     private IWorkerRepository _workerRepository => LazyGetRequiredService<IWorkerRepository>();    // Depo sorumlusu FK kontrolu icin.
 
     /// <summary>
@@ -39,6 +41,26 @@ public class WarehouseManager : BaseManager<Warehouse>
         await EnsureExistsInAsync(_workerRepository, model.ManagerWorkerId);
 
         return model;
+    }
+
+    /// <summary>
+    /// Birden fazla depo oluşturur; toplu kod tekilliği ve sorumlu çalışan varlığı kontrol edilir.
+    /// </summary>
+    public async Task<System.Collections.Generic.List<CreateWarehouseModel>> CreateManyAsync(System.Collections.Generic.List<CreateWarehouseModel> models)
+    {
+        var codes = models.Where(x => !string.IsNullOrWhiteSpace(x.Code)).Select(x => x.Code).ToList();
+        if (codes.Any())
+        {
+            await EnsureUniqueBulkAsync(codes, x => x.Code);
+        }
+
+        var managerIds = models.Where(x => x.ManagerWorkerId.HasValue).Select(x => x.ManagerWorkerId.Value).ToList();
+        if (managerIds.Any())
+        {
+            await EnsureAllExistInAsync(_workerRepository, managerIds);
+        }
+
+        return models;
     }
 
     /// <summary>
