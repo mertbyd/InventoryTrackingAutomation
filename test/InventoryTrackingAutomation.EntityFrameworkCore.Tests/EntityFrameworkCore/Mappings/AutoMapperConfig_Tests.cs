@@ -1,8 +1,0 @@
-using InventoryTrackingAutomation.Mappings;
-using InventoryTrackingAutomation.EntityFrameworkCore;
-
-namespace InventoryTrackingAutomation.EntityFrameworkCore.Mappings;
-
-public class AutoMapperConfig_Tests : InventoryTrackingAutomation.Mappings.AutoMapperConfig_Tests<InventoryTrackingAutomationEntityFrameworkCoreTestModule>
-{
-}

@@ -16,7 +16,7 @@ public class UnitType : Entity<Guid>, IPassivable
     public bool IsActive { get; set; } // Bu birimin sistemde kullanıma açık olup olmadığını belirler.
 
     protected UnitType() { }
-    
+
     public UnitType(Guid id, string code, string name) : base(id)
     {
         Code = code;

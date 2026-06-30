@@ -1,4 +1,4 @@
-using AutoMapper;
+using InventoryTrackingAutomation.Application.Mappers.Tasks;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -38,7 +38,7 @@ public class TaskLineAppService : InventoryTrackingAutomationAppService, ITaskLi
     private IValidator<CreateTaskLineDto> _createValidator => LazyGetRequiredService<IValidator<CreateTaskLineDto>>();
     private IValidator<UpdateTaskLineDto> _updateValidator => LazyGetRequiredService<IValidator<UpdateTaskLineDto>>();
     private ILocalEventBus _localEventBus => LazyGetRequiredService<ILocalEventBus>();
-    private IMapper _mapper => LazyGetRequiredService<IMapper>();
+    private static readonly TaskLineMapper _mapper = new TaskLineMapper();
 
     /// Görev kalemini Id ile getirmek için kullanılır.
     public async Task<TaskLineDto> GetAsync(Guid id)
@@ -62,10 +62,13 @@ public class TaskLineAppService : InventoryTrackingAutomationAppService, ITaskLi
         await _createValidator.ValidateAndThrowAsync(input);
         await EnsureTaskExistsAsync(taskId);
 
-        var model = _mapper.Map<CreateTaskLineDto, CreateTaskLineModel>(input);
+        var model = _mapper.MapToModel(input);
         model.TaskId = taskId;
 
-        var entity = await _manager.CreateAsync(taskId, model);
+        var validatedModel = await _manager.CreateAsync(taskId, model);
+        var entity = new TaskLine(GuidGenerator.Create());
+        entity.TaskId = taskId;
+        _mapper.MapToEntity(validatedModel, entity);
         var inserted = await _repository.InsertAsync(entity, autoSave: true);
         await InvalidateTaskLineCachesAsync(taskId);
         return await MapTaskLineAsync(inserted);
@@ -78,9 +81,10 @@ public class TaskLineAppService : InventoryTrackingAutomationAppService, ITaskLi
         await _updateValidator.ValidateAndThrowAsync(input);
         var existing = await EnsureTaskLineBelongsToTaskAsync(taskId, lineId);
 
-        var model = _mapper.Map<UpdateTaskLineDto, UpdateTaskLineModel>(input);
-        var updated = await _manager.UpdateAsync(existing, model);
-        var saved = await _repository.UpdateAsync(updated, autoSave: true);
+        var model = _mapper.MapToModel(input);
+        var validatedModel = await _manager.UpdateAsync(existing, model);
+        _mapper.MapToEntity(validatedModel, existing);
+        var saved = await _repository.UpdateAsync(existing, autoSave: true);
         await InvalidateTaskLineCachesAsync(taskId);
         return await MapTaskLineAsync(saved);
     }
@@ -126,14 +130,14 @@ public class TaskLineAppService : InventoryTrackingAutomationAppService, ITaskLi
 
     private async Task<TaskLineDto> MapTaskLineAsync(TaskLine entity)
     {
-        var dto = _mapper.Map<TaskLine, TaskLineDto>(entity);
+        var dto = _mapper.MapToDto(entity);
         dto.AllocatedQuantity = await _vehicleTaskLineRepository.GetAllocatedQuantityByTaskLineIdAsync(entity.Id);
         return dto;
     }
 
     private async Task<List<TaskLineDto>> MapTaskLinesAsync(List<TaskLine> entities)
     {
-        var dtos = _mapper.Map<List<TaskLine>, List<TaskLineDto>>(entities);
+        var dtos = _mapper.MapToDto(entities);
         var taskLineIds = entities.Select(x => x.Id).ToList();
         var vehicleLines = await _vehicleTaskLineRepository.GetByTaskLineIdsAsync(taskLineIds);
         var allocationsByTaskLineId = vehicleLines

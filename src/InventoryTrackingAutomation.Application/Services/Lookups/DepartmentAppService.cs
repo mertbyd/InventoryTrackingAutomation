@@ -1,4 +1,4 @@
-using AutoMapper;
+using InventoryTrackingAutomation.Application.Mappers.Lookups;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -33,21 +33,21 @@ public class DepartmentAppService : InventoryTrackingAutomationAppService, IDepa
     private IValidator<UpdateDepartmentDto> _updateValidator => LazyGetRequiredService<IValidator<UpdateDepartmentDto>>();
 
     // Tüm bağımlılıkları DI ile alır.
-    private IMapper _mapper => LazyGetRequiredService<IMapper>();
+    private static readonly DepartmentMapper _mapper = new DepartmentMapper();
 
 
     // Id ile departmanı getirir; yoksa EntityNotFoundException.
-//işlevi: İlgili iş senaryosunu (use-case) yürütür.
-//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
+    //işlevi: İlgili iş senaryosunu (use-case) yürütür.
+    //sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<DepartmentDto> GetAsync(Guid id)
     {
         var entity = await _manager.EnsureExistsAsync(id);
-        return _mapper.Map<Department, DepartmentDto>(entity);
+        return _mapper.MapToDto(entity);
     }
 
     // Departmanları sayfalı listeler.
-//işlevi: İlgili iş senaryosunu (use-case) yürütür.
-//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
+    //işlevi: İlgili iş senaryosunu (use-case) yürütür.
+    //sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<PagedResultDto<DepartmentDto>> GetListAsync(PagedResultRequestDto input)
     {
         var totalCount = await _repository.GetCountAsync();
@@ -55,54 +55,57 @@ public class DepartmentAppService : InventoryTrackingAutomationAppService, IDepa
             input.SkipCount, input.MaxResultCount, sorting: string.Empty);
         return new PagedResultDto<DepartmentDto>(
             totalCount,
-            _mapper.Map<List<Department>, List<DepartmentDto>>(entities));
+            _mapper.MapToDto(entities));
     }
 
     // Yeni departman oluşturur — manager iş kurallarını uygular, repository persist eder.
     //işlevi: İlgili iş senaryosunu (use-case) yürütür.
-//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
+    //sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<DepartmentDto> CreateAsync(CreateDepartmentDto input)
     {
         await _createValidator.ValidateAndThrowAsync(input);
-        var model = _mapper.Map<CreateDepartmentDto, CreateDepartmentModel>(input);
-        var entity = await _manager.CreateAsync(model);
+        var model = _mapper.MapToModel(input);
+        var validatedModel = await _manager.CreateAsync(model);
+        var entity = new Department(GuidGenerator.Create());
+        _mapper.MapToEntity(validatedModel, entity);
         var inserted = await _repository.InsertAsync(entity, autoSave: true);
-        return _mapper.Map<Department, DepartmentDto>(inserted);
+        return _mapper.MapToDto(inserted);
     }
 
-    // Birden fazla departmanı toplu oluşturur.
-    //işlevi: İlgili iş senaryosunu (use-case) yürütür.
-//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<List<DepartmentDto>> CreateManyAsync(List<CreateDepartmentDto> inputs)
     {
         var entities = new List<Department>();
         foreach (var dto in inputs)
         {
             await _createValidator.ValidateAndThrowAsync(dto);
-            var model = _mapper.Map<CreateDepartmentDto, CreateDepartmentModel>(dto);
-            entities.Add(await _manager.CreateAsync(model));
+            var model = _mapper.MapToModel(dto);
+            var validatedModel = await _manager.CreateAsync(model);
+            var entity = new Department(GuidGenerator.Create());
+            _mapper.MapToEntity(validatedModel, entity);
+            entities.Add(entity);
         }
 
         var inserted = await _repository.InsertManyAndGetListAsync(entities);
-        return _mapper.Map<List<Department>, List<DepartmentDto>>(inserted);
+        return _mapper.MapToDto(inserted);
     }
 
     // Departmanı günceller — manager iş kurallarını uygular, repository persist eder.
     //işlevi: İlgili iş senaryosunu (use-case) yürütür.
-//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
+    //sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<DepartmentDto> UpdateAsync(Guid id, UpdateDepartmentDto input)
     {
         await _updateValidator.ValidateAndThrowAsync(input);
         var existing = await _manager.EnsureExistsAsync(id);
-        var model = _mapper.Map<UpdateDepartmentDto, UpdateDepartmentModel>(input);
-        var updated = await _manager.UpdateAsync(existing, model);
-        var saved = await _repository.UpdateAsync(updated, autoSave: true);
-        return _mapper.Map<Department, DepartmentDto>(saved);
+        var model = _mapper.MapToModel(input);
+        var validatedModel = await _manager.UpdateAsync(existing, model);
+        _mapper.MapToEntity(validatedModel, existing);
+        var saved = await _repository.UpdateAsync(existing, autoSave: true);
+        return _mapper.MapToDto(saved);
     }
 
     // Departmanı soft delete ile siler.
     //işlevi: İlgili iş senaryosunu (use-case) yürütür.
-//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
+    //sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task DeleteAsync(Guid id)
     {
         var existing = await _manager.EnsureExistsAsync(id);

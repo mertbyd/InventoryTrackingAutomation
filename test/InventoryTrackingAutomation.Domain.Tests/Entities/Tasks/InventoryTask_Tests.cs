@@ -25,7 +25,7 @@ public class InventoryTask_Tests
         var id = Guid.NewGuid();
         var code = "TASK-001";
         var name = "Test Gorevi";
-        
+
         // ACT: Entity'yi olustur.
         var task = new InventoryTask(id)
         {

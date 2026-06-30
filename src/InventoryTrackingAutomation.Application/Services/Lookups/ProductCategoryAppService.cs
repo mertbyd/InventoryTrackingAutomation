@@ -1,4 +1,4 @@
-using AutoMapper;
+using InventoryTrackingAutomation.Application.Mappers.Lookups;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -33,21 +33,21 @@ public class ProductCategoryAppService : InventoryTrackingAutomationAppService, 
     private IValidator<UpdateProductCategoryDto> _updateValidator => LazyGetRequiredService<IValidator<UpdateProductCategoryDto>>();
 
     // Tüm bağımlılıkları DI ile alır.
-    private IMapper _mapper => LazyGetRequiredService<IMapper>();
+    private static readonly ProductCategoryMapper _mapper = new ProductCategoryMapper();
 
 
     // Id ile ürün kategorisini getirir; yoksa EntityNotFoundException.
-//işlevi: İlgili iş senaryosunu (use-case) yürütür.
-//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
+    //işlevi: İlgili iş senaryosunu (use-case) yürütür.
+    //sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<ProductCategoryDto> GetAsync(Guid id)
     {
         var entity = await _manager.EnsureExistsAsync(id);
-        return _mapper.Map<ProductCategory, ProductCategoryDto>(entity);
+        return _mapper.MapToDto(entity);
     }
 
     // Ürün kategorilerini sayfalı listeler.
-//işlevi: İlgili iş senaryosunu (use-case) yürütür.
-//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
+    //işlevi: İlgili iş senaryosunu (use-case) yürütür.
+    //sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<PagedResultDto<ProductCategoryDto>> GetListAsync(PagedResultRequestDto input)
     {
         var totalCount = await _repository.GetCountAsync();
@@ -55,54 +55,57 @@ public class ProductCategoryAppService : InventoryTrackingAutomationAppService, 
             input.SkipCount, input.MaxResultCount, sorting: string.Empty);
         return new PagedResultDto<ProductCategoryDto>(
             totalCount,
-            _mapper.Map<List<ProductCategory>, List<ProductCategoryDto>>(entities));
+            _mapper.MapToDto(entities));
     }
 
     // Yeni ürün kategorisi oluşturur — manager iş kurallarını uygular, repository persist eder.
     //işlevi: İlgili iş senaryosunu (use-case) yürütür.
-//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
+    //sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<ProductCategoryDto> CreateAsync(CreateProductCategoryDto input)
     {
         await _createValidator.ValidateAndThrowAsync(input);
-        var model = _mapper.Map<CreateProductCategoryDto, CreateProductCategoryModel>(input);
-        var entity = await _manager.CreateAsync(model);
+        var model = _mapper.MapToModel(input);
+        var validatedModel = await _manager.CreateAsync(model);
+        var entity = new ProductCategory(GuidGenerator.Create());
+        _mapper.MapToEntity(validatedModel, entity);
         var inserted = await _repository.InsertAsync(entity, autoSave: true);
-        return _mapper.Map<ProductCategory, ProductCategoryDto>(inserted);
+        return _mapper.MapToDto(inserted);
     }
 
-    // Birden fazla ürün kategorisini toplu oluşturur.
-    //işlevi: İlgili iş senaryosunu (use-case) yürütür.
-//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<List<ProductCategoryDto>> CreateManyAsync(List<CreateProductCategoryDto> inputs)
     {
         var entities = new List<ProductCategory>();
         foreach (var dto in inputs)
         {
             await _createValidator.ValidateAndThrowAsync(dto);
-            var model = _mapper.Map<CreateProductCategoryDto, CreateProductCategoryModel>(dto);
-            entities.Add(await _manager.CreateAsync(model));
+            var model = _mapper.MapToModel(dto);
+            var validatedModel = await _manager.CreateAsync(model);
+            var entity = new ProductCategory(GuidGenerator.Create());
+            _mapper.MapToEntity(validatedModel, entity);
+            entities.Add(entity);
         }
 
         var inserted = await _repository.InsertManyAndGetListAsync(entities);
-        return _mapper.Map<List<ProductCategory>, List<ProductCategoryDto>>(inserted);
+        return _mapper.MapToDto(inserted);
     }
 
     // Ürün kategorisini günceller — manager iş kurallarını uygular, repository persist eder.
     //işlevi: İlgili iş senaryosunu (use-case) yürütür.
-//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
+    //sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<ProductCategoryDto> UpdateAsync(Guid id, UpdateProductCategoryDto input)
     {
         await _updateValidator.ValidateAndThrowAsync(input);
         var existing = await _manager.EnsureExistsAsync(id);
-        var model = _mapper.Map<UpdateProductCategoryDto, UpdateProductCategoryModel>(input);
-        var updated = await _manager.UpdateAsync(existing, model);
-        var saved = await _repository.UpdateAsync(updated, autoSave: true);
-        return _mapper.Map<ProductCategory, ProductCategoryDto>(saved);
+        var model = _mapper.MapToModel(input);
+        var validatedModel = await _manager.UpdateAsync(existing, model);
+        _mapper.MapToEntity(validatedModel, existing);
+        var saved = await _repository.UpdateAsync(existing, autoSave: true);
+        return _mapper.MapToDto(saved);
     }
 
     // Ürün kategorisini soft delete ile siler.
     //işlevi: İlgili iş senaryosunu (use-case) yürütür.
-//sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
+    //sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task DeleteAsync(Guid id)
     {
         var existing = await _manager.EnsureExistsAsync(id);

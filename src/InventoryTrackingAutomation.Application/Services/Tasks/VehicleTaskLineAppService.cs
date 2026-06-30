@@ -1,4 +1,4 @@
-using AutoMapper;
+using InventoryTrackingAutomation.Application.Mappers.Tasks;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -33,7 +33,7 @@ public class VehicleTaskLineAppService : InventoryTrackingAutomationAppService, 
     private IValidator<CreateVehicleTaskLineDto> _createValidator => LazyGetRequiredService<IValidator<CreateVehicleTaskLineDto>>();
     private IValidator<UpdateVehicleTaskLineDto> _updateValidator => LazyGetRequiredService<IValidator<UpdateVehicleTaskLineDto>>();
     private ILocalEventBus _localEventBus => LazyGetRequiredService<ILocalEventBus>();
-    private IMapper _mapper => LazyGetRequiredService<IMapper>();
+    private static readonly VehicleTaskLineMapper _mapper = new VehicleTaskLineMapper();
 
     /// <summary>
     /// Araç-görev kalemini getirir.
@@ -63,12 +63,15 @@ public class VehicleTaskLineAppService : InventoryTrackingAutomationAppService, 
         await _createValidator.ValidateAndThrowAsync(input);
         var vehicleTask = await _manager.EnsureVehicleTaskExistsAsync(vehicleTaskId);
 
-        var model = _mapper.Map<CreateVehicleTaskLineDto, CreateVehicleTaskLineModel>(input);
-        var entity = await _manager.CreateAsync(vehicleTaskId, model);
+        var model = _mapper.MapToModel(input);
+        var validatedModel = await _manager.CreateAsync(vehicleTaskId, model);
+        var entity = new VehicleTaskLine(GuidGenerator.Create());
+        entity.VehicleTaskId = vehicleTaskId;
+        _mapper.MapToEntity(validatedModel, entity);
         var inserted = await _repository.InsertAsync(entity, autoSave: true);
-        
+
         await InvalidateCachesAsync(vehicleTask);
-        
+
         // ProductId bilgisini almak için manager'dan tekrar model olarak çekiyoruz.
         return await GetAsync(inserted.Id);
     }
@@ -83,12 +86,13 @@ public class VehicleTaskLineAppService : InventoryTrackingAutomationAppService, 
         var vehicleTask = await _manager.EnsureVehicleTaskExistsAsync(vehicleTaskId);
         var existing = await _manager.EnsureBelongsToVehicleTaskAsync(vehicleTaskId, lineId);
 
-        var model = _mapper.Map<UpdateVehicleTaskLineDto, UpdateVehicleTaskLineModel>(input);
-        var updated = await _manager.UpdateAsync(existing, model);
-        await _repository.UpdateAsync(updated, autoSave: true);
-        
+        var model = _mapper.MapToModel(input);
+        var validatedModel = await _manager.UpdateAsync(existing, model);
+        _mapper.MapToEntity(validatedModel, existing);
+        await _repository.UpdateAsync(existing, autoSave: true);
+
         await InvalidateCachesAsync(vehicleTask);
-        
+
         return await GetAsync(lineId);
     }
 
@@ -100,8 +104,9 @@ public class VehicleTaskLineAppService : InventoryTrackingAutomationAppService, 
     {
         var vehicleTask = await _manager.EnsureVehicleTaskExistsAsync(vehicleTaskId);
         await _manager.EnsureBelongsToVehicleTaskAsync(vehicleTaskId, lineId);
-        
-        await _manager.DeleteAsync(lineId);
+
+        await _manager.EnsureCanDeleteAsync(lineId);
+        await _repository.DeleteAsync(lineId);
         await InvalidateCachesAsync(vehicleTask);
     }
 
@@ -110,7 +115,7 @@ public class VehicleTaskLineAppService : InventoryTrackingAutomationAppService, 
     /// </summary>
     private VehicleTaskLineDto MapToDto(VehicleTaskLineWithProductModel model)
     {
-        var dto = _mapper.Map<VehicleTaskLine, VehicleTaskLineDto>(model.Line);
+        var dto = _mapper.MapToDto(model.Line);
         dto.ProductId = model.ProductId;
         return dto;
     }

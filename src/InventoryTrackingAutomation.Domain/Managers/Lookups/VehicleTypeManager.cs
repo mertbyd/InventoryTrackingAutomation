@@ -1,5 +1,4 @@
 using System.Threading.Tasks;
-using AutoMapper;
 using InventoryTrackingAutomation.Entities.Lookups;
 using InventoryTrackingAutomation.Interface.Lookups;
 using InventoryTrackingAutomation.Models.Lookups;
@@ -11,7 +10,7 @@ namespace InventoryTrackingAutomation.Managers.Lookups;
 // sistemdeki gorevi: Arac tipi lookup kayitlarinda Code benzersizligini merkezi olarak garanti eder.
 public class VehicleTypeManager : BaseManager<VehicleType>
 {
-    private IMapper _mapper => LazyGetRequiredService<IMapper>();
+
 
     public VehicleTypeManager(
         IVehicleTypeRepository repository,
@@ -20,23 +19,18 @@ public class VehicleTypeManager : BaseManager<VehicleType>
     {
     }
 
-    public async Task<VehicleType> CreateAsync(CreateVehicleTypeModel model)
+    public async Task<CreateVehicleTypeModel> CreateAsync(CreateVehicleTypeModel model)
     {
         await EnsureUniqueAsync(x => x.Code == model.Code);
-
-        var entity = new VehicleType(GuidGenerator.Create(), model.Code, model.Name);
-        _mapper.Map(model, entity);
-        return entity;
+        return model;
     }
 
-    public async Task<VehicleType> UpdateAsync(VehicleType existing, UpdateVehicleTypeModel model)
+    public async Task<UpdateVehicleTypeModel> UpdateAsync(VehicleType existing, UpdateVehicleTypeModel model)
     {
         if (existing.Code != model.Code)
         {
             await EnsureUniqueAsync(x => x.Code == model.Code, existing.Id);
         }
-
-        _mapper.Map(model, existing);
-        return existing;
+        return model;
     }
 }
