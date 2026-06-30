@@ -1,4 +1,3 @@
-using AutoMapper;
 using System.Threading.Tasks;
 using InventoryTrackingAutomation.Entities.Lookups;
 using InventoryTrackingAutomation.Entities.Masters;
@@ -21,7 +20,6 @@ public class VehicleManager : BaseManager<Vehicle>
     /// <summary>
     /// VehicleManager constructor'ı.
     /// </summary>
-    private IMapper _mapper => LazyGetRequiredService<IMapper>();
     public VehicleManager(IVehicleRepository repository,
         IAbpLazyServiceProvider abpLazyServiceProvider)
         : base(repository, abpLazyServiceProvider)
@@ -31,9 +29,9 @@ public class VehicleManager : BaseManager<Vehicle>
     /// <summary>
     /// Yeni araç oluşturur — PlateNumber unique kontrolü yapar.
     /// </summary>
-//işlevi: Etki alanı kuralını veya validasyonunu işletir.
-//sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
-    public async Task<Vehicle> CreateAsync(CreateVehicleModel model)
+    //işlevi: Etki alanı kuralını veya validasyonunu işletir.
+    //sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
+    public async Task<CreateVehicleModel> CreateAsync(CreateVehicleModel model)
     {
         if (!string.IsNullOrWhiteSpace(model.PlateNumber))
         {
@@ -44,17 +42,15 @@ public class VehicleManager : BaseManager<Vehicle>
         // islevi: Enum yerine gelen VehicleType lookup kaydinin DB'de var oldugunu dogrular.
         await EnsureExistsInAsync(_vehicleTypeRepository, model.VehicleTypeId);
 
-        var entity = new Vehicle(GuidGenerator.Create());
-        _mapper.Map(model, entity);
-        return entity;
+        return model;
     }
 
     /// <summary>
     /// Aracı günceller — PlateNumber unique (self hariç) kontrolü yapar.
     /// </summary>
-//işlevi: Etki alanı kuralını veya validasyonunu işletir.
-//sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
-    public async Task<Vehicle> UpdateAsync(Vehicle existing, UpdateVehicleModel model)
+    //işlevi: Etki alanı kuralını veya validasyonunu işletir.
+    //sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
+    public async Task<UpdateVehicleModel> UpdateAsync(Vehicle existing, UpdateVehicleModel model)
     {
         if (!string.IsNullOrWhiteSpace(model.PlateNumber) && existing.PlateNumber != model.PlateNumber)
         {
@@ -66,8 +62,7 @@ public class VehicleManager : BaseManager<Vehicle>
         // islevi: Enum yerine gelen VehicleType lookup kaydinin DB'de var oldugunu dogrular.
         await EnsureExistsInAsync(_vehicleTypeRepository, model.VehicleTypeId);
 
-        _mapper.Map(model, existing);
-        return existing;
+        return model;
     }
 
     /// <summary>

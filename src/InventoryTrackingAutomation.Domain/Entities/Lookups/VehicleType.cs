@@ -16,7 +16,7 @@ public class VehicleType : Entity<Guid>, IPassivable
     public bool IsActive { get; set; } // Bu araç tipinin sistemde seçilebilir olup olmadığını belirler.
 
     protected VehicleType() { }
-    
+
     public VehicleType(Guid id, string code, string name) : base(id)
     {
         Code = code;

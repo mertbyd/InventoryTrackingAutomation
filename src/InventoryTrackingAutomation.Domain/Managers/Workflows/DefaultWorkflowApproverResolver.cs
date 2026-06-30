@@ -27,8 +27,8 @@ public class DefaultWorkflowApproverResolver : InventoryTrackingAutomationLazySe
             .GroupBy(s => s.Key, StringComparer.Ordinal)
             .ToDictionary(g => g.Key, g => g.First(), StringComparer.Ordinal);
 
-//işlevi: Etki alanı kuralını veya validasyonunu işletir.
-//sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
+    //işlevi: Etki alanı kuralını veya validasyonunu işletir.
+    //sistemdeki görevi: Veri bütünlüğünü ve domain mantığını garanti altına alan düşük seviyeli operasyondur.
     public Task<Guid?> ResolveApproverAsync(ApproverContext context, WorkflowStepDefinition stepDefinition)
     {
         if (string.IsNullOrEmpty(stepDefinition.ResolverKey))

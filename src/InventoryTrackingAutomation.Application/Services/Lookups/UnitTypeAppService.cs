@@ -6,6 +6,7 @@ using InventoryTrackingAutomation.Interface.Lookups;
 using InventoryTrackingAutomation.Managers.Lookups;
 using InventoryTrackingAutomation.Models.Lookups;
 using InventoryTrackingAutomation.Services.Lookups;
+using InventoryTrackingAutomation.Application.Mappers.Lookups;
 using Volo.Abp.DependencyInjection;
 
 namespace InventoryTrackingAutomation.Application.Services.Lookups;
@@ -15,13 +16,32 @@ namespace InventoryTrackingAutomation.Application.Services.Lookups;
 public class UnitTypeAppService : LookupCrudAppService<UnitType, UnitTypeDto, CreateUnitTypeDto, UpdateUnitTypeDto, CreateUnitTypeModel, UpdateUnitTypeModel>, IUnitTypeAppService
 {
     private UnitTypeManager _manager => LazyGetRequiredService<UnitTypeManager>();
+    private static readonly UnitTypeMapper _mapper = new UnitTypeMapper();
 
-    public UnitTypeAppService(IAbpLazyServiceProvider abpLazyServiceProvider, IUnitTypeRepository repository) 
+    public UnitTypeAppService(IAbpLazyServiceProvider abpLazyServiceProvider, IUnitTypeRepository repository)
         : base(abpLazyServiceProvider, repository)
     {
     }
 
+    protected override UnitTypeDto MapToDto(UnitType entity) => _mapper.MapToDto(entity);
+    protected override System.Collections.Generic.List<UnitTypeDto> MapToDto(System.Collections.Generic.List<UnitType> entities) => _mapper.MapToDto(entities);
+    protected override CreateUnitTypeModel MapToCreateModel(CreateUnitTypeDto input) => _mapper.MapToModel(input);
+    protected override UpdateUnitTypeModel MapToUpdateModel(UpdateUnitTypeDto input) => _mapper.MapToModel(input);
+
     protected override Task<UnitType> EnsureExistsAsync(Guid id) => _manager.EnsureExistsAsync(id);
-    protected override Task<UnitType> CreateEntityAsync(CreateUnitTypeModel model) => _manager.CreateAsync(model);
-    protected override Task<UnitType> UpdateEntityAsync(UnitType entity, UpdateUnitTypeModel model) => _manager.UpdateAsync(entity, model);
+
+    protected override async Task<UnitType> CreateEntityAsync(CreateUnitTypeModel model)
+    {
+        var validatedModel = await _manager.CreateAsync(model);
+        var entity = new UnitType(GuidGenerator.Create(), validatedModel.Code, validatedModel.Name);
+        _mapper.MapToEntity(validatedModel, entity);
+        return entity;
+    }
+
+    protected override async Task<UnitType> UpdateEntityAsync(UnitType entity, UpdateUnitTypeModel model)
+    {
+        var validatedModel = await _manager.UpdateAsync(entity, model);
+        _mapper.MapToEntity(validatedModel, entity);
+        return entity;
+    }
 }

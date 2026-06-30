@@ -1,4 +1,3 @@
-using AutoMapper;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -42,7 +41,6 @@ public class MovementRequestManager : BaseManager<MovementRequest>
     private StockAdjustmentManager _stockAdjustmentManager => LazyGetRequiredService<StockAdjustmentManager>();
     private VehicleTaskManager _vehicleTaskManager => LazyGetRequiredService<VehicleTaskManager>();
     private ILocalEventBus _localEventBus => LazyGetRequiredService<ILocalEventBus>();
-    private IMapper _mapper => LazyGetRequiredService<IMapper>();
 
     public MovementRequestManager(IMovementRequestRepository repository,
         IAbpLazyServiceProvider abpLazyServiceProvider)
@@ -51,72 +49,27 @@ public class MovementRequestManager : BaseManager<MovementRequest>
     }
 
     /// Yeni hareket talebi entity'si oluşturmak için kullanılır.
-    public async Task<MovementRequest> CreateAsync(CreateMovementRequestModel model)
+    public async Task<CreateMovementRequestModel> CreateAsync(CreateMovementRequestModel model)
     {
         await ValidateRequestNumberForCreateAsync(model.RequestNumber);
         await ValidateHeaderReferencesAsync(model.RequestedByWorkerId, model.VehicleTaskId);
         await ValidatePriorityAsync(model.Priority);
 
-        var entity = new MovementRequest(GuidGenerator.Create());
-        _mapper.Map(model, entity);
-        entity.Status = InventoryTrackingAutomation.Enums.MovementStatusEnum.Pending;
-        return entity;
+        return model;
     }
 
     /// Mevcut bir hareket talebini güncellemek için kullanılır.
-    public async Task<MovementRequest> UpdateAsync(MovementRequest existing, UpdateMovementRequestModel model)
+    public async Task<UpdateMovementRequestModel> UpdateAsync(MovementRequest existing, UpdateMovementRequestModel model)
     {
         EnsureEditable(existing);
         await ValidateRequestNumberForUpdateAsync(existing, model.RequestNumber);
         await ValidateChangedReferencesAsync(model);
         await ValidatePriorityAsync(model.Priority);
 
-        _mapper.Map(model, existing);
-        return existing;
+        return model;
     }
 
-    /// Hareket talebini workflow ile birlikte oluşturmak için kullanılır.
-    public async Task<MovementRequest> CreateWithWorkflowAsync(CreateMovementRequestModel model, Guid currentUserId)
-    {
-        var entity = await CreateAsync(model);
-        var vehicleTask = await EnsureVehicleTaskActiveAsync(model.VehicleTaskId);
-        var workflowInstance = await AssignWorkflowAsync(entity, vehicleTask.TaskId, currentUserId);
 
-        var inserted = await Repository.InsertAsync(entity, autoSave: true);
-        if (workflowInstance != null)
-        {
-            await PublishInitialWorkflowStepAssignedAsync(workflowInstance);
-        }
-        return inserted;
-    }
-
-    /// Birden fazla hareket talebini workflow ile birlikte oluşturmak için kullanılır.
-    public async Task<List<MovementRequest>> CreateManyWithWorkflowAsync(List<CreateMovementRequestModel> models, Guid currentUserId)
-    {
-        var entities = new List<MovementRequest>();
-        var workflowInstances = new List<InventoryTrackingAutomation.Entities.Workflows.WorkflowInstance>();
-
-        foreach (var model in models)
-        {
-            var entity = await CreateAsync(model);
-            var vehicleTask = await EnsureVehicleTaskActiveAsync(model.VehicleTaskId);
-            var workflowInstance = await AssignWorkflowAsync(entity, vehicleTask.TaskId, currentUserId);
-            if (workflowInstance != null)
-            {
-                workflowInstances.Add(workflowInstance);
-            }
-
-            entities.Add(entity);
-        }
-
-        var inserted = await Repository.InsertManyAndGetListAsync(entities);
-        foreach (var workflowInstance in workflowInstances)
-        {
-            await PublishInitialWorkflowStepAssignedAsync(workflowInstance);
-        }
-
-        return inserted;
-    }
 
     /// Hareket talebinin sevkiyat işlemini başlatmak için kullanılır.
     [UnitOfWork]
@@ -128,16 +81,13 @@ public class MovementRequestManager : BaseManager<MovementRequest>
     {
         var request = await EnsureExistsAsync(requestId);
         var context = await EnsureOperationalContextAsync(request.Id);
-
         if (context.IsReturnFlow)
         {
             throw new BusinessException(MovementRequestExceptionCodes.DispatchNotAllowed);
         }
-
         EnsureStatus(request, MovementStatusEnum.Approved, MovementRequestExceptionCodes.DispatchNotAllowed);
         await ValidateVehicleAvailableAsync(context.VehicleId);
         await ValidateDispatchTaskStatusAsync(context);
-
         var lines = await GetVehicleTaskLinesForTransferAsync(context.VehicleTaskId);
         foreach (var lineContext in lines)
         {
@@ -287,8 +237,7 @@ public class MovementRequestManager : BaseManager<MovementRequest>
         var lines = await _vehicleTaskLineRepository.GetByVehicleTaskIdAsync(vehicleTaskId);
         if (lines.Count == 0)
         {
-            throw new BusinessException(VehicleTaskLineExceptionCodes.NotFound)
-                .WithData("VehicleTaskId", vehicleTaskId);
+            throw new BusinessException(VehicleTaskLineExceptionCodes.NotFound);
         }
 
         // ProductId VehicleTaskLine'da tekrar tutulmaz; hareket stok satiri icin TaskLine uzerinden cozulur.
@@ -298,8 +247,7 @@ public class MovementRequestManager : BaseManager<MovementRequest>
         var missingTaskLine = lines.FirstOrDefault(x => !productByTaskLineId.ContainsKey(x.TaskLineId));
         if (missingTaskLine != null)
         {
-            throw new BusinessException(TaskLineExceptionCodes.NotFound)
-                .WithData("TaskLineId", missingTaskLine.TaskLineId);
+            throw new BusinessException(TaskLineExceptionCodes.NotFound);
         }
 
         return lines
@@ -408,11 +356,7 @@ public class MovementRequestManager : BaseManager<MovementRequest>
 
             if (total != vtl.Line.AllocatedQuantity)
             {
-                throw new BusinessException(MovementRequestExceptionCodes.QuantityMismatch)
-                    .WithData("MovementRequestId", request.Id)
-                    .WithData("VehicleTaskLineId", vtl.Line.Id)
-                    .WithData("Expected", vtl.Line.AllocatedQuantity)
-                    .WithData("Actual", total);
+                throw new BusinessException(MovementRequestExceptionCodes.QuantityMismatch);
             }
         }
     }
@@ -488,22 +432,18 @@ public class MovementRequestManager : BaseManager<MovementRequest>
     {
         if (vehicleTaskId == Guid.Empty)
         {
-            throw new BusinessException(VehicleTaskExceptionCodes.NotFound)
-                .WithData("VehicleTaskId", vehicleTaskId);
+            throw new BusinessException(VehicleTaskExceptionCodes.NotFound);
         }
 
         var vehicleTask = await _vehicleTaskRepository.FindAsync(vehicleTaskId);
         if (vehicleTask == null)
         {
-            throw new BusinessException(VehicleTaskExceptionCodes.NotFound)
-                .WithData("VehicleTaskId", vehicleTaskId);
+            throw new BusinessException(VehicleTaskExceptionCodes.NotFound);
         }
 
         if (vehicleTask.ReleasedAt.HasValue)
         {
-            throw new BusinessException(GeneralExceptionCodes.InvalidOperation)
-                .WithData("VehicleTaskId", vehicleTaskId)
-                .WithData("Reason", "ReleasedVehicleTaskCannotCreateMovementRequest");
+            throw new BusinessException(GeneralExceptionCodes.InvalidOperation);
         }
 
         return vehicleTask;
@@ -515,9 +455,7 @@ public class MovementRequestManager : BaseManager<MovementRequest>
         var lines = await _vehicleTaskLineRepository.GetByVehicleTaskIdAsync(vehicleTaskId);
         if (lines.Count == 0)
         {
-            throw new BusinessException(GeneralExceptionCodes.InvalidOperation)
-                .WithData("VehicleTaskId", vehicleTaskId)
-                .WithData("Reason", "VehicleTaskLineRequiredBeforeMovementRequest");
+            throw new BusinessException(GeneralExceptionCodes.InvalidOperation);
         }
     }
 
@@ -538,9 +476,7 @@ public class MovementRequestManager : BaseManager<MovementRequest>
 
             if (task.TargetWarehouseId == task.SourceWarehouseId)
             {
-                throw new BusinessException(InventoryTransactionExceptionCodes.InvalidLocationPair)
-                    .WithData("SourceWarehouseId", task.SourceWarehouseId)
-                    .WithData("TargetWarehouseId", task.TargetWarehouseId);
+                throw new BusinessException(InventoryTransactionExceptionCodes.InvalidLocationPair);
             }
         }
     }
@@ -569,11 +505,7 @@ public class MovementRequestManager : BaseManager<MovementRequest>
         // Kural: Sadece Draft veya InProgress operasyonlar sevk edilebilir.
         if (context.TaskStatus != TaskStatusEnum.InProgress && context.TaskStatus != TaskStatusEnum.Draft)
         {
-            throw new BusinessException(MovementRequestExceptionCodes.DispatchNotAllowed)
-                .WithData("MovementRequestId", context.MovementRequestId)
-                .WithData("TaskId", context.TaskId)
-                .WithData("TaskStatus", context.TaskStatus)
-                .WithData("ExpectedTaskStatus", $"{TaskStatusEnum.InProgress} or {TaskStatusEnum.Draft}");
+            throw new BusinessException(MovementRequestExceptionCodes.DispatchNotAllowed);
         }
 
         if (context.TaskStatus == TaskStatusEnum.Draft)
@@ -604,26 +536,24 @@ public class MovementRequestManager : BaseManager<MovementRequest>
     {
         if (taskId == Guid.Empty)
         {
-            throw new BusinessException(InventoryTaskExceptionCodes.NotFound)
-                .WithData("TaskId", taskId);
+            throw new BusinessException(InventoryTaskExceptionCodes.NotFound);
         }
 
         var task = await _inventoryTaskRepository.FindAsync(taskId);
         if (task == null)
         {
-            throw new BusinessException(InventoryTaskExceptionCodes.NotFound)
-                .WithData("TaskId", taskId);
+            throw new BusinessException(InventoryTaskExceptionCodes.NotFound);
         }
 
         return task;
     }
 
-    /// Talebe uygun workflow atamasini yapmak icin kullanilir.
-    private async Task<InventoryTrackingAutomation.Entities.Workflows.WorkflowInstance?> AssignWorkflowAsync(
+    public async Task<InventoryTrackingAutomation.Entities.Workflows.WorkflowInstance?> AssignWorkflowAsync(
         MovementRequest entity,
-        Guid taskId,
         Guid currentUserId)
     {
+        var vehicleTask = await EnsureVehicleTaskActiveAsync(entity.VehicleTaskId);
+        var taskId = vehicleTask.TaskId;
         // Workflow secimi MovementRequest.Type alanindan degil, Task.Type alanindan yapilir.
         var task = await EnsureTaskExistsAsync(taskId);
         var workflowName = task.Type == InventoryTaskTypeEnum.FieldOperation
@@ -659,7 +589,7 @@ public class MovementRequestManager : BaseManager<MovementRequest>
     private sealed record VehicleTaskLineTransferContext(VehicleTaskLine Line, Guid ProductId);
 
     /// İlk workflow adımı için bildirim yayınlamak için kullanılır.
-    private Task PublishInitialWorkflowStepAssignedAsync(InventoryTrackingAutomation.Entities.Workflows.WorkflowInstance? workflowInstance)
+    public Task PublishInitialWorkflowStepAssignedAsync(InventoryTrackingAutomation.Entities.Workflows.WorkflowInstance? workflowInstance)
     {
         var firstStep = workflowInstance?.Steps.FirstOrDefault();
         if (workflowInstance == null || firstStep == null)
@@ -678,3 +608,4 @@ public class MovementRequestManager : BaseManager<MovementRequest>
         });
     }
 }
+
