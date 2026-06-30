@@ -157,7 +157,7 @@ public class InventoryTrackingAutomationAuthServerModule : AbpModule
 
         Configure<AbpMultiTenancyOptions>(options =>
         {
-            options.IsEnabled = MultiTenancyConsts.IsEnabled;
+            options.IsEnabled = InventoryTrackingAutomation.MultiTenancy.MultiTenancyConsts.IsEnabled;
         });
 
         var dataProtectionBuilder = context.Services.AddDataProtection().SetApplicationName("InventoryTrackingAutomation");
@@ -214,7 +214,7 @@ public class InventoryTrackingAutomationAuthServerModule : AbpModule
         app.UseAuthentication();
         app.UseAbpOpenIddictValidation();
 
-        if (MultiTenancyConsts.IsEnabled)
+        if (InventoryTrackingAutomation.MultiTenancy.MultiTenancyConsts.IsEnabled)
         {
             app.UseMultiTenancy();
         }
