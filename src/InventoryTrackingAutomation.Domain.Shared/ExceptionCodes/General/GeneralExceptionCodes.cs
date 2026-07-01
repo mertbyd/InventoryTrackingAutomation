@@ -7,4 +7,6 @@ public static class GeneralExceptionCodes
     public const string NotAuthorized = $"{GeneralErrorCodesPrefix}:00002";
     public const string InvalidEnumValue = $"{GeneralErrorCodesPrefix}:00003";
     public const string SoftDeleteNotSupported = $"{GeneralErrorCodesPrefix}:00004";
+    public const string UpdateNotSupported = $"{GeneralErrorCodesPrefix}:00005";
+    public const string DeleteNotSupported = $"{GeneralErrorCodesPrefix}:00006";
 }

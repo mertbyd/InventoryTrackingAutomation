@@ -116,8 +116,8 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
         carType = await _vehicleTypeRepository.FirstOrDefaultAsync(x => x.Code == "CAR");
         if (carType == null) { carType = await _vehicleTypeRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Lookups.VehicleType(_guidGenerator.Create(), "CAR", "Binek Araç"), autoSave: true); }
 
-        pieceType = await _unitTypeRepository.FirstOrDefaultAsync(x => x.Code == "PIECE");
-        if (pieceType == null) { pieceType = await _unitTypeRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Lookups.UnitType(_guidGenerator.Create(), "PIECE", "Adet"), autoSave: true); }
+        pieceType = await _unitTypeRepository.FirstOrDefaultAsync(x => x.Code == InventoryTrackingAutomation.Constants.Lookups.UnitTypeCodes.Piece);
+        if (pieceType == null) { pieceType = await _unitTypeRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Lookups.UnitType(_guidGenerator.Create(), InventoryTrackingAutomation.Constants.Lookups.UnitTypeCodes.Piece, "Adet"), autoSave: true); }
         kgType = await _unitTypeRepository.FirstOrDefaultAsync(x => x.Code == "KG");
         if (kgType == null) { kgType = await _unitTypeRepository.InsertAsync(new InventoryTrackingAutomation.Entities.Lookups.UnitType(_guidGenerator.Create(), "KG", "Kilogram"), autoSave: true); }
 
