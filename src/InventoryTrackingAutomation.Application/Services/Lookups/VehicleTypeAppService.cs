@@ -31,26 +31,17 @@ public class VehicleTypeAppService : LookupCrudAppService<VehicleType, VehicleTy
 
     protected override Task<VehicleType> EnsureExistsAsync(Guid id) => _manager.EnsureExistsAsync(id);
 
-    protected override async Task<VehicleType> CreateEntityAsync(CreateVehicleTypeModel model)
+    protected override Task<CreateVehicleTypeModel> CreateModelAsync(CreateVehicleTypeModel model) =>
+        _manager.CreateAsync(model);
+
+    protected override Task<List<CreateVehicleTypeModel>> CreateModelsAsync(List<CreateVehicleTypeModel> models) =>
+        _manager.CreateManyAsync(models);
+
+    protected override VehicleType CreateEntity(CreateVehicleTypeModel model)
     {
-        var validatedModel = await _manager.CreateAsync(model);
-        var entity = new VehicleType(GuidGenerator.Create(), validatedModel.Code, validatedModel.Name);
-        _mapper.MapToEntity(validatedModel, entity);
+        var entity = new VehicleType(GuidGenerator.Create(), model.Code, model.Name);
+        _mapper.MapToEntity(model, entity);
         return entity;
-    }
-
-    protected override async Task<List<VehicleType>> CreateEntitiesAsync(List<CreateVehicleTypeModel> models)
-    {
-        var validatedModels = await _manager.CreateManyAsync(models);
-        var entities = new List<VehicleType>();
-        foreach (var model in validatedModels)
-        {
-            var entity = new VehicleType(GuidGenerator.Create(), model.Code, model.Name);
-            _mapper.MapToEntity(model, entity);
-            entities.Add(entity);
-        }
-
-        return entities;
     }
 
     protected override async Task<VehicleType> UpdateEntityAsync(VehicleType entity, UpdateVehicleTypeModel model)

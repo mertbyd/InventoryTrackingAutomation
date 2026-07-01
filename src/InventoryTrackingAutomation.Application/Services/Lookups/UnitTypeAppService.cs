@@ -31,26 +31,17 @@ public class UnitTypeAppService : LookupCrudAppService<UnitType, UnitTypeDto, Cr
 
     protected override Task<UnitType> EnsureExistsAsync(Guid id) => _manager.EnsureExistsAsync(id);
 
-    protected override async Task<UnitType> CreateEntityAsync(CreateUnitTypeModel model)
+    protected override Task<CreateUnitTypeModel> CreateModelAsync(CreateUnitTypeModel model) =>
+        _manager.CreateAsync(model);
+
+    protected override Task<List<CreateUnitTypeModel>> CreateModelsAsync(List<CreateUnitTypeModel> models) =>
+        _manager.CreateManyAsync(models);
+
+    protected override UnitType CreateEntity(CreateUnitTypeModel model)
     {
-        var validatedModel = await _manager.CreateAsync(model);
-        var entity = new UnitType(GuidGenerator.Create(), validatedModel.Code, validatedModel.Name);
-        _mapper.MapToEntity(validatedModel, entity);
+        var entity = new UnitType(GuidGenerator.Create(), model.Code, model.Name);
+        _mapper.MapToEntity(model, entity);
         return entity;
-    }
-
-    protected override async Task<List<UnitType>> CreateEntitiesAsync(List<CreateUnitTypeModel> models)
-    {
-        var validatedModels = await _manager.CreateManyAsync(models);
-        var entities = new List<UnitType>();
-        foreach (var model in validatedModels)
-        {
-            var entity = new UnitType(GuidGenerator.Create(), model.Code, model.Name);
-            _mapper.MapToEntity(model, entity);
-            entities.Add(entity);
-        }
-
-        return entities;
     }
 
     protected override async Task<UnitType> UpdateEntityAsync(UnitType entity, UpdateUnitTypeModel model)
