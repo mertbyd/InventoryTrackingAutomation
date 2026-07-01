@@ -3,24 +3,24 @@ using System;
 namespace InventoryTrackingAutomation.Dtos.Common;
 
 /// <summary>
-/// Bir FK referansının ekranda gösterilecek karşılığı (Id + Code/Name).
+/// Bir FK referansinin ekranda gosterilecek karsiligi (Id + Code/Name).
 /// </summary>
-// işlevi: Anlamsız bir FK Id'sinin yanında kullanıcının göreceği Code/Name karşılığını taşır.
-// sistemdeki görevi: FE'nin Id'yi metne çevirmek için ekrandan ekstra sorgu atmasını engeller.
+// islevi: Anlamsiz bir FK Id'sinin yaninda kullanicinin gorecegi Code/Name karsiligini tasir.
+// sistemdeki gorevi: FE'nin Id'yi metne cevirmek icin ekrandan ekstra sorgu atmasini engeller.
 public class DisplayLabelDto
 {
     /// <summary>
-    /// Referans verilen kaydın Id'si.
+    /// Referans verilen kaydin Id'si.
     /// </summary>
     public Guid Id { get; set; }
 
     /// <summary>
-    /// Referans kaydın kurumsal kodu. Örnek: Product.Code, InventoryTask.Code.
+    /// Referans kaydin kurumsal kodu veya takip numarasidir. Ornek: InventoryTask.Code, Worker.RegistrationNumber.
     /// </summary>
     public string? Code { get; set; }
 
     /// <summary>
-    /// Referans kaydın ekranda görünen adı. Name / PlateNumber / RegistrationNumber buraya map'lenir.
+    /// Referans kaydin ekranda gorunen adidir. Name veya Title alanlari buraya map'lenir.
     /// </summary>
     public string? Name { get; set; }
 }

@@ -38,8 +38,7 @@ public abstract class InventoryTrackingAutomationAppService : ApplicationService
         var worker = await workerRepository.FindAsync(w => w.UserId == userId);
         if (worker == null)
         {
-            throw new BusinessException(WorkerExceptionCodes.NotFound)
-                .WithData("UserId", userId);
+            throw new BusinessException(WorkerExceptionCodes.NotFound);
         }
         return worker.Id;
     }
