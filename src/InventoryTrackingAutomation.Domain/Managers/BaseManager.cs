@@ -21,6 +21,8 @@ public abstract class BaseManager<TEntity> : InventoryTrackingAutomationDomainSe
 
     // Tureyen manager kendi modulune ait exception code'u ezmelidir.
     protected virtual string AlreadyExistsErrorCode => GeneralExceptionCodes.InvalidOperation;
+    protected virtual string UpdateNotSupportedErrorCode => GeneralExceptionCodes.UpdateNotSupported;
+    protected virtual string DeleteNotSupportedErrorCode => GeneralExceptionCodes.DeleteNotSupported;
 
     protected BaseManager(IBaseRepository<TEntity> repository)
     {
@@ -45,6 +47,20 @@ public abstract class BaseManager<TEntity> : InventoryTrackingAutomationDomainSe
         }
 
         return entity;
+    }
+
+    /// Update isleminin desteklenmedigi durumlarda exception firlatir.
+    public virtual async Task<TEntity> RejectUpdateAsync(Guid id)
+    {
+        await EnsureExistsAsync(id);
+        throw new BusinessException(UpdateNotSupportedErrorCode);
+    }
+
+    /// Delete isleminin desteklenmedigi durumlarda exception firlatir.
+    public virtual async Task RejectDeleteAsync(Guid id)
+    {
+        await EnsureExistsAsync(id);
+        throw new BusinessException(DeleteNotSupportedErrorCode);
     }
 
     /// Belirli bir repository'de entity varligini dogrulamak icin kullanilir.

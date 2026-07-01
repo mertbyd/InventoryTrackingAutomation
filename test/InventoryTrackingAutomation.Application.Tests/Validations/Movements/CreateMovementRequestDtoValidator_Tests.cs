@@ -39,7 +39,7 @@ public class CreateMovementRequestDtoValidator_Tests
         // ACT & ASSERT
         var result = _validator.TestValidate(model);
         result.ShouldHaveValidationErrorFor(x => x.VehicleTaskId)
-              .WithErrorMessage("Arac-gorev atamasi zorunludur.");
+              .WithErrorCode(InventoryTrackingAutomation.ExceptionCodes.MovementRequestExceptionCodes.ValidationExceptions.VehicleTaskId.CannotEmpty);
     }
 
     [Fact]
