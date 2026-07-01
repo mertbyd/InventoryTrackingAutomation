@@ -1,5 +1,7 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
+using InventoryTrackingAutomation.Dtos.Movements;
 using InventoryTrackingAutomation.Entities.Masters;
 using InventoryTrackingAutomation.Entities.Movements;
 using InventoryTrackingAutomation.Entities.Tasks;
@@ -8,6 +10,7 @@ using InventoryTrackingAutomation.Enums.Tasks;
 using InventoryTrackingAutomation.Interface.Movements;
 using InventoryTrackingAutomation.Services.Movements;
 using Volo.Abp;
+using Volo.Abp.Application.Dtos;
 using Volo.Abp.Domain.Repositories;
 using Volo.Abp.Modularity;
 using Xunit;
@@ -28,6 +31,8 @@ public abstract class MovementRequestAppService_Tests<TStartupModule> : Inventor
 
     private readonly IRepository<InventoryTrackingAutomation.Entities.Lookups.VehicleType, Guid> _vehicleTypeRepository;
     private readonly IRepository<InventoryTrackingAutomation.Entities.Lookups.WorkerType, Guid> _workerTypeRepository;
+
+    private sealed record MovementRequestSeed(MovementRequest Request, Worker Worker, InventoryTaskEntity Task);
 
     protected MovementRequestAppService_Tests()
     {
@@ -57,6 +62,38 @@ public abstract class MovementRequestAppService_Tests<TStartupModule> : Inventor
     }
 
     [Fact]
+    public async Task GetAsync_Should_Fill_Display_References()
+    {
+        await WithUnitOfWorkAsync(async () =>
+        {
+            var seed = await InsertMovementRequestSeedAsync(MovementStatusEnum.Pending, "GET-ENRICH");
+
+            var dto = await _appService.GetAsync(seed.Request.Id);
+
+            AssertDisplayReferences(dto, seed);
+        });
+    }
+
+    [Fact]
+    public async Task GetListAsync_Should_Fill_Display_References()
+    {
+        await WithUnitOfWorkAsync(async () =>
+        {
+            var seed = await InsertMovementRequestSeedAsync(MovementStatusEnum.Pending, "LIST-ENRICH");
+
+            var result = await _appService.GetListAsync(new PagedResultRequestDto
+            {
+                SkipCount = 0,
+                MaxResultCount = 100
+            });
+
+            var dto = result.Items.First(item => item.Id == seed.Request.Id);
+
+            AssertDisplayReferences(dto, seed);
+        });
+    }
+
+    [Fact]
     public async Task Should_Not_Delete_Completed_Movement_Request()
     {
         await WithUnitOfWorkAsync(async () =>
@@ -73,6 +110,28 @@ public abstract class MovementRequestAppService_Tests<TStartupModule> : Inventor
     }
 
     private async Task<MovementRequest> InsertMovementRequestAsync(MovementStatusEnum status, string prefix)
+    {
+        return (await InsertMovementRequestSeedAsync(status, prefix)).Request;
+    }
+
+    private static void AssertDisplayReferences(MovementRequestDto dto, MovementRequestSeed seed)
+    {
+        Assert.True(dto.References.TryGetValue(nameof(MovementRequestDto.RequestedByWorkerId), out var workerReference));
+        Assert.NotNull(workerReference);
+        Assert.Equal(seed.Worker.Id, workerReference!.Id);
+        Assert.Equal(seed.Worker.RegistrationNumber, workerReference.Code);
+        Assert.Null(workerReference.Name);
+
+        Assert.True(dto.References.TryGetValue(nameof(MovementRequestDto.TaskId), out var taskReference));
+        Assert.NotNull(taskReference);
+        Assert.Equal(seed.Task.Id, taskReference!.Id);
+        Assert.Equal(seed.Task.Code, taskReference.Code);
+        Assert.Equal(seed.Task.Name, taskReference.Name);
+
+        Assert.False(dto.References.ContainsKey(nameof(MovementRequestDto.VehicleTaskId)));
+    }
+
+    private async Task<MovementRequestSeed> InsertMovementRequestSeedAsync(MovementStatusEnum status, string prefix)
     {
         var warehouse = await _warehouseRepository.InsertAsync(new Warehouse(Guid.NewGuid())
         {
@@ -126,7 +185,7 @@ public abstract class MovementRequestAppService_Tests<TStartupModule> : Inventor
             AssignedAt = DateTime.UtcNow
         }, autoSave: true);
 
-        return await _repository.InsertAsync(new MovementRequest(Guid.NewGuid())
+        var request = await _repository.InsertAsync(new MovementRequest(Guid.NewGuid())
         {
             RequestNumber = $"{prefix}-REQ-{Guid.NewGuid():N}"[..30],
             Status = status,
@@ -136,6 +195,8 @@ public abstract class MovementRequestAppService_Tests<TStartupModule> : Inventor
             RequestedByWorkerId = worker.Id,
             VehicleTaskId = vehicleTask.Id
         }, autoSave: true);
+
+        return new MovementRequestSeed(request, worker, task);
     }
 }
 
