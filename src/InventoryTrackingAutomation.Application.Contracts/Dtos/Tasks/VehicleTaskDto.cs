@@ -1,12 +1,13 @@
 using System;
 using System.Collections.Generic;
 using Volo.Abp.Application.Dtos;
+using InventoryTrackingAutomation.Dtos.Common;
 
 namespace InventoryTrackingAutomation.Dtos.Tasks;
 
 //işlevi: VehicleTask verisinin transferi sırasında taşınacak olan yapıyı tanımlar.
 //sistemdeki görevi: Katmanlar arası veri alışverişini standartlaştırır.
-public class VehicleTaskDto : EntityDto<Guid>
+public class VehicleTaskDto : EnrichedEntityDto<Guid>
 {
     /// <summary>
     /// Arac Id&apos;si.

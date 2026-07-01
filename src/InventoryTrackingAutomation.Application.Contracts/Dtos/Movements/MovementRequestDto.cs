@@ -1,6 +1,7 @@
 using System;
 using InventoryTrackingAutomation.Enums;
 using Volo.Abp.Application.Dtos;
+using InventoryTrackingAutomation.Dtos.Common;
 using InventoryTrackingAutomation.Enums.Tasks;
 using InventoryTrackingAutomation.Enums.Inventory;
 using System;
@@ -11,7 +12,7 @@ namespace InventoryTrackingAutomation.Dtos.Movements;
 //sistemdeki görevii: Veri tabanı modelini gizleyerek sadece istemcinin ihtiyacı olan talep bilgilerini sunar.
 //işlevi: MovementRequest verisinin transferi sırasında taşınacak olan yapıyı tanımlar.
 //sistemdeki görevi: Katmanlar arası veri alışverişini standartlaştırır.
-public class MovementRequestDto : EntityDto<Guid>
+public class MovementRequestDto : EnrichedEntityDto<Guid>
 {
     /// <summary>
     /// Talep numarasi. Ornek: &quot;MR-2024-00123&quot;

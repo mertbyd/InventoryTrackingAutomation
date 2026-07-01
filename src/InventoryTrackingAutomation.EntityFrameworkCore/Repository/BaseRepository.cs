@@ -51,8 +51,7 @@ public class BaseRepository<T> : EfCoreRepository<InventoryTrackingAutomationDbC
     {
         if (!typeof(ISoftDelete).IsAssignableFrom(typeof(T)))
         {
-            throw new BusinessException(GeneralExceptionCodes.SoftDeleteNotSupported)
-                .WithData("EntityType", typeof(T).Name);
+            throw new BusinessException(GeneralExceptionCodes.SoftDeleteNotSupported);
         }
 
         await DeleteAsync(id, autoSave: true);
@@ -65,8 +64,7 @@ public class BaseRepository<T> : EfCoreRepository<InventoryTrackingAutomationDbC
     {
         if (!typeof(ISoftDelete).IsAssignableFrom(typeof(T)))
         {
-            throw new BusinessException(GeneralExceptionCodes.SoftDeleteNotSupported)
-                .WithData("EntityType", typeof(T).Name);
+            throw new BusinessException(GeneralExceptionCodes.SoftDeleteNotSupported);
         }
 
         await DeleteManyAsync(ids, autoSave: true);
