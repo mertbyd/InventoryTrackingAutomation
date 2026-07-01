@@ -3,6 +3,7 @@ using InventoryTrackingAutomation.Enums;
 using InventoryTrackingAutomation.Enums.Inventory;
 using InventoryTrackingAutomation.Enums.Tasks;
 using InventoryTrackingAutomation.Enums.Workflows;
+using InventoryTrackingAutomation.Constants.Lookups;
 
 namespace InventoryTrackingAutomation.Settings;
 
@@ -26,11 +27,11 @@ public class InventoryTrackingAutomationSettingDefinitionProvider : SettingDefin
         context.Add(
             new SettingDefinition(
                 InventoryTrackingAutomationSettings.Products.DefaultUnitType,
-                "PIECE"
+                UnitTypeCodes.Piece
             ),
             new SettingDefinition(
                 InventoryTrackingAutomationSettings.Products.AllowedUnitTypes,
-                "PIECE,BOX,KG,METER,LITER"
+                string.Join(",", UnitTypeCodes.Piece, UnitTypeCodes.Box, UnitTypeCodes.Kg, UnitTypeCodes.Meter, UnitTypeCodes.Liter)
             )
         );
 
@@ -38,19 +39,19 @@ public class InventoryTrackingAutomationSettingDefinitionProvider : SettingDefin
         context.Add(
             new SettingDefinition(
                 InventoryTrackingAutomationSettings.Vehicles.DefaultVehicleType,
-                "TRUCK"
+                VehicleTypeCodes.Truck
             ),
             new SettingDefinition(
                 InventoryTrackingAutomationSettings.Vehicles.AllowedVehicleTypes,
-                "TRUCK,VAN,CAR"
+                string.Join(",", VehicleTypeCodes.Truck, VehicleTypeCodes.Van, VehicleTypeCodes.Car)
             ),
             new SettingDefinition(
                 InventoryTrackingAutomationSettings.Workers.DefaultWorkerType,
-                "BLUE_COLLAR"
+                WorkerTypeCodes.BlueCollar
             ),
             new SettingDefinition(
                 InventoryTrackingAutomationSettings.Workers.AllowedWorkerTypes,
-                "WHITE_COLLAR,BLUE_COLLAR,SUBCONTRACTOR"
+                string.Join(",", WorkerTypeCodes.WhiteCollar, WorkerTypeCodes.BlueCollar, WorkerTypeCodes.Subcontractor)
             )
         );
 

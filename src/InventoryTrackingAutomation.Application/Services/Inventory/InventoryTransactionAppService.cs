@@ -104,6 +104,6 @@ public class InventoryTransactionAppService : InventoryTrackingAutomationAppServ
     public async Task DeleteAsync(Guid id)
     {
         // Soft delete kapatildigi icin silme istegi domain manager'da is kurali olarak reddedilir.
-        await _manager.DeleteAsync(id);
+        await _manager.RejectDeleteAsync(id);
     }
 }
