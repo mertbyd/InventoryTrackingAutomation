@@ -3,12 +3,13 @@ using InventoryTrackingAutomation.Enums.Tasks;
 using InventoryTrackingAutomation.Enums.Inventory;
 using System;
 using Volo.Abp.Application.Dtos;
+using InventoryTrackingAutomation.Dtos.Common;
 
 namespace InventoryTrackingAutomation.Dtos.Inventory;
 
 //işlevi: InventoryTransaction verisinin transferi sırasında taşınacak olan yapıyı tanımlar.
 //sistemdeki görevi: Katmanlar arası veri alışverişini standartlaştırır.
-public class InventoryTransactionDto : EntityDto<Guid>
+public class InventoryTransactionDto : EnrichedEntityDto<Guid>
 {
     /// <summary>
     /// Urun Id&apos;si.

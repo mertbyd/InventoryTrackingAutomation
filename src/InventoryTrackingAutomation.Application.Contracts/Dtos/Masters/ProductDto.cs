@@ -1,5 +1,6 @@
 using System;
 using Volo.Abp.Application.Dtos;
+using InventoryTrackingAutomation.Dtos.Common;
 using InventoryTrackingAutomation.Enums.Tasks;
 using InventoryTrackingAutomation.Enums.Inventory;
 using System;
@@ -8,7 +9,7 @@ namespace InventoryTrackingAutomation.Dtos.Masters;
 
 //işlevi: Product verisinin transferi sırasında taşınacak olan yapıyı tanımlar.
 //sistemdeki görevi: Katmanlar arası veri alışverişini standartlaştırır.
-public class ProductDto : EntityDto<Guid>
+public class ProductDto : EnrichedEntityDto<Guid>
 {
     /// <summary>
     /// Ürün kodu. Örnek: &quot;PRD-001&quot;

@@ -1,5 +1,6 @@
 using System;
 using Volo.Abp.Application.Dtos;
+using InventoryTrackingAutomation.Dtos.Common;
 
 namespace InventoryTrackingAutomation.Dtos.Tasks;
 
@@ -8,7 +9,7 @@ namespace InventoryTrackingAutomation.Dtos.Tasks;
 /// </summary>
 //işlevi: VehicleTaskLine verisinin transferi sırasında taşınacak olan yapıyı tanımlar.
 //sistemdeki görevi: Katmanlar arası veri alışverişini standartlaştırır.
-public class VehicleTaskLineDto : EntityDto<Guid>
+public class VehicleTaskLineDto : EnrichedEntityDto<Guid>
 {
     /// <summary>Arac-gorev atamasi baglami.</summary>
     public Guid VehicleTaskId { get; set; }     // Arac-gorev atamasi baglami.

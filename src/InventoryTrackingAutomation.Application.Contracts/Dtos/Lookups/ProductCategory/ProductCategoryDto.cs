@@ -1,11 +1,12 @@
 using System;
 using Volo.Abp.Application.Dtos;
+using InventoryTrackingAutomation.Dtos.Common;
 
 namespace InventoryTrackingAutomation.Dtos.Lookups;
 
 //işlevi: ProductCategory verisinin transferi sırasında taşınacak olan yapıyı tanımlar.
 //sistemdeki görevi: Katmanlar arası veri alışverişini standartlaştırır.
-public class ProductCategoryDto : EntityDto<Guid>
+public class ProductCategoryDto : EnrichedEntityDto<Guid>
 {
     /// <summary>
     /// Kategori kodu. Örnek: &quot;CAT-001&quot;

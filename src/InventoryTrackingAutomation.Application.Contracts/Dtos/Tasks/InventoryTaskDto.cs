@@ -4,12 +4,13 @@ using InventoryTrackingAutomation.Enums.Tasks;
 using InventoryTrackingAutomation.Enums.Inventory;
 using System;
 using Volo.Abp.Application.Dtos;
+using InventoryTrackingAutomation.Dtos.Common;
 
 namespace InventoryTrackingAutomation.Dtos.Tasks;
 
 //işlevi: InventoryTask verisinin transferi sırasında taşınacak olan yapıyı tanımlar.
 //sistemdeki görevi: Katmanlar arası veri alışverişini standartlaştırır.
-public class InventoryTaskDto : EntityDto<Guid>
+public class InventoryTaskDto : EnrichedEntityDto<Guid>
 {
     /// <summary>
     /// Gorev surec tipi.
