@@ -30,7 +30,9 @@ public abstract class LookupCrudAppService<TEntity, TDto, TCreateDto, TUpdateDto
     }
 
     protected abstract Task<TEntity> EnsureExistsAsync(Guid id);
-    protected abstract Task<TEntity> CreateEntityAsync(TCreateModel model);
+    protected abstract Task<TCreateModel> CreateModelAsync(TCreateModel model);
+    protected abstract Task<List<TCreateModel>> CreateModelsAsync(List<TCreateModel> models);
+    protected abstract TEntity CreateEntity(TCreateModel model);
     protected abstract Task<TEntity> UpdateEntityAsync(TEntity entity, TUpdateModel model);
 
     protected IValidator<TCreateDto> CreateValidator => LazyGetRequiredService<IValidator<TCreateDto>>();
@@ -62,7 +64,23 @@ public abstract class LookupCrudAppService<TEntity, TDto, TCreateDto, TUpdateDto
         return MapToDto(inserted);
     }
 
-    protected abstract Task<List<TEntity>> CreateEntitiesAsync(List<TCreateModel> models);
+    protected virtual async Task<TEntity> CreateEntityAsync(TCreateModel model)
+    {
+        var validatedModel = await CreateModelAsync(model);
+        return CreateEntity(validatedModel);
+    }
+
+    protected virtual async Task<List<TEntity>> CreateEntitiesAsync(List<TCreateModel> models)
+    {
+        var validatedModels = await CreateModelsAsync(models);
+        var entities = new List<TEntity>(validatedModels.Count);
+        foreach (var model in validatedModels)
+        {
+            entities.Add(CreateEntity(model));
+        }
+
+        return entities;
+    }
 
     public virtual async Task<List<TDto>> CreateManyAsync(List<TCreateDto> inputs)
     {
