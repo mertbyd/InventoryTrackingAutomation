@@ -31,26 +31,17 @@ public class WorkerTypeAppService : LookupCrudAppService<WorkerType, WorkerTypeD
 
     protected override Task<WorkerType> EnsureExistsAsync(Guid id) => _manager.EnsureExistsAsync(id);
 
-    protected override async Task<WorkerType> CreateEntityAsync(CreateWorkerTypeModel model)
+    protected override Task<CreateWorkerTypeModel> CreateModelAsync(CreateWorkerTypeModel model) =>
+        _manager.CreateAsync(model);
+
+    protected override Task<List<CreateWorkerTypeModel>> CreateModelsAsync(List<CreateWorkerTypeModel> models) =>
+        _manager.CreateManyAsync(models);
+
+    protected override WorkerType CreateEntity(CreateWorkerTypeModel model)
     {
-        var validatedModel = await _manager.CreateAsync(model);
-        var entity = new WorkerType(GuidGenerator.Create(), validatedModel.Code, validatedModel.Name);
-        _mapper.MapToEntity(validatedModel, entity);
+        var entity = new WorkerType(GuidGenerator.Create(), model.Code, model.Name);
+        _mapper.MapToEntity(model, entity);
         return entity;
-    }
-
-    protected override async Task<List<WorkerType>> CreateEntitiesAsync(List<CreateWorkerTypeModel> models)
-    {
-        var validatedModels = await _manager.CreateManyAsync(models);
-        var entities = new List<WorkerType>();
-        foreach (var model in validatedModels)
-        {
-            var entity = new WorkerType(GuidGenerator.Create(), model.Code, model.Name);
-            _mapper.MapToEntity(model, entity);
-            entities.Add(entity);
-        }
-
-        return entities;
     }
 
     protected override async Task<WorkerType> UpdateEntityAsync(WorkerType entity, UpdateWorkerTypeModel model)

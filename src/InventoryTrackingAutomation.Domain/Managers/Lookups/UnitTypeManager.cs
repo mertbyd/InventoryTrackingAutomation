@@ -1,5 +1,6 @@
+using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 using InventoryTrackingAutomation.Entities.Lookups;
 using InventoryTrackingAutomation.Interface.Lookups;
@@ -13,6 +14,7 @@ namespace InventoryTrackingAutomation.Managers.Lookups;
 public class UnitTypeManager : BaseManager<UnitType>
 {
     protected override string AlreadyExistsErrorCode => UnitTypeExceptionCodes.AlreadyExists;
+    private static readonly Expression<Func<UnitType, string>> CodeSelector = x => x.Code;
 
     public UnitTypeManager(
         IUnitTypeRepository repository,
@@ -21,31 +23,15 @@ public class UnitTypeManager : BaseManager<UnitType>
     {
     }
 
-    public async Task<CreateUnitTypeModel> CreateAsync(CreateUnitTypeModel model)
-    {
-        await EnsureUniqueAsync(x => x.Code == model.Code);
-        return model;
-    }
+    public Task<CreateUnitTypeModel> CreateAsync(CreateUnitTypeModel model) =>
+        EnsureUniqueCodeForCreateAsync(model, x => x.Code, CodeSelector);
 
-    /// Toplu olcu birimi olusturma kurallarini tek benzersizlik sorgusuyla uygular.
-    public async Task<List<CreateUnitTypeModel>> CreateManyAsync(List<CreateUnitTypeModel> models)
-    {
-        var codes = models.Where(x => !string.IsNullOrWhiteSpace(x.Code)).Select(x => x.Code).ToList();
-        if (codes.Count > 0)
-        {
-            await EnsureUniqueBulkAsync(codes, x => x.Code);
-        }
+    /// <summary>
+    /// Toplu olcu birimi olusturma icin ortak BaseManager Code benzersizlik kontrolunu kullanir.
+    /// </summary>
+    public Task<List<CreateUnitTypeModel>> CreateManyAsync(List<CreateUnitTypeModel> models) =>
+        EnsureUniqueCodesForCreateManyAsync(models, x => x.Code, CodeSelector);
 
-        return models;
-    }
-
-    public async Task<UpdateUnitTypeModel> UpdateAsync(UnitType existing, UpdateUnitTypeModel model)
-    {
-        if (existing.Code != model.Code)
-        {
-            await EnsureUniqueAsync(x => x.Code == model.Code, existing.Id);
-        }
-
-        return model;
-    }
+    public Task<UpdateUnitTypeModel> UpdateAsync(UnitType existing, UpdateUnitTypeModel model) =>
+        EnsureUniqueCodeForUpdateAsync(existing, model, x => x.Code, x => x.Code, CodeSelector);
 }

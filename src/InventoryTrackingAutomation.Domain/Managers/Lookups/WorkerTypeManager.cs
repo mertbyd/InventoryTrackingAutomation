@@ -1,5 +1,6 @@
+using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 using InventoryTrackingAutomation.Entities.Lookups;
 using InventoryTrackingAutomation.Interface.Lookups;
@@ -13,6 +14,7 @@ namespace InventoryTrackingAutomation.Managers.Lookups;
 public class WorkerTypeManager : BaseManager<WorkerType>
 {
     protected override string AlreadyExistsErrorCode => WorkerTypeExceptionCodes.AlreadyExists;
+    private static readonly Expression<Func<WorkerType, string>> CodeSelector = x => x.Code;
 
     public WorkerTypeManager(
         IWorkerTypeRepository repository,
@@ -21,31 +23,15 @@ public class WorkerTypeManager : BaseManager<WorkerType>
     {
     }
 
-    public async Task<CreateWorkerTypeModel> CreateAsync(CreateWorkerTypeModel model)
-    {
-        await EnsureUniqueAsync(x => x.Code == model.Code);
-        return model;
-    }
+    public Task<CreateWorkerTypeModel> CreateAsync(CreateWorkerTypeModel model) =>
+        EnsureUniqueCodeForCreateAsync(model, x => x.Code, CodeSelector);
 
-    /// Toplu calisan tipi olusturma kurallarini tek benzersizlik sorgusuyla uygular.
-    public async Task<List<CreateWorkerTypeModel>> CreateManyAsync(List<CreateWorkerTypeModel> models)
-    {
-        var codes = models.Where(x => !string.IsNullOrWhiteSpace(x.Code)).Select(x => x.Code).ToList();
-        if (codes.Count > 0)
-        {
-            await EnsureUniqueBulkAsync(codes, x => x.Code);
-        }
+    /// <summary>
+    /// Toplu calisan tipi olusturma icin ortak BaseManager Code benzersizlik kontrolunu kullanir.
+    /// </summary>
+    public Task<List<CreateWorkerTypeModel>> CreateManyAsync(List<CreateWorkerTypeModel> models) =>
+        EnsureUniqueCodesForCreateManyAsync(models, x => x.Code, CodeSelector);
 
-        return models;
-    }
-
-    public async Task<UpdateWorkerTypeModel> UpdateAsync(WorkerType existing, UpdateWorkerTypeModel model)
-    {
-        if (existing.Code != model.Code)
-        {
-            await EnsureUniqueAsync(x => x.Code == model.Code, existing.Id);
-        }
-
-        return model;
-    }
+    public Task<UpdateWorkerTypeModel> UpdateAsync(WorkerType existing, UpdateWorkerTypeModel model) =>
+        EnsureUniqueCodeForUpdateAsync(existing, model, x => x.Code, x => x.Code, CodeSelector);
 }
