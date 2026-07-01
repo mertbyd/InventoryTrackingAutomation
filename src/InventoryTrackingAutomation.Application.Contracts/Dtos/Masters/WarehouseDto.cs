@@ -1,11 +1,12 @@
 using System;
 using Volo.Abp.Application.Dtos;
+using InventoryTrackingAutomation.Dtos.Common;
 
 namespace InventoryTrackingAutomation.Dtos.Masters;
 
 //işlevi: Warehouse verisinin transferi sırasında taşınacak olan yapıyı tanımlar.
 //sistemdeki görevi: Katmanlar arası veri alışverişini standartlaştırır.
-public class WarehouseDto : EntityDto<Guid>
+public class WarehouseDto : EnrichedEntityDto<Guid>
 {
     public string Code { get; set; } = default!;      // Deponun benzersiz is kodu.
     public string Name { get; set; } = default!;      // Depo adi.
