@@ -204,11 +204,72 @@ public abstract class BaseManager<TEntity> : InventoryTrackingAutomationDomainSe
         }
     }
 
+    /// Code ile benzersizlesen lookup create modellerini ortak sekilde dogrular.
+    protected async Task<TModel> EnsureUniqueCodeForCreateAsync<TModel>(
+        TModel model,
+        Func<TModel, string?> modelCodeSelector,
+        Expression<Func<TEntity, string>> entityCodeSelector)
+    {
+        var code = modelCodeSelector(model);
+        if (!string.IsNullOrWhiteSpace(code))
+        {
+            await EnsureUniqueAsync(BuildEqualityPredicate(entityCodeSelector, code));
+        }
+
+        return model;
+    }
+
+    /// Code ile benzersizlesen lookup bulk create modellerini input ici ve DB seviyesinde ortak sekilde dogrular.
+    protected async Task<List<TModel>> EnsureUniqueCodesForCreateManyAsync<TModel>(
+        List<TModel> models,
+        Func<TModel, string?> modelCodeSelector,
+        Expression<Func<TEntity, string>> entityCodeSelector)
+    {
+        var codes = models
+            .Select(modelCodeSelector)
+            .Where(code => !string.IsNullOrWhiteSpace(code))
+            .Select(code => code!)
+            .ToList();
+
+        if (codes.Count > 0)
+        {
+            await EnsureUniqueBulkAsync(codes, entityCodeSelector);
+        }
+
+        return models;
+    }
+
+    /// Code ile benzersizlesen lookup update modellerinde Code degistiyse ortak benzersizlik kontrolu yapar.
+    protected async Task<TModel> EnsureUniqueCodeForUpdateAsync<TModel>(
+        TEntity existing,
+        TModel model,
+        Func<TEntity, string?> entityCodeSelector,
+        Func<TModel, string?> modelCodeSelector,
+        Expression<Func<TEntity, string>> entityCodeExpression)
+    {
+        var code = modelCodeSelector(model);
+        if (!string.IsNullOrWhiteSpace(code) && entityCodeSelector(existing) != code)
+        {
+            await EnsureUniqueAsync(BuildEqualityPredicate(entityCodeExpression, code), existing.Id);
+        }
+
+        return model;
+    }
+
     /// Enum degerinin gecerliligini dogrulamak icin kullanilir.
     protected async Task EnsureValidEnumAsync<TEnum>(TEnum value, string settingName) where TEnum : struct, Enum
     {
         var enumValidationManager = LazyGetRequiredService<InventoryTrackingAutomation.Managers.Shared.EnumValidationManager>();
         await enumValidationManager.ValidateAllowedEnumAsync(value, settingName);
+    }
+
+    private static Expression<Func<TEntity, bool>> BuildEqualityPredicate(
+        Expression<Func<TEntity, string>> propertySelector,
+        string value)
+    {
+        var parameter = propertySelector.Parameters[0];
+        var body = Expression.Equal(propertySelector.Body, Expression.Constant(value));
+        return Expression.Lambda<Func<TEntity, bool>>(body, parameter);
     }
 
     private static void EnsureAllIdsFound<TOther>(IReadOnlyCollection<Guid> expectedIds, IEnumerable<Guid> foundIds)

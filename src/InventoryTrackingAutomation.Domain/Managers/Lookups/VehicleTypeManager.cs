@@ -1,5 +1,6 @@
+using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 using InventoryTrackingAutomation.Entities.Lookups;
 using InventoryTrackingAutomation.Interface.Lookups;
@@ -13,6 +14,7 @@ namespace InventoryTrackingAutomation.Managers.Lookups;
 public class VehicleTypeManager : BaseManager<VehicleType>
 {
     protected override string AlreadyExistsErrorCode => VehicleTypeExceptionCodes.AlreadyExists;
+    private static readonly Expression<Func<VehicleType, string>> CodeSelector = x => x.Code;
 
     public VehicleTypeManager(
         IVehicleTypeRepository repository,
@@ -21,31 +23,15 @@ public class VehicleTypeManager : BaseManager<VehicleType>
     {
     }
 
-    public async Task<CreateVehicleTypeModel> CreateAsync(CreateVehicleTypeModel model)
-    {
-        await EnsureUniqueAsync(x => x.Code == model.Code);
-        return model;
-    }
+    public Task<CreateVehicleTypeModel> CreateAsync(CreateVehicleTypeModel model) =>
+        EnsureUniqueCodeForCreateAsync(model, x => x.Code, CodeSelector);
 
-    /// Toplu arac tipi olusturma kurallarini tek benzersizlik sorgusuyla uygular.
-    public async Task<List<CreateVehicleTypeModel>> CreateManyAsync(List<CreateVehicleTypeModel> models)
-    {
-        var codes = models.Where(x => !string.IsNullOrWhiteSpace(x.Code)).Select(x => x.Code).ToList();
-        if (codes.Count > 0)
-        {
-            await EnsureUniqueBulkAsync(codes, x => x.Code);
-        }
+    /// <summary>
+    /// Toplu arac tipi olusturma icin ortak BaseManager Code benzersizlik kontrolunu kullanir.
+    /// </summary>
+    public Task<List<CreateVehicleTypeModel>> CreateManyAsync(List<CreateVehicleTypeModel> models) =>
+        EnsureUniqueCodesForCreateManyAsync(models, x => x.Code, CodeSelector);
 
-        return models;
-    }
-
-    public async Task<UpdateVehicleTypeModel> UpdateAsync(VehicleType existing, UpdateVehicleTypeModel model)
-    {
-        if (existing.Code != model.Code)
-        {
-            await EnsureUniqueAsync(x => x.Code == model.Code, existing.Id);
-        }
-
-        return model;
-    }
+    public Task<UpdateVehicleTypeModel> UpdateAsync(VehicleType existing, UpdateVehicleTypeModel model) =>
+        EnsureUniqueCodeForUpdateAsync(existing, model, x => x.Code, x => x.Code, CodeSelector);
 }
