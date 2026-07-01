@@ -13,4 +13,21 @@ public class VehicleTaskRepository : BaseRepository<VehicleTask>, IVehicleTaskRe
         : base(dbContextProvider)
     {
     }
+
+    public async System.Threading.Tasks.Task<System.Collections.Generic.List<InventoryTrackingAutomation.Models.Tasks.TaskVehicleModel>> GetTaskVehiclesByTaskIdAsync(System.Guid inventoryTaskId)
+    {
+        var dbContext = await GetDbContextAsync();
+        return await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync(
+            dbContext.VehicleTasks
+                .Where(x => x.TaskId == inventoryTaskId)
+                .Select(x => new InventoryTrackingAutomation.Models.Tasks.TaskVehicleModel
+                {
+                    VehicleTaskId = x.Id,
+                    TaskId = x.TaskId,
+                    VehicleId = x.VehicleId,
+                    AssignedAt = x.AssignedAt,
+                    ReleasedAt = x.ReleasedAt
+                })
+        );
+    }
 }

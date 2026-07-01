@@ -75,4 +75,17 @@ public class VehicleTaskLineRepository : BaseRepository<VehicleTaskLine>, IVehic
                 (!excludedVehicleTaskLineId.HasValue || x.Id != excludedVehicleTaskLineId.Value))
             .SumAsync(x => x.AllocatedQuantity);
     }
+
+    public async Task<List<InventoryTrackingAutomation.Models.Tasks.VehicleTaskLineWithProductModel>> GetTransferContextsByVehicleTaskIdAsync(Guid vehicleTaskId)
+    {
+        var dbContext = await GetDbContextAsync();
+        var query = await (
+            from vtl in dbContext.VehicleTaskLines
+            join tl in dbContext.TaskLines on vtl.TaskLineId equals tl.Id
+            where vtl.VehicleTaskId == vehicleTaskId
+            select new { Line = vtl, tl.ProductId }
+        ).ToListAsync();
+
+        return query.Select(x => new InventoryTrackingAutomation.Models.Tasks.VehicleTaskLineWithProductModel(x.Line, x.ProductId)).ToList();
+    }
 }

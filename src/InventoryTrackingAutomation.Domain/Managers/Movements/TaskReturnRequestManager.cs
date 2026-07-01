@@ -108,7 +108,7 @@ public class TaskReturnRequestManager : InventoryTrackingAutomationDomainService
     }
 
     /// Iade akisi icin VehicleTaskLine kayitlarini guvenceye alir; eksikse olusturur.
-    private async Task EnsureVehicleTaskLinesAsync(Guid taskId, Guid vehicleTaskId, IReadOnlyList<TaskVehicleReturnLine> returnLines)
+    private async Task EnsureVehicleTaskLinesAsync(Guid taskId, Guid vehicleTaskId, IReadOnlyList<InventoryTrackingAutomation.Models.Movements.TaskVehicleReturnLineModel> returnLines)
     {
         foreach (var line in returnLines)
         {
@@ -164,55 +164,24 @@ public class TaskReturnRequestManager : InventoryTrackingAutomationDomainService
             .Select(x => x.Id)
             .ToHashSet();
 
-        var lastTransaction = (await _inventoryTransactionRepository.GetListAsync(x =>
-            x.RelatedMovementRequestId.HasValue &&
-            movementIds.Contains(x.RelatedMovementRequestId.Value) &&
-            x.TargetLocationType == StockLocationTypeEnum.Vehicle &&
-            x.TargetLocationId == vehicleId &&
-            x.TransactionType == InventoryTransactionTypeEnum.WarehouseToVehicle))
-            .OrderByDescending(x => x.OccurredAt)
-            .FirstOrDefault();
-
-        if (lastTransaction?.SourceLocationType == StockLocationTypeEnum.Warehouse &&
-            lastTransaction.SourceLocationId.HasValue)
+        var sourceWarehouseId = await _inventoryTransactionRepository.GetLastSourceWarehouseIdAsync(movementIds, vehicleId);
+        if (sourceWarehouseId.HasValue)
         {
-            return lastTransaction.SourceLocationId.Value;
+            return sourceWarehouseId.Value;
         }
+        
         throw new BusinessException(GeneralExceptionCodes.InvalidOperation);
     }
 
     /// Görev aracındaki iade satırlarını getirmek için kullanılır.
-    private async Task<IReadOnlyList<TaskVehicleReturnLine>> GetTaskVehicleReturnLinesAsync(Guid taskId, Guid vehicleTaskId, Guid vehicleId)
+    private async Task<IReadOnlyList<InventoryTrackingAutomation.Models.Movements.TaskVehicleReturnLineModel>> GetTaskVehicleReturnLinesAsync(Guid taskId, Guid vehicleTaskId, Guid vehicleId)
     {
         var movementIds = (await _movementRequestRepository.GetListAsync(x =>
                 x.VehicleTaskId == vehicleTaskId))
             .Select(x => x.Id)
             .ToHashSet();
 
-        var transactions = await _inventoryTransactionRepository.GetListAsync(x =>
-            x.RelatedMovementRequestId.HasValue &&
-            movementIds.Contains(x.RelatedMovementRequestId.Value) &&
-            (
-                (x.TransactionType == InventoryTransactionTypeEnum.WarehouseToVehicle &&
-                 x.TargetLocationType == StockLocationTypeEnum.Vehicle &&
-                 x.TargetLocationId == vehicleId) ||
-                (x.TransactionType == InventoryTransactionTypeEnum.VehicleToWarehouse &&
-                 x.SourceLocationType == StockLocationTypeEnum.Vehicle &&
-                 x.SourceLocationId == vehicleId) ||
-                (x.TransactionType == InventoryTransactionTypeEnum.Adjustment &&
-                 x.SourceLocationType == StockLocationTypeEnum.Vehicle &&
-                 x.SourceLocationId == vehicleId)
-            ));
-
-        return transactions
-            .GroupBy(x => x.ProductId)
-            .Select(group => new TaskVehicleReturnLine(
-                group.Key,
-                group.Sum(x => x.TransactionType == InventoryTransactionTypeEnum.WarehouseToVehicle
-                    ? x.Quantity
-                    : -x.Quantity)))
-            .Where(x => x.Quantity > 0)
-            .ToList();
+        return await _inventoryTransactionRepository.GetVehicleReturnLinesAsync(movementIds, vehicleId);
     }
 
     /// Talep numarası üretmek için kullanılır.
@@ -221,7 +190,5 @@ public class TaskReturnRequestManager : InventoryTrackingAutomationDomainService
         var suffix = GuidGenerator.Create().ToString("N")[..8].ToUpperInvariant();
         return $"RET-{DateTime.UtcNow:yyyyMMddHHmmss}-{suffix}";
     }
-
-    private sealed record TaskVehicleReturnLine(Guid ProductId, int Quantity);
 }
 

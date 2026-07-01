@@ -40,143 +40,27 @@ public class InventoryQueryManager : InventoryTrackingAutomationLazyService, ITr
     public async Task<ProductStockSummaryModel> GetProductStockSummaryAsync(Guid productId)
     {
         await _productManager.EnsureExistsAsync(productId);
-
-        var locations = await _stockLocationRepository.GetListAsync(x => x.ProductId == productId);
-        var activeVehicleTasks = await GetActiveVehicleTasksAsync(locations
-            .Where(x => x.LocationType == StockLocationTypeEnum.Vehicle)
-            .Select(x => (Guid?)x.LocationId));
-
-        var locationSummaries = locations
-            .Select(location => CreateLocationSummary(location, activeVehicleTasks))
-            .ToList();
-
-        return new ProductStockSummaryModel
-        {
-            ProductId = productId,
-            TotalQuantity = locations.Sum(x => x.Quantity),
-            WarehouseQuantity = locations
-                .Where(x => x.LocationType == StockLocationTypeEnum.Warehouse)
-                .Sum(x => x.Quantity),
-            VehicleQuantity = locations
-                .Where(x => x.LocationType == StockLocationTypeEnum.Vehicle)
-                .Sum(x => x.Quantity),
-            ActiveTaskQuantity = locationSummaries
-                .Where(x => x.TaskId.HasValue)
-                .Sum(x => x.Quantity),
-            Locations = locationSummaries
-        };
+        return await _stockLocationRepository.GetProductStockSummaryAsync(productId);
     }
 
     /// Araç envanterlerini getirmek için kullanılır.
     public async Task<List<VehicleInventoryModel>> GetVehicleInventoriesAsync(Guid vehicleId)
     {
         await _vehicleManager.EnsureExistsAsync(vehicleId);
-
-        var locations = await _stockLocationRepository.GetListAsync(x =>
-            x.LocationType == StockLocationTypeEnum.Vehicle &&
-            x.LocationId == vehicleId);
-        var activeVehicleTask = (await _vehicleTaskRepository.GetListAsync(x =>
-                x.VehicleId == vehicleId &&
-                !x.ReleasedAt.HasValue))
-            .FirstOrDefault();
-
-        return locations
-            .Select(location => new VehicleInventoryModel
-            {
-                VehicleId = vehicleId,
-                ProductId = location.ProductId,
-                VehicleTaskId = activeVehicleTask?.Id,
-                TaskId = activeVehicleTask?.TaskId,
-                Quantity = location.Quantity,
-                ReservedQuantity = location.ReservedQuantity
-            })
-            .ToList();
+        return await _stockLocationRepository.GetVehicleInventoriesAsync(vehicleId);
     }
 
     /// Görev araçlarını getirmek için kullanılır.
     public async Task<List<TaskVehicleModel>> GetTaskVehiclesAsync(Guid inventoryTaskId)
     {
         await _inventoryTaskManager.EnsureExistsAsync(inventoryTaskId);
-
-        var vehicleTasks = await _vehicleTaskRepository.GetListAsync(x => x.TaskId == inventoryTaskId);
-        return vehicleTasks
-            .Select(x => new TaskVehicleModel
-            {
-                VehicleTaskId = x.Id,
-                TaskId = x.TaskId,
-                VehicleId = x.VehicleId,
-                AssignedAt = x.AssignedAt,
-                ReleasedAt = x.ReleasedAt
-            })
-            .ToList();
+        return await _vehicleTaskRepository.GetTaskVehiclesByTaskIdAsync(inventoryTaskId);
     }
 
     /// Görev envanterini getirmek için kullanılır.
     public async Task<List<TaskInventoryModel>> GetTaskInventoryAsync(Guid inventoryTaskId)
     {
         await _inventoryTaskManager.EnsureExistsAsync(inventoryTaskId);
-
-        var vehicleTasks = await _vehicleTaskRepository.GetListAsync(x =>
-            x.TaskId == inventoryTaskId &&
-            !x.ReleasedAt.HasValue);
-        var vehicleIds = vehicleTasks.Select(x => x.VehicleId).Distinct().ToList();
-        var locations = await _stockLocationRepository.GetListAsync(x =>
-            x.LocationType == StockLocationTypeEnum.Vehicle &&
-            vehicleIds.Contains(x.LocationId));
-
-        return locations
-            .Select(location =>
-            {
-                var vehicleTask = vehicleTasks.First(x => x.VehicleId == location.LocationId);
-                return new TaskInventoryModel
-                {
-                    TaskId = inventoryTaskId,
-                    VehicleTaskId = vehicleTask.Id,
-                    VehicleId = vehicleTask.VehicleId,
-                    ProductId = location.ProductId,
-                    Quantity = location.Quantity,
-                    ReservedQuantity = location.ReservedQuantity
-                };
-            })
-            .ToList();
-    }
-
-    /// Aktif araç görevlerini getirmek için kullanılır.
-    private async Task<List<Entities.Tasks.VehicleTask>> GetActiveVehicleTasksAsync(IEnumerable<Guid?> vehicleIds)
-    {
-        var ids = vehicleIds
-            .Where(x => x.HasValue)
-            .Select(x => x!.Value)
-            .Distinct()
-            .ToList();
-
-        if (ids.Count == 0)
-        {
-            return new List<Entities.Tasks.VehicleTask>();
-        }
-
-        return await _vehicleTaskRepository.GetListAsync(x => ids.Contains(x.VehicleId) && !x.ReleasedAt.HasValue);
-    }
-
-    /// Lokasyon özeti oluşturmak için kullanılır.
-    private static ProductStockLocationSummaryModel CreateLocationSummary(
-        Entities.Inventory.StockLocation location,
-        IReadOnlyCollection<Entities.Tasks.VehicleTask> activeVehicleTasks)
-    {
-        // Arac lokasyonlarinda aktif gorev baglami gorunurluge eklenir.
-        var vehicleTask = location.LocationType == StockLocationTypeEnum.Vehicle
-            ? activeVehicleTasks.FirstOrDefault(x => x.VehicleId == location.LocationId)
-            : null;
-
-        return new ProductStockLocationSummaryModel
-        {
-            LocationType = location.LocationType,
-            WarehouseId = location.LocationType == StockLocationTypeEnum.Warehouse ? location.LocationId : null,
-            VehicleId = location.LocationType == StockLocationTypeEnum.Vehicle ? location.LocationId : null,
-            VehicleTaskId = vehicleTask?.Id,
-            TaskId = vehicleTask?.TaskId,
-            Quantity = location.Quantity,
-            ReservedQuantity = location.ReservedQuantity
-        };
+        return await _stockLocationRepository.GetTaskInventoryAsync(inventoryTaskId);
     }
 }
