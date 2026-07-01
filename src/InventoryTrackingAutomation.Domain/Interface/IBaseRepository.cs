@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Volo.Abp.Domain.Entities;
 using Volo.Abp.Domain.Repositories;
@@ -11,6 +12,11 @@ namespace InventoryTrackingAutomation.Interface;
 /// </summary>
 public interface IBaseRepository<T> : IRepository<T, Guid> where T : class, IEntity<Guid>
 {
+    /// <summary>
+    /// Verilen koşula uyan kayıt olup olmadığını liste çekmeden kontrol eder.
+    /// </summary>
+    Task<bool> ExistsAsync(Expression<Func<T, bool>> predicate);
+
     /// <summary>
     /// Toplu insert yapar ve insert edilmiş listeyi döner.
     /// </summary>

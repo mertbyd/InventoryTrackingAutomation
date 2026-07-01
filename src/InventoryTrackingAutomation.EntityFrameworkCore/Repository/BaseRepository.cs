@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 using InventoryTrackingAutomation.ExceptionCodes;
 using InventoryTrackingAutomation.Interface;
@@ -9,7 +10,7 @@ using Volo.Abp.Data;
 using Volo.Abp.Domain.Entities;
 using Volo.Abp.Domain.Repositories.EntityFrameworkCore;
 using Volo.Abp.EntityFrameworkCore;
-using InventoryTrackingAutomation.ExceptionCodes;
+using Microsoft.EntityFrameworkCore;
 
 namespace InventoryTrackingAutomation.Repository;
 
@@ -22,6 +23,15 @@ public class BaseRepository<T> : EfCoreRepository<InventoryTrackingAutomationDbC
     public BaseRepository(IDbContextProvider<InventoryTrackingAutomationDbContext> dbContextProvider)
         : base(dbContextProvider)
     {
+    }
+
+    /// <summary>
+    /// Any sorgusunu EF tarafında çalıştırır; uniqueness kontrollerinde liste çekmeyi engeller.
+    /// </summary>
+    public async Task<bool> ExistsAsync(Expression<Func<T, bool>> predicate)
+    {
+        var dbSet = await GetDbSetAsync();
+        return await dbSet.AnyAsync(predicate);
     }
 
     /// <summary>

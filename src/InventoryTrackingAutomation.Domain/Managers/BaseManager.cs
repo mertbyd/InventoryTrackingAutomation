@@ -143,7 +143,7 @@ public abstract class BaseManager<TEntity> : InventoryTrackingAutomationDomainSe
     public async Task EnsureUniqueAsync(
         Expression<Func<TEntity, bool>> predicate)
     {
-        var exists = (await Repository.GetListAsync(predicate)).Any();
+        var exists = await Repository.ExistsAsync(predicate);
         if (exists)
         {
             throw new BusinessException(AlreadyExistsErrorCode);
@@ -177,7 +177,7 @@ public abstract class BaseManager<TEntity> : InventoryTrackingAutomationDomainSe
         var containsExpression = Expression.Call(Expression.Constant(valueList), containsMethod!, propertySelector.Body);
         var lambda = Expression.Lambda<Func<TEntity, bool>>(containsExpression, parameter);
 
-        var exists = (await Repository.GetListAsync(lambda)).Any();
+        var exists = await Repository.ExistsAsync(lambda);
         if (exists)
         {
             throw new BusinessException(AlreadyExistsErrorCode);
@@ -189,8 +189,14 @@ public abstract class BaseManager<TEntity> : InventoryTrackingAutomationDomainSe
         Expression<Func<TEntity, bool>> predicate,
         Guid excludeId)
     {
-        var exists = (await Repository.GetListAsync(predicate))
-            .Any(e => !e.Id.Equals(excludeId));
+        var parameter = predicate.Parameters[0];
+        var excludeExpression = Expression.NotEqual(
+            Expression.Property(parameter, nameof(IEntity<Guid>.Id)),
+            Expression.Constant(excludeId));
+        var combinedBody = Expression.AndAlso(predicate.Body, excludeExpression);
+        var combinedPredicate = Expression.Lambda<Func<TEntity, bool>>(combinedBody, parameter);
+
+        var exists = await Repository.ExistsAsync(combinedPredicate);
 
         if (exists)
         {

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using InventoryTrackingAutomation.Entities.Movements;
+using InventoryTrackingAutomation.Entities.Workflows;
 using InventoryTrackingAutomation.Entities.Tasks;
 using InventoryTrackingAutomation.Enums;
 using InventoryTrackingAutomation.Enums.Inventory;
@@ -16,6 +17,7 @@ using InventoryTrackingAutomation.Models.Movements;
 using InventoryTrackingAutomation.Managers.Inventory;
 using InventoryTrackingAutomation.Managers.Tasks;
 using InventoryTrackingAutomation.Models.Inventory;
+using InventoryTrackingAutomation.Models.Workflows;
 using InventoryTrackingAutomation.Workflows;
 using Volo.Abp.EventBus.Local;
 using Volo.Abp;
@@ -707,6 +709,94 @@ public class MovementRequestManager : BaseManager<MovementRequest>
         entity.WorkflowInstanceId = workflowInstance.Id;
         entity.Status = InventoryTrackingAutomation.Enums.MovementStatusEnum.InReview;
         return workflowInstance;
+    }
+
+    /// <summary>
+    /// Toplu hareket talepleri icin workflow secimini ve instance baslatmayi minimum sorguyla yapar.
+    /// </summary>
+    public async Task<List<WorkflowInstance>> AssignWorkflowsAsync(
+        IReadOnlyCollection<MovementRequest> entities,
+        Guid currentUserId)
+    {
+        if (entities.Count == 0)
+        {
+            return new List<WorkflowInstance>();
+        }
+
+        var vehicleTaskIds = entities.Select(x => x.VehicleTaskId).Distinct().ToList();
+        var vehicleTasks = await _vehicleTaskRepository.GetListAsync(x => vehicleTaskIds.Contains(x.Id));
+        var vehicleTaskById = vehicleTasks.ToDictionary(x => x.Id);
+
+        var missingVehicleTaskId = vehicleTaskIds.FirstOrDefault(id => !vehicleTaskById.ContainsKey(id));
+        if (missingVehicleTaskId != Guid.Empty || vehicleTaskById.Count != vehicleTaskIds.Count)
+        {
+            throw new BusinessException(VehicleTaskExceptionCodes.NotFound);
+        }
+
+        var taskIds = vehicleTasks.Select(x => x.TaskId).Distinct().ToList();
+        var tasks = await _inventoryTaskRepository.GetListAsync(x => taskIds.Contains(x.Id));
+        var taskById = tasks.ToDictionary(x => x.Id);
+
+        var missingTaskId = taskIds.FirstOrDefault(id => !taskById.ContainsKey(id));
+        if (missingTaskId != Guid.Empty || taskById.Count != taskIds.Count)
+        {
+            throw new BusinessException(InventoryTaskExceptionCodes.NotFound);
+        }
+
+        var workflowNames = tasks
+            .Select(x => x.Type == InventoryTaskTypeEnum.FieldOperation
+                ? WorkflowDefinitionNames.TaskMovementRequest
+                : WorkflowDefinitionNames.MovementRequest)
+            .Distinct()
+            .ToList();
+        var workflowDefinitions = await _workflowDefinitionRepository.GetListAsync(
+            x => workflowNames.Contains(x.Name) && x.IsActive);
+        var workflowDefinitionByName = workflowDefinitions.ToDictionary(x => x.Name);
+
+        var startModels = new List<StartWorkflowModel>();
+        foreach (var entity in entities)
+        {
+            var vehicleTask = vehicleTaskById[entity.VehicleTaskId];
+            var task = taskById[vehicleTask.TaskId];
+            var workflowName = task.Type == InventoryTaskTypeEnum.FieldOperation
+                ? WorkflowDefinitionNames.TaskMovementRequest
+                : WorkflowDefinitionNames.MovementRequest;
+
+            if (!workflowDefinitionByName.TryGetValue(workflowName, out var workflowDefinition))
+            {
+                continue;
+            }
+
+            startModels.Add(new StartWorkflowModel
+            {
+                WorkflowDefinitionId = workflowDefinition.Id,
+                EntityType = WorkflowEntityTypes.MovementRequest,
+                EntityId = entity.Id,
+                InitiatorUserId = currentUserId
+            });
+        }
+
+        var workflowInstances = await _workflowManager.StartWorkflowsAsync(startModels);
+        if (workflowInstances.Count == 0)
+        {
+            return workflowInstances;
+        }
+
+        await _workflowInstanceRepository.InsertManyAsync(workflowInstances);
+
+        var workflowInstanceByEntityId = workflowInstances.ToDictionary(x => x.EntityId);
+        foreach (var entity in entities)
+        {
+            if (!workflowInstanceByEntityId.TryGetValue(entity.Id, out var workflowInstance))
+            {
+                continue;
+            }
+
+            entity.WorkflowInstanceId = workflowInstance.Id;
+            entity.Status = MovementStatusEnum.InReview;
+        }
+
+        return workflowInstances;
     }
 
     private static bool HasValidId(Guid? id) => id.HasValue && id.Value != Guid.Empty;
