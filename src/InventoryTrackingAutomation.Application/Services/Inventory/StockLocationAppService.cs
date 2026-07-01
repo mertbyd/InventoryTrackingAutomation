@@ -1,6 +1,7 @@
 using InventoryTrackingAutomation.Application.Mappers.Inventory;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using InventoryTrackingAutomation.Dtos.Inventory;
 using InventoryTrackingAutomation.Entities.Inventory;
@@ -92,8 +93,8 @@ public class StockLocationAppService : InventoryTrackingAutomationAppService, IS
         }
 
         var inserted = await _repository.InsertManyAndGetListAsync(entities);
-        foreach (var e in inserted)
-            await InvalidateStockCacheAsync(e.ProductId, e.LocationType, e.LocationId);
+        await InvalidateStockCacheAsync(inserted);
+
         return _mapper.MapToDto(inserted);
     }
 
@@ -123,10 +124,37 @@ public class StockLocationAppService : InventoryTrackingAutomationAppService, IS
 
     private async Task InvalidateStockCacheAsync(Guid productId, StockLocationTypeEnum locationType, Guid locationId)
     {
-        var keys = locationType == StockLocationTypeEnum.Vehicle
-            ? new[] { CacheKeys.ProductStockSummary(productId), CacheKeys.VehicleInventories(locationId) }
-            : new[] { CacheKeys.ProductStockSummary(productId) };
+        await PublishStockCacheInvalidationAsync(BuildStockCacheKeys(productId, locationType, locationId));
+    }
 
-        await _localEventBus.PublishAsync(CacheInvalidationEto.ForKeys(keys));
+    private Task InvalidateStockCacheAsync(IEnumerable<StockLocation> stockLocations)
+    {
+        var keys = stockLocations
+            .SelectMany(x => BuildStockCacheKeys(x.ProductId, x.LocationType, x.LocationId))
+            .Distinct()
+            .ToArray();
+
+        return PublishStockCacheInvalidationAsync(keys);
+    }
+
+    private static IEnumerable<string> BuildStockCacheKeys(
+        Guid productId,
+        StockLocationTypeEnum locationType,
+        Guid locationId)
+    {
+        yield return CacheKeys.ProductStockSummary(productId);
+
+        if (locationType == StockLocationTypeEnum.Vehicle)
+        {
+            yield return CacheKeys.VehicleInventories(locationId);
+        }
+    }
+
+    private Task PublishStockCacheInvalidationAsync(IEnumerable<string> keys)
+    {
+        var keyArray = keys.Distinct().ToArray();
+        return keyArray.Length == 0
+            ? Task.CompletedTask
+            : _localEventBus.PublishAsync(CacheInvalidationEto.ForKeys(keyArray));
     }
 }

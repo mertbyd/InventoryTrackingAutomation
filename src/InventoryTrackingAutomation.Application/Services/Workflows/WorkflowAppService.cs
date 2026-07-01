@@ -39,7 +39,7 @@ public class WorkflowAppService : InventoryTrackingAutomationAppService, IWorkfl
     // Step definition bilgilerini okumak için repository.
     private IRepository<WorkflowStepDefinition, Guid> _stepDefinitionRepository => LazyGetRequiredService<IRepository<WorkflowStepDefinition, Guid>>();
     private IRepository<WorkflowDefinition, Guid> _workflowDefinitionRepository => LazyGetRequiredService<IRepository<WorkflowDefinition, Guid>>();
-    private IIdentityUserRepository _identityUserRepository => LazyGetRequiredService<IIdentityUserRepository>();
+    private IRepository<IdentityUser, Guid> _identityUserReadRepository => LazyGetRequiredService<IRepository<IdentityUser, Guid>>();
 
     // Tüm bağımlılıkları DI ile alır.
     private static readonly WorkflowMapper _mapper = new WorkflowMapper();
@@ -197,10 +197,10 @@ public class WorkflowAppService : InventoryTrackingAutomationAppService, IWorkfl
             }
         }
 
-        var users = await _identityUserRepository.GetListAsync();
-        var userMap = users
-            .Where(user => userIds.Contains(user.Id))
-            .ToDictionary(user => user.Id);
+        // Sadece tarihcede gorunecek kullanicilar cekilir; tum IdentityUser tablosu memory'ye alinmaz.
+        var userQueryable = await _identityUserReadRepository.GetQueryableAsync();
+        var users = await AsyncExecuter.ToListAsync(userQueryable.Where(user => userIds.Contains(user.Id)));
+        var userMap = users.ToDictionary(user => user.Id);
 
         string? GetUserName(Guid id) => userMap.TryGetValue(id, out var user) ? user.UserName : null;
         string? GetFullName(Guid id) => userMap.TryGetValue(id, out var user) ? user.Name : null;
