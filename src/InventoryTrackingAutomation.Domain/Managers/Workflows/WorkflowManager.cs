@@ -13,7 +13,7 @@ using Volo.Abp;
 using Volo.Abp.Domain.Services;
 using Volo.Abp.EventBus.Local;
 using Volo.Abp.DependencyInjection;
-using Volo.Abp.Linq;
+
 
 namespace InventoryTrackingAutomation.Managers.Workflows;
 
@@ -33,7 +33,6 @@ public class WorkflowManager : InventoryTrackingAutomationDomainService
     private IWorkflowInstanceStepRepository _workflowInstanceStepRepository => LazyGetRequiredService<IWorkflowInstanceStepRepository>();
     private ILocalEventBus _localEventBus => LazyGetRequiredService<ILocalEventBus>();
     private IWorkflowApproverResolver _workflowApproverResolver => LazyGetRequiredService<IWorkflowApproverResolver>();
-    private IAsyncQueryableExecuter _asyncQueryableExecuter => LazyGetRequiredService<IAsyncQueryableExecuter>();
 
 
 
@@ -43,43 +42,7 @@ public class WorkflowManager : InventoryTrackingAutomationDomainService
     public async Task<WorkflowInstance> StartWorkflowAsync(StartWorkflowModel model)
     {
         var definition = await FindAndValidateDefinitionAsync(model.WorkflowDefinitionId);
-        return await CreateWorkflowInstanceAsync(model, definition);
-    }
 
-    /// <summary>
-    /// Birden fazla workflow instance'ini definition sorgusunu tekrar etmeden bellekte hazirlar.
-    /// </summary>
-    public async Task<List<WorkflowInstance>> StartWorkflowsAsync(IReadOnlyCollection<StartWorkflowModel> models)
-    {
-        if (models.Count == 0)
-        {
-            return new List<WorkflowInstance>();
-        }
-
-        var definitionIds = models.Select(x => x.WorkflowDefinitionId).Distinct().ToList();
-        var query = await _workflowDefinitionRepository.WithDetailsAsync(x => x.Steps);
-        var definitionList = await _asyncQueryableExecuter.ToListAsync(query.Where(x => definitionIds.Contains(x.Id)));
-        var definitions = definitionList.ToDictionary(x => x.Id);
-
-        var instances = new List<WorkflowInstance>(models.Count);
-        foreach (var model in models)
-        {
-            if (!definitions.TryGetValue(model.WorkflowDefinitionId, out var definition))
-            {
-                throw new BusinessException(WorkflowExceptionCodes.DefinitionNotFound);
-            }
-
-            ValidateDefinition(definition);
-            instances.Add(await CreateWorkflowInstanceAsync(model, definition));
-        }
-
-        return instances;
-    }
-
-    private async Task<WorkflowInstance> CreateWorkflowInstanceAsync(
-        StartWorkflowModel model,
-        WorkflowDefinition definition)
-    {
         var instance = new WorkflowInstance(
             id: GuidGenerator.Create(),
             workflowDefinitionId: definition.Id,
@@ -161,21 +124,16 @@ public class WorkflowManager : InventoryTrackingAutomationDomainService
     private async Task<WorkflowDefinition> FindAndValidateDefinitionAsync(Guid definitionId)
     {
         var query = await _workflowDefinitionRepository.WithDetailsAsync(x => x.Steps);
-        var definition = await _asyncQueryableExecuter.FirstOrDefaultAsync(query.Where(x => x.Id == definitionId));
+        var definition = query.FirstOrDefault(x => x.Id == definitionId);
         if (definition == null)
             throw new BusinessException(WorkflowExceptionCodes.DefinitionNotFound);
-        ValidateDefinition(definition);
-
-        return definition;
-    }
-
-    private static void ValidateDefinition(WorkflowDefinition definition)
-    {
         if (!definition.IsActive)
             throw new BusinessException(WorkflowExceptionCodes.General.InvalidOperation);
         
         if (!definition.Steps.Any())
             throw new BusinessException(WorkflowExceptionCodes.General.InvalidOperation);
+        
+        return definition;
     }
 
     private async Task<WorkflowInstanceStep> FindAndValidateStepAsync(Guid stepId)
