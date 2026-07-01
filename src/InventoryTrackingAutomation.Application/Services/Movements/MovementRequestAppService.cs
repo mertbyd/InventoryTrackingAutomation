@@ -106,10 +106,15 @@ public class MovementRequestAppService : InventoryTrackingAutomationAppService, 
             var entity = new MovementRequest(GuidGenerator.Create());
             entity.Status = InventoryTrackingAutomation.Enums.MovementStatusEnum.Pending;
             _mapper.MapToEntity(model, entity);
+
+            var workflowInstance = await _manager.AssignWorkflowAsync(entity, currentUserId);
+            if (workflowInstance != null)
+            {
+                workflowInstances.Add(workflowInstance);
+            }
             entities.Add(entity);
         }
 
-        workflowInstances = await _manager.AssignWorkflowsAsync(entities, currentUserId);
         var inserted = await _repository.InsertManyAndGetListAsync(entities);
         foreach (var workflowInstance in workflowInstances)
         {

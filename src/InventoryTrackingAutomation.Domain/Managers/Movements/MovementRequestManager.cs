@@ -334,27 +334,14 @@ public class MovementRequestManager : BaseManager<MovementRequest>
     }
 
     /// Transfer edilecek VehicleTaskLine verilerini getirmek için kullanılır.
-    private async Task<List<VehicleTaskLineTransferContext>> GetVehicleTaskLinesForTransferAsync(Guid vehicleTaskId)
+    private async Task<List<InventoryTrackingAutomation.Models.Tasks.VehicleTaskLineWithProductModel>> GetVehicleTaskLinesForTransferAsync(Guid vehicleTaskId)
     {
-        var lines = await _vehicleTaskLineRepository.GetByVehicleTaskIdAsync(vehicleTaskId);
+        var lines = await _vehicleTaskLineRepository.GetTransferContextsByVehicleTaskIdAsync(vehicleTaskId);
         if (lines.Count == 0)
         {
             throw new BusinessException(VehicleTaskLineExceptionCodes.NotFound);
         }
-
-        // ProductId VehicleTaskLine'da tekrar tutulmaz; hareket stok satiri icin TaskLine uzerinden cozulur.
-        var taskLineIds = lines.Select(x => x.TaskLineId).Distinct().ToList();
-        var taskLines = await _taskLineRepository.GetListAsync(x => taskLineIds.Contains(x.Id));
-        var productByTaskLineId = taskLines.ToDictionary(x => x.Id, x => x.ProductId);
-        var missingTaskLine = lines.FirstOrDefault(x => !productByTaskLineId.ContainsKey(x.TaskLineId));
-        if (missingTaskLine != null)
-        {
-            throw new BusinessException(TaskLineExceptionCodes.NotFound);
-        }
-
-        return lines
-            .Select(line => new VehicleTaskLineTransferContext(line, productByTaskLineId[line.TaskLineId]))
-            .ToList();
+        return lines;
     }
 
     /// Kayıt oluştururken talep numarasının benzersizliğini doğrulamak için kullanılır.
@@ -404,40 +391,28 @@ public class MovementRequestManager : BaseManager<MovementRequest>
     /// İade alım giriş verilerini VehicleTaskLine bazlı doğrulamak için kullanılır.
     private static void ValidateReturnReceiveInput(
         MovementRequest request,
-        IReadOnlyCollection<VehicleTaskLineTransferContext> expectedLines,
+        IReadOnlyCollection<InventoryTrackingAutomation.Models.Tasks.VehicleTaskLineWithProductModel> expectedLines,
         ReceiveMovementRequestModel model)
     {
         if (model.Lines.Count == 0)
         {
-            throw new BusinessException(
-                MovementRequestExceptionCodes.ReturnReceiveLineRequired);
+            throw new BusinessException(MovementRequestExceptionCodes.ReturnReceiveLineRequired);
         }
 
-        var duplicateIds = model.Lines
-            .GroupBy(x => x.VehicleTaskLineId)
-            .Where(x => x.Count() > 1)
-            .Select(x => x.Key)
-            .ToList();
-
-        if (duplicateIds.Count > 0)
+        if (model.Lines.GroupBy(x => x.VehicleTaskLineId).Any(g => g.Count() > 1))
         {
             throw new BusinessException(MovementRequestExceptionCodes.QuantityMismatch);
         }
 
         var expectedIds = expectedLines.Select(x => x.Line.Id).ToHashSet();
-        var unexpectedIds = model.Lines
-            .Where(x => !expectedIds.Contains(x.VehicleTaskLineId))
-            .Select(x => x.VehicleTaskLineId)
-            .ToList();
-
-        if (unexpectedIds.Count > 0)
+        if (model.Lines.Any(x => !expectedIds.Contains(x.VehicleTaskLineId)))
         {
             throw new BusinessException(MovementRequestExceptionCodes.QuantityMismatch);
         }
 
         foreach (var vtl in expectedLines)
         {
-            var receivedLine = model.Lines.SingleOrDefault(x => x.VehicleTaskLineId == vtl.Line.Id);
+            var receivedLine = model.Lines.FirstOrDefault(x => x.VehicleTaskLineId == vtl.Line.Id);
             if (receivedLine == null)
             {
                 throw new BusinessException(MovementRequestExceptionCodes.ReturnReceiveLineRequired);
@@ -711,98 +686,9 @@ public class MovementRequestManager : BaseManager<MovementRequest>
         return workflowInstance;
     }
 
-    /// <summary>
-    /// Toplu hareket talepleri icin workflow secimini ve instance baslatmayi minimum sorguyla yapar.
-    /// </summary>
-    public async Task<List<WorkflowInstance>> AssignWorkflowsAsync(
-        IReadOnlyCollection<MovementRequest> entities,
-        Guid currentUserId)
-    {
-        if (entities.Count == 0)
-        {
-            return new List<WorkflowInstance>();
-        }
-
-        var vehicleTaskIds = entities.Select(x => x.VehicleTaskId).Distinct().ToList();
-        var vehicleTasks = await _vehicleTaskRepository.GetListAsync(x => vehicleTaskIds.Contains(x.Id));
-        var vehicleTaskById = vehicleTasks.ToDictionary(x => x.Id);
-
-        var missingVehicleTaskId = vehicleTaskIds.FirstOrDefault(id => !vehicleTaskById.ContainsKey(id));
-        if (missingVehicleTaskId != Guid.Empty || vehicleTaskById.Count != vehicleTaskIds.Count)
-        {
-            throw new BusinessException(VehicleTaskExceptionCodes.NotFound);
-        }
-
-        var taskIds = vehicleTasks.Select(x => x.TaskId).Distinct().ToList();
-        var tasks = await _inventoryTaskRepository.GetListAsync(x => taskIds.Contains(x.Id));
-        var taskById = tasks.ToDictionary(x => x.Id);
-
-        var missingTaskId = taskIds.FirstOrDefault(id => !taskById.ContainsKey(id));
-        if (missingTaskId != Guid.Empty || taskById.Count != taskIds.Count)
-        {
-            throw new BusinessException(InventoryTaskExceptionCodes.NotFound);
-        }
-
-        var workflowNames = tasks
-            .Select(x => x.Type == InventoryTaskTypeEnum.FieldOperation
-                ? WorkflowDefinitionNames.TaskMovementRequest
-                : WorkflowDefinitionNames.MovementRequest)
-            .Distinct()
-            .ToList();
-        var workflowDefinitions = await _workflowDefinitionRepository.GetListAsync(
-            x => workflowNames.Contains(x.Name) && x.IsActive);
-        var workflowDefinitionByName = workflowDefinitions.ToDictionary(x => x.Name);
-
-        var startModels = new List<StartWorkflowModel>();
-        foreach (var entity in entities)
-        {
-            var vehicleTask = vehicleTaskById[entity.VehicleTaskId];
-            var task = taskById[vehicleTask.TaskId];
-            var workflowName = task.Type == InventoryTaskTypeEnum.FieldOperation
-                ? WorkflowDefinitionNames.TaskMovementRequest
-                : WorkflowDefinitionNames.MovementRequest;
-
-            if (!workflowDefinitionByName.TryGetValue(workflowName, out var workflowDefinition))
-            {
-                continue;
-            }
-
-            startModels.Add(new StartWorkflowModel
-            {
-                WorkflowDefinitionId = workflowDefinition.Id,
-                EntityType = WorkflowEntityTypes.MovementRequest,
-                EntityId = entity.Id,
-                InitiatorUserId = currentUserId
-            });
-        }
-
-        var workflowInstances = await _workflowManager.StartWorkflowsAsync(startModels);
-        if (workflowInstances.Count == 0)
-        {
-            return workflowInstances;
-        }
-
-        await _workflowInstanceRepository.InsertManyAsync(workflowInstances);
-
-        var workflowInstanceByEntityId = workflowInstances.ToDictionary(x => x.EntityId);
-        foreach (var entity in entities)
-        {
-            if (!workflowInstanceByEntityId.TryGetValue(entity.Id, out var workflowInstance))
-            {
-                continue;
-            }
-
-            entity.WorkflowInstanceId = workflowInstance.Id;
-            entity.Status = MovementStatusEnum.InReview;
-        }
-
-        return workflowInstances;
-    }
 
     private static bool HasValidId(Guid? id) => id.HasValue && id.Value != Guid.Empty;
     private static bool MissingId(Guid? id) => !id.HasValue || id.Value == Guid.Empty;
-
-    private sealed record VehicleTaskLineTransferContext(VehicleTaskLine Line, Guid ProductId);
 
     /// İlk workflow adımı için bildirim yayınlamak için kullanılır.
     public Task PublishInitialWorkflowStepAssignedAsync(InventoryTrackingAutomation.Entities.Workflows.WorkflowInstance? workflowInstance)
@@ -824,4 +710,3 @@ public class MovementRequestManager : BaseManager<MovementRequest>
         });
     }
 }
-
