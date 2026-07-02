@@ -14,9 +14,14 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi;
 using OpenIddict.Validation.AspNetCore;
+using System.Net.ServerSentEvents;
+using System.Runtime.CompilerServices;
+using System.Threading;
 using InventoryTrackingAutomation.EntityFrameworkCore;
 using InventoryTrackingAutomation.MultiTenancy;
+using InventoryTrackingAutomation.Notifications;
 using InventoryTrackingAutomation.SignalR;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Extensions.DependencyInjection;
 using SystemStandards.Extensions;
 using SystemStandards.Abp;
@@ -60,6 +65,7 @@ using Volo.Abp.Swashbuckle;
 using Volo.Abp.TenantManagement;
 using Volo.Abp.TenantManagement.EntityFrameworkCore;
 using Volo.Abp.UI.Navigation.Urls;
+using Volo.Abp.Users;
 using Volo.Abp.VirtualFileSystem;
 
 namespace InventoryTrackingAutomation;
@@ -383,9 +389,33 @@ public class InventoryTrackingAutomationHttpApiHostModule : AbpModule
         });
         app.UseAuditing();
         app.UseAbpSerilogEnrichers();
-        app.UseConfiguredEndpoints();
+        app.UseConfiguredEndpoints(endpoints =>
+        {
+            // Tek yonlu canli bildirim akisi; cift yonlu soket gerektirmeyen client'lar SignalR yerine bu SSE stream'ine baglanir.
+            endpoints.MapGet(
+                    InventoryNotificationConstants.SseEvents.StreamPath,
+                    (HttpContext httpContext, ICurrentUser currentUser, InventorySseConnectionManager connectionManager) =>
+                        TypedResults.ServerSentEvents(StreamInventoryNotificationsAsync(
+                            connectionManager, currentUser.GetId(), httpContext.RequestAborted)))
+                .RequireAuthorization();
+        });
 
         await SeedDataAsync(context);
+    }
+
+    // Baglanti acik kaldigi surece kullanicinin kanalina dusen bildirimleri SSE event'i olarak akitir.
+    private static async IAsyncEnumerable<SseItem<InventoryNotificationPayload>> StreamInventoryNotificationsAsync(
+        InventorySseConnectionManager connectionManager,
+        Guid userId,
+        [EnumeratorCancellation] CancellationToken cancellationToken)
+    {
+        using var subscription = connectionManager.Subscribe(userId);
+
+        await foreach (var payload in subscription.Reader.ReadAllAsync(cancellationToken))
+        {
+            yield return new SseItem<InventoryNotificationPayload>(
+                payload, InventoryNotificationConstants.SseEvents.InventoryNotification);
+        }
     }
 
     private async Task SeedDataAsync(ApplicationInitializationContext context)

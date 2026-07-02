@@ -1,4 +1,5 @@
 using System;
+using InventoryTrackingAutomation.Search;
 using Volo.Abp.Application.Dtos;
 
 namespace InventoryTrackingAutomation.Dtos.Masters;
@@ -7,9 +8,11 @@ namespace InventoryTrackingAutomation.Dtos.Masters;
 /// Elasticsearch'teki urun arama dokumani; okuma-tarafi projeksiyondur, domain entity degildir.
 /// </summary>
 // islevi: Urunun aranabilir alanlarini ve FE'nin listede gosterecegi denormalize etiketleri tasir.
-// sistemdeki gorevi: ProductSearchManager tarafindan yazilir, arama endpoint'i tarafindan okunur; PostgreSQL karar verisi olarak kullanilmaz.
-public class ProductIndexDto : EntityDto<Guid>
+// sistemdeki gorevi: ProductElasticsearchEventHandler ve reindex tarafindan yazilir, arama endpoint'i tarafindan okunur; PostgreSQL karar verisi olarak kullanilmaz.
+public class ProductIndexDto : EntityDto<Guid>, ISearchDocument
 {
+    public static string IndexName => SearchIndexNames.Products; // Dokumanin yazildigi/okundugu index; tek tanim noktasi SearchIndexNames.
+
     public string Code { get; set; } = default!; // Urun kodu; birebir eslesme agirlikli aranir.
     public string Name { get; set; } = default!; // Urun adi; fuzzy metin aramasinin ana alanidir.
     public Guid? CategoryId { get; set; } // Bagli kategori Id'si (Guid lookup Id).

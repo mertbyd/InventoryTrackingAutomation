@@ -26,6 +26,8 @@ public partial class ProductMapper
 {
     public partial ProductDto MapToDto(Product source);
     public partial List<ProductDto> MapToDto(List<Product> source);
+    public partial ProductIndexDto MapToIndexDto(Product source);
+    public partial List<ProductIndexDto> MapToIndexDto(List<Product> source);
     public partial ProductStockSummaryDto MapToDto(ProductStockSummaryModel source);
     public partial CreateProductModel MapToModel(CreateProductDto source);
     public partial UpdateProductModel MapToModel(UpdateProductDto source);

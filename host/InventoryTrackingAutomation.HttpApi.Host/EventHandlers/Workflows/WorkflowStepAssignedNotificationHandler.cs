@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using InventoryTrackingAutomation.Events.Workflows;
 using InventoryTrackingAutomation.Notifications;
@@ -9,26 +10,26 @@ using Volo.Abp.EventBus;
 namespace InventoryTrackingAutomation.EventHandlers.Workflows;
 
 /// <summary>
-/// Workflow adim atamalarini ilgili onayciya SignalR bildirimi olarak iletir.
+/// Workflow adim atamalarini kayitli tum bildirim tasiyicilarina (SignalR, SSE...) iletir.
 /// </summary>
-public class WorkflowStepAssignedSignalRHandler :
+public class WorkflowStepAssignedNotificationHandler :
     ILocalEventHandler<WorkflowStepAssignedEto>,
     ITransientDependency
 {
-    private readonly IInventoryNotificationSender _notificationSender;
+    private readonly IEnumerable<IInventoryNotificationSender> _notificationSenders;
     private readonly IInventorySignalRDebugRecorder _debugRecorder;
 
-    public WorkflowStepAssignedSignalRHandler(
-        IInventoryNotificationSender notificationSender,
+    public WorkflowStepAssignedNotificationHandler(
+        IEnumerable<IInventoryNotificationSender> notificationSenders,
         IInventorySignalRDebugRecorder debugRecorder)
     {
-        _notificationSender = notificationSender;
+        _notificationSenders = notificationSenders;
         _debugRecorder = debugRecorder;
     }
 
     public async Task HandleEventAsync(WorkflowStepAssignedEto eventData)
     {
-        // Workflow event'ini client tarafinin anlayacagi SignalR payload'una cevirir.
+        // Workflow event'ini client tarafinin anlayacagi bildirim payload'una cevirir.
         var payload = CreatePayload(eventData);
 
         if (!eventData.AssignedUserId.HasValue)
@@ -43,8 +44,11 @@ public class WorkflowStepAssignedSignalRHandler :
 
         try
         {
-            // ABP SignalR UserIdProvider hedef kullaniciyi AssignedUserId ile eslestirir.
-            await _notificationSender.SendToUserAsync(eventData.AssignedUserId.Value, payload);
+            // Bildirim kanal bagimsizdir; kayitli her tasiyici (SignalR, SSE...) ayni payload'u kendi kanalindan gonderir.
+            foreach (var notificationSender in _notificationSenders)
+            {
+                await notificationSender.SendToUserAsync(eventData.AssignedUserId.Value, payload);
+            }
 
             _debugRecorder.Record(eventData.AssignedUserId, payload, sent: true);
         }

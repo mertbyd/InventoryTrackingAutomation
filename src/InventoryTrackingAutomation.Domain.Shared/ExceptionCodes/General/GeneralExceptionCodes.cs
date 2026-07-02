@@ -10,4 +10,5 @@ public static class GeneralExceptionCodes
     public const string UpdateNotSupported = $"{GeneralErrorCodesPrefix}:00005";
     public const string DeleteNotSupported = $"{GeneralErrorCodesPrefix}:00006";
     public const string SearchUnavailable = $"{GeneralErrorCodesPrefix}:00007";
+    public const string SearchPredicateNotSupported = $"{GeneralErrorCodesPrefix}:00008";
 }

@@ -1,9 +1,9 @@
 using System;
 
-namespace InventoryTrackingAutomation.SignalR;
+namespace InventoryTrackingAutomation.Notifications;
 
 /// <summary>
-/// SignalR ile client'a tasinan envanter bildirim mesaji.
+/// Client'a tasinan envanter bildirim mesaji; SignalR ve SSE tasiyicilarinin ortak payload'u.
 /// </summary>
 public class InventoryNotificationPayload
 {

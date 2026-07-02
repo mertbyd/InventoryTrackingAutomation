@@ -18,14 +18,14 @@ namespace InventoryTrackingAutomation;
 )]
 public class InventoryTrackingAutomationDomainModule : AbpModule
 {
-    // işlevi: Domain katmanı modül tanımıdır.
-    // sistemdeki görevi: Domain servislerinin, manager'ların ve event handler'ların ABP konvansiyonel DI
-    // mekanizması tarafından otomatik olarak kaydedilmesini sağlar.
-    // ITransientDependency implement eden tüm sınıflar (DataSeedContributor, Managers vb.)
-    // ABP tarafından otomatik olarak DI container'a eklenir — manuel AddTransient gerekmez.
+    // iÅŸlevi: Domain katmanÄ± modÃ¼l tanÄ±mÄ±dÄ±r.
+    // sistemdeki gÃ¶revi: Domain servislerinin, manager'larÄ±n ve event handler'larÄ±n ABP konvansiyonel DI
+    // mekanizmasÄ± tarafÄ±ndan otomatik olarak kaydedilmesini saÄŸlar.
+    // ITransientDependency implement eden tÃ¼m sÄ±nÄ±flar (DataSeedContributor, Managers vb.)
+    // ABP tarafÄ±ndan otomatik olarak DI container'a eklenir â€” manuel AddTransient gerekmez.
     public override void ConfigureServices(ServiceConfigurationContext context)
     {
-        // Elasticsearch: typed options + tek singleton client. Indexleme/arama isini ilgili Search manager'lari yapar.
+        // Elasticsearch: typed options + tek singleton client. Indexleme/arama isini generic Elasticsearch repository'leri yapar.
         var configuration = context.Services.GetConfiguration();
         Configure<ElasticsearchOptions>(configuration.GetSection(ElasticsearchOptions.SectionName));
 
