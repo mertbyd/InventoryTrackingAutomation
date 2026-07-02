@@ -5,7 +5,7 @@ using Elastic.Clients.Elasticsearch.QueryDsl;
 using InventoryTrackingAutomation.ExceptionCodes;
 using Volo.Abp;
 
-namespace InventoryTrackingAutomation.Repository.Search;
+namespace InventoryTrackingAutomation.Search;
 
 /// <summary>
 /// Repository'ye gelen lambda predicate'i Elasticsearch query nesnesine cevirir.
