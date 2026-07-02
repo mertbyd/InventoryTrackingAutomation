@@ -1,3 +1,7 @@
+using InventoryTrackingAutomation.Models.Tasks;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using InventoryTrackingAutomation.Entities.Tasks;
 
 namespace InventoryTrackingAutomation.Interface.Tasks;
@@ -7,5 +11,6 @@ namespace InventoryTrackingAutomation.Interface.Tasks;
 /// </summary>
 public interface IVehicleTaskRepository : IBaseRepository<VehicleTask>
 {
-    System.Threading.Tasks.Task<System.Collections.Generic.List<InventoryTrackingAutomation.Models.Tasks.TaskVehicleModel>> GetTaskVehiclesByTaskIdAsync(System.Guid inventoryTaskId);
+    Task<List<TaskVehicleModel>> GetTaskVehiclesByTaskIdAsync(Guid inventoryTaskId);
 }
+

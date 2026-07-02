@@ -1,3 +1,8 @@
+using InventoryTrackingAutomation.Models.Movements;
+using InventoryTrackingAutomation.Enums.Inventory;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using Volo.Abp.EntityFrameworkCore;
 using InventoryTrackingAutomation.Entities.Inventory;
 using InventoryTrackingAutomation.Interface.Inventory;
@@ -16,7 +21,7 @@ public class InventoryTransactionRepository : BaseRepository<InventoryTransactio
     {
     }
 
-    public async System.Threading.Tasks.Task<System.Collections.Generic.List<InventoryTrackingAutomation.Models.Movements.TaskVehicleReturnLineModel>> GetVehicleReturnLinesAsync(System.Collections.Generic.HashSet<System.Guid> movementIds, System.Guid vehicleId)
+    public async Task<List<TaskVehicleReturnLineModel>> GetVehicleReturnLinesAsync(HashSet<Guid> movementIds, Guid vehicleId)
     {
         var dbContext = await GetDbContextAsync();
         var transactions = await dbContext.InventoryTransactions
@@ -24,43 +29,43 @@ public class InventoryTransactionRepository : BaseRepository<InventoryTransactio
                 x.RelatedMovementRequestId.HasValue &&
                 movementIds.Contains(x.RelatedMovementRequestId.Value) &&
                 (
-                    (x.TransactionType == InventoryTrackingAutomation.Enums.Inventory.InventoryTransactionTypeEnum.WarehouseToVehicle &&
-                     x.TargetLocationType == InventoryTrackingAutomation.Enums.Inventory.StockLocationTypeEnum.Vehicle &&
+                    (x.TransactionType == InventoryTransactionTypeEnum.WarehouseToVehicle &&
+                     x.TargetLocationType == StockLocationTypeEnum.Vehicle &&
                      x.TargetLocationId == vehicleId) ||
-                    (x.TransactionType == InventoryTrackingAutomation.Enums.Inventory.InventoryTransactionTypeEnum.VehicleToWarehouse &&
-                     x.SourceLocationType == InventoryTrackingAutomation.Enums.Inventory.StockLocationTypeEnum.Vehicle &&
+                    (x.TransactionType == InventoryTransactionTypeEnum.VehicleToWarehouse &&
+                     x.SourceLocationType == StockLocationTypeEnum.Vehicle &&
                      x.SourceLocationId == vehicleId) ||
-                    (x.TransactionType == InventoryTrackingAutomation.Enums.Inventory.InventoryTransactionTypeEnum.Adjustment &&
-                     x.SourceLocationType == InventoryTrackingAutomation.Enums.Inventory.StockLocationTypeEnum.Vehicle &&
+                    (x.TransactionType == InventoryTransactionTypeEnum.Adjustment &&
+                     x.SourceLocationType == StockLocationTypeEnum.Vehicle &&
                      x.SourceLocationId == vehicleId)
                 ))
             .ToListAsync();
 
         return transactions
             .GroupBy(x => x.ProductId)
-            .Select(group => new InventoryTrackingAutomation.Models.Movements.TaskVehicleReturnLineModel(
+            .Select(group => new TaskVehicleReturnLineModel(
                 group.Key,
-                group.Sum(x => x.TransactionType == InventoryTrackingAutomation.Enums.Inventory.InventoryTransactionTypeEnum.WarehouseToVehicle
+                group.Sum(x => x.TransactionType == InventoryTransactionTypeEnum.WarehouseToVehicle
                     ? x.Quantity
                     : -x.Quantity)))
             .Where(x => x.Quantity > 0)
             .ToList();
     }
 
-    public async System.Threading.Tasks.Task<System.Guid?> GetLastSourceWarehouseIdAsync(System.Collections.Generic.HashSet<System.Guid> movementIds, System.Guid vehicleId)
+    public async Task<Guid?> GetLastSourceWarehouseIdAsync(HashSet<Guid> movementIds, Guid vehicleId)
     {
         var dbContext = await GetDbContextAsync();
         var lastTransaction = await dbContext.InventoryTransactions
             .Where(x =>
                 x.RelatedMovementRequestId.HasValue &&
                 movementIds.Contains(x.RelatedMovementRequestId.Value) &&
-                x.TargetLocationType == InventoryTrackingAutomation.Enums.Inventory.StockLocationTypeEnum.Vehicle &&
+                x.TargetLocationType == StockLocationTypeEnum.Vehicle &&
                 x.TargetLocationId == vehicleId &&
-                x.TransactionType == InventoryTrackingAutomation.Enums.Inventory.InventoryTransactionTypeEnum.WarehouseToVehicle)
+                x.TransactionType == InventoryTransactionTypeEnum.WarehouseToVehicle)
             .OrderByDescending(x => x.OccurredAt)
             .FirstOrDefaultAsync();
 
-        if (lastTransaction?.SourceLocationType == InventoryTrackingAutomation.Enums.Inventory.StockLocationTypeEnum.Warehouse &&
+        if (lastTransaction?.SourceLocationType == StockLocationTypeEnum.Warehouse &&
             lastTransaction.SourceLocationId.HasValue)
         {
             return lastTransaction.SourceLocationId.Value;
@@ -69,9 +74,10 @@ public class InventoryTransactionRepository : BaseRepository<InventoryTransactio
         return null;
     }
 
-    public override async System.Threading.Tasks.Task<System.Linq.IQueryable<InventoryTrackingAutomation.Entities.Inventory.InventoryTransaction>> WithDetailsAsync()
+    public override async Task<IQueryable<InventoryTransaction>> WithDetailsAsync()
     {
         return (await GetQueryableAsync()).Include(x => x.Product).Include(x => x.RelatedMovementRequest);
     }
 }
+
 

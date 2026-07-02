@@ -1,3 +1,5 @@
+using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Volo.Abp.EntityFrameworkCore;
 using InventoryTrackingAutomation.Entities.Masters;
@@ -15,9 +17,10 @@ public class ProductRepository : BaseRepository<Product>, IProductRepository
     {
     }
 
-    public override async System.Threading.Tasks.Task<System.Linq.IQueryable<InventoryTrackingAutomation.Entities.Masters.Product>> WithDetailsAsync()
+    public override async Task<IQueryable<Product>> WithDetailsAsync()
     {
         return (await GetQueryableAsync()).Include(x => x.Category).Include(x => x.UnitType);
     }
 }
+
 

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using InventoryTrackingAutomation.Entities.Lookups;
 using InventoryTrackingAutomation.Interface.Lookups;
@@ -42,7 +43,7 @@ public class ProductCategoryManager : BaseManager<ProductCategory>
     /// <summary>
     /// Birden fazla ürün kategorisi oluşturur — Toplu Code unique kontrolü yapar.
     /// </summary>
-    public async Task<System.Collections.Generic.List<CreateProductCategoryModel>> CreateManyAsync(System.Collections.Generic.List<CreateProductCategoryModel> models)
+    public async Task<List<CreateProductCategoryModel>> CreateManyAsync(List<CreateProductCategoryModel> models)
     {
         var codes = models.Where(x => !string.IsNullOrWhiteSpace(x.Code)).Select(x => x.Code).ToList();
         if (codes.Any())
@@ -72,3 +73,4 @@ public class ProductCategoryManager : BaseManager<ProductCategory>
         return model;
     }
 }
+

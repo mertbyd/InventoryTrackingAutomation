@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using InventoryTrackingAutomation.Entities.Lookups;
 using InventoryTrackingAutomation.Entities.Masters;
@@ -19,7 +21,7 @@ public class ProductManager : BaseManager<Product>
     protected override string AlreadyExistsErrorCode => ProductExceptionCodes.CodeNotUnique;
 
     private IProductCategoryRepository _categoryRepository => LazyGetRequiredService<IProductCategoryRepository>();  // CategoryId FK validasyonu için
-    private IRepository<UnitType, System.Guid> _unitTypeRepository => LazyGetRequiredService<IRepository<UnitType, System.Guid>>();
+    private IRepository<UnitType, Guid> _unitTypeRepository => LazyGetRequiredService<IRepository<UnitType, Guid>>();
 
     /// <summary>
     /// ProductManager constructor'ı.
@@ -59,7 +61,7 @@ public class ProductManager : BaseManager<Product>
     /// <summary>
     /// Birden fazla ürün oluşturur — Toplu Code unique ve category/unit varlık kontrolü yapar.
     /// </summary>
-    public async Task<System.Collections.Generic.List<CreateProductModel>> CreateManyAsync(System.Collections.Generic.List<CreateProductModel> models)
+    public async Task<List<CreateProductModel>> CreateManyAsync(List<CreateProductModel> models)
     {
         var codes = models.Where(x => !string.IsNullOrWhiteSpace(x.Code)).Select(x => x.Code).ToList();
         if (codes.Any())
@@ -120,4 +122,5 @@ public class ProductManager : BaseManager<Product>
         return Task.FromResult(existing);
     }
 }
+
 

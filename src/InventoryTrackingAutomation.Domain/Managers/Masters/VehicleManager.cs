@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using InventoryTrackingAutomation.Entities.Lookups;
 using InventoryTrackingAutomation.Entities.Masters;
@@ -17,7 +19,7 @@ public class VehicleManager : BaseManager<Vehicle>
 {
     protected override string AlreadyExistsErrorCode => VehicleExceptionCodes.AlreadyExists;
 
-    private IRepository<VehicleType, System.Guid> _vehicleTypeRepository => LazyGetRequiredService<IRepository<VehicleType, System.Guid>>();
+    private IRepository<VehicleType, Guid> _vehicleTypeRepository => LazyGetRequiredService<IRepository<VehicleType, Guid>>();
 
     /// <summary>
     /// VehicleManager constructor'ı.
@@ -50,7 +52,7 @@ public class VehicleManager : BaseManager<Vehicle>
     /// <summary>
     /// Birden fazla araç oluşturur — Toplu PlateNumber unique kontrolü yapar.
     /// </summary>
-    public async Task<System.Collections.Generic.List<CreateVehicleModel>> CreateManyAsync(System.Collections.Generic.List<CreateVehicleModel> models)
+    public async Task<List<CreateVehicleModel>> CreateManyAsync(List<CreateVehicleModel> models)
     {
         var plates = models.Where(x => !string.IsNullOrWhiteSpace(x.PlateNumber)).Select(x => x.PlateNumber).ToList();
         if (plates.Any())
@@ -98,4 +100,5 @@ public class VehicleManager : BaseManager<Vehicle>
         return Task.FromResult(existing);
     }
 }
+
 

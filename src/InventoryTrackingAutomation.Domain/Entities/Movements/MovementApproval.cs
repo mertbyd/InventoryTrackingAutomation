@@ -1,3 +1,4 @@
+using InventoryTrackingAutomation.Entities.Masters;
 using System;
 using InventoryTrackingAutomation.Enums.Tasks;
 using InventoryTrackingAutomation.Enums.Inventory;
@@ -22,8 +23,9 @@ public class MovementApproval : CreationAuditedEntity<Guid>
     public string? Note { get; set; } // Onaycinin operasyonel notunu veya red gerekcesini tasir.
 
     public virtual MovementRequest MovementRequest { get; set; }
-    public virtual InventoryTrackingAutomation.Entities.Masters.Worker ApproverWorker { get; set; }
+    public virtual Worker ApproverWorker { get; set; }
     protected MovementApproval() { }
     public MovementApproval(Guid id) : base(id) { }
 }
+
 

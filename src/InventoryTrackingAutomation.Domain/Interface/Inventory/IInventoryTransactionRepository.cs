@@ -1,3 +1,7 @@
+using InventoryTrackingAutomation.Models.Movements;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using InventoryTrackingAutomation.Entities.Inventory;
 
 namespace InventoryTrackingAutomation.Interface.Inventory;
@@ -7,6 +11,7 @@ namespace InventoryTrackingAutomation.Interface.Inventory;
 /// </summary>
 public interface IInventoryTransactionRepository : IBaseRepository<InventoryTransaction>
 {
-    System.Threading.Tasks.Task<System.Collections.Generic.List<InventoryTrackingAutomation.Models.Movements.TaskVehicleReturnLineModel>> GetVehicleReturnLinesAsync(System.Collections.Generic.HashSet<System.Guid> movementIds, System.Guid vehicleId);
-    System.Threading.Tasks.Task<System.Guid?> GetLastSourceWarehouseIdAsync(System.Collections.Generic.HashSet<System.Guid> movementIds, System.Guid vehicleId);
+    Task<List<TaskVehicleReturnLineModel>> GetVehicleReturnLinesAsync(HashSet<Guid> movementIds, Guid vehicleId);
+    Task<Guid?> GetLastSourceWarehouseIdAsync(HashSet<Guid> movementIds, Guid vehicleId);
 }
+

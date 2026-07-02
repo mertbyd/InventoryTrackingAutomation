@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using InventoryTrackingAutomation.Entities.Inventory;
 using InventoryTrackingAutomation.Enums.Inventory;
@@ -45,7 +47,7 @@ public class InventoryTransactionManager : BaseManager<InventoryTransaction>
     /// <summary>
     /// Birden fazla stok hareket kaydı oluşturmak için toplu validasyon yapar.
     /// </summary>
-    public async Task<System.Collections.Generic.List<CreateInventoryTransactionModel>> CreateManyAsync(System.Collections.Generic.List<CreateInventoryTransactionModel> models)
+    public async Task<List<CreateInventoryTransactionModel>> CreateManyAsync(List<CreateInventoryTransactionModel> models)
     {
         var productIds = models.Select(x => x.ProductId).Distinct().ToList();
         if (productIds.Any()) await EnsureAllExistInAsync(_productRepository, productIds);
@@ -64,7 +66,7 @@ public class InventoryTransactionManager : BaseManager<InventoryTransaction>
 
 
     /// Hareket referanslarını doğrulamak için kullanılır.
-    private async Task ValidateReferencesAsync(System.Guid productId, System.Guid? movementRequestId)
+    private async Task ValidateReferencesAsync(Guid productId, Guid? movementRequestId)
     {
         // Transaction kaynak referanslari domain katmaninda repository uzerinden dogrulanir.
         await EnsureExistsInAsync(_productRepository, productId);
@@ -84,7 +86,7 @@ public class InventoryTransactionManager : BaseManager<InventoryTransaction>
 
 
     /// Stok hareketini ledger'a kaydetmek için kullanılır.
-    public async Task<InventoryTransaction> RecordAsync(InventoryTrackingAutomation.Models.Inventory.StockTransferModel model)
+    public async Task<InventoryTransaction> RecordAsync(StockTransferModel model)
     {
         var entity = new InventoryTransaction(GuidGenerator.Create())
         {
@@ -126,4 +128,5 @@ public class InventoryTransactionManager : BaseManager<InventoryTransaction>
         return entity;
     }
 }
+
 

@@ -44,7 +44,7 @@ public class InventoryTaskManager : BaseManager<InventoryTask>
     /// <summary>
     /// Birden fazla envanter görevini toplu oluşturmak ve doğrulamak için kullanılır.
     /// </summary>
-    public async Task<System.Collections.Generic.List<CreateInventoryTaskModel>> CreateManyAsync(System.Collections.Generic.List<CreateInventoryTaskModel> models)
+    public async Task<List<CreateInventoryTaskModel>> CreateManyAsync(List<CreateInventoryTaskModel> models)
     {
         var codes = models.Where(x => !string.IsNullOrWhiteSpace(x.Code)).Select(x => x.Code).ToList();
         if (codes.Any())
@@ -84,8 +84,8 @@ public class InventoryTaskManager : BaseManager<InventoryTask>
     /// </summary>
     public async Task<UpdateInventoryTaskModel> UpdateAsync(InventoryTask existing, UpdateInventoryTaskModel model)
     {
-        if (existing.Status == InventoryTrackingAutomation.Enums.Tasks.TaskStatusEnum.Completed ||
-            existing.Status == InventoryTrackingAutomation.Enums.Tasks.TaskStatusEnum.Cancelled)
+        if (existing.Status == TaskStatusEnum.Completed ||
+            existing.Status == TaskStatusEnum.Cancelled)
         {
             throw new BusinessException(InventoryTaskExceptionCodes.CannotUpdateCompletedOrCancelled);
         }
@@ -181,10 +181,10 @@ public class InventoryTaskManager : BaseManager<InventoryTask>
     /// </summary>
     public async Task TransitionStatusAsync(
         InventoryTask task,
-        InventoryTrackingAutomation.Enums.Tasks.TaskStatusEnum target,
+        TaskStatusEnum target,
         Volo.Abp.EventBus.Local.ILocalEventBus localEventBus,
-        System.Guid? changedByUserId = null,
-        System.Guid? changedByWorkerId = null)
+        Guid? changedByUserId = null,
+        Guid? changedByWorkerId = null)
     {
         if (task.Status == target) return;
 
@@ -192,10 +192,10 @@ public class InventoryTaskManager : BaseManager<InventoryTask>
 
         var allowed = (task.Status, target) switch
         {
-            (InventoryTrackingAutomation.Enums.Tasks.TaskStatusEnum.Draft, InventoryTrackingAutomation.Enums.Tasks.TaskStatusEnum.InProgress) => true,
-            (InventoryTrackingAutomation.Enums.Tasks.TaskStatusEnum.InProgress, InventoryTrackingAutomation.Enums.Tasks.TaskStatusEnum.Completed) => true,
-            (InventoryTrackingAutomation.Enums.Tasks.TaskStatusEnum.Draft, InventoryTrackingAutomation.Enums.Tasks.TaskStatusEnum.Cancelled) => true,
-            (InventoryTrackingAutomation.Enums.Tasks.TaskStatusEnum.InProgress, InventoryTrackingAutomation.Enums.Tasks.TaskStatusEnum.Cancelled) => true,
+            (TaskStatusEnum.Draft, TaskStatusEnum.InProgress) => true,
+            (TaskStatusEnum.InProgress, TaskStatusEnum.Completed) => true,
+            (TaskStatusEnum.Draft, TaskStatusEnum.Cancelled) => true,
+            (TaskStatusEnum.InProgress, TaskStatusEnum.Cancelled) => true,
             _ => false
         };
 
@@ -214,4 +214,5 @@ public class InventoryTaskManager : BaseManager<InventoryTask>
         });
     }
 }
+
 

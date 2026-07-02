@@ -1,3 +1,4 @@
+using System.Linq;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -43,9 +44,10 @@ public class TaskLineRepository : BaseRepository<TaskLine>, ITaskLineRepository
             .FirstOrDefaultAsync(x => x.TaskId == taskId && x.ProductId == productId);
     }
 
-    public override async System.Threading.Tasks.Task<System.Linq.IQueryable<InventoryTrackingAutomation.Entities.Tasks.TaskLine>> WithDetailsAsync()
+    public override async Task<IQueryable<TaskLine>> WithDetailsAsync()
     {
         return (await GetQueryableAsync()).Include(x => x.Task).Include(x => x.Product);
     }
 }
+
 

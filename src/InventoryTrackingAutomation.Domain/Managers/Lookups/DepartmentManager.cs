@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using InventoryTrackingAutomation.Entities.Lookups;
 using InventoryTrackingAutomation.Interface.Lookups;
@@ -42,7 +43,7 @@ public class DepartmentManager : BaseManager<Department>
     /// <summary>
     /// Birden fazla departman oluşturur — Toplu Code unique kontrolü yapar.
     /// </summary>
-    public async Task<System.Collections.Generic.List<CreateDepartmentModel>> CreateManyAsync(System.Collections.Generic.List<CreateDepartmentModel> models)
+    public async Task<List<CreateDepartmentModel>> CreateManyAsync(List<CreateDepartmentModel> models)
     {
         var codes = models.Where(x => !string.IsNullOrWhiteSpace(x.Code)).Select(x => x.Code).ToList();
         if (codes.Any())
@@ -68,4 +69,5 @@ public class DepartmentManager : BaseManager<Department>
         return model;
     }
 }
+
 

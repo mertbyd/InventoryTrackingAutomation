@@ -1,3 +1,5 @@
+using InventoryTrackingAutomation.Entities.Tasks;
+using InventoryTrackingAutomation.Entities.Masters;
 using System;
 using InventoryTrackingAutomation.Enums.Tasks;
 using InventoryTrackingAutomation.Enums.Inventory;
@@ -25,8 +27,8 @@ public class MovementRequest : FullAuditedEntity<Guid>
     public string? CancellationNote { get; set; } // Iptal durumunda gerekce baglamini tasir.
     public Guid? WorkflowInstanceId { get; set; } // Talebin bagli oldugu workflow sureci baglamini tasir.
 
-    public virtual InventoryTrackingAutomation.Entities.Tasks.VehicleTask VehicleTask { get; protected set; }
-    public virtual InventoryTrackingAutomation.Entities.Masters.Worker RequestedByWorker { get; protected set; }
+    public virtual VehicleTask VehicleTask { get; protected set; }
+    public virtual Worker RequestedByWorker { get; protected set; }
     public virtual MovementRequest? ParentMovementRequest { get; protected set; }
 
     protected MovementRequest() { }
@@ -35,3 +37,4 @@ public class MovementRequest : FullAuditedEntity<Guid>
     //sistemdeki görevii: Yeni talep kayitlarinin Entity Framework tarafindan ID bazli olusumunu saglar.
     public MovementRequest(Guid id) : base(id) { }
 }
+
