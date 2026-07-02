@@ -32,7 +32,6 @@ public partial class VehicleTaskMapper
     public partial CreateVehicleTaskModel MapToModel(CreateVehicleTaskDto source);
     public partial List<CreateVehicleTaskLineModel> MapToModel(List<CreateVehicleTaskLineDto> source);
     public partial UpdateVehicleTaskModel MapToModel(UpdateVehicleTaskDto source);
-    [MapProperty(nameof(VehicleTask.VehicleTaskLines), nameof(VehicleTaskDto.Lines))]
     public partial VehicleTaskDto MapToDto(VehicleTask source);
     public partial void MapToEntity(CreateVehicleTaskModel source, [MappingTarget] VehicleTask target);
     public partial void MapToEntity(UpdateVehicleTaskModel source, [MappingTarget] VehicleTask target);
