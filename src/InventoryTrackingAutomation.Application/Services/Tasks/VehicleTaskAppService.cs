@@ -29,7 +29,6 @@ public class VehicleTaskAppService : InventoryTrackingAutomationAppService, IVeh
 
     private IVehicleTaskRepository _repository => LazyGetRequiredService<IVehicleTaskRepository>();
     private IVehicleTaskLineRepository _vehicleTaskLineRepository => LazyGetRequiredService<IVehicleTaskLineRepository>();
-    private ITaskLineRepository _taskLineRepository => LazyGetRequiredService<ITaskLineRepository>();
     private VehicleTaskManager _manager => LazyGetRequiredService<VehicleTaskManager>();
     private VehicleTaskLineManager _vehicleTaskLineManager => LazyGetRequiredService<VehicleTaskLineManager>();
     private IVehicleTaskLineAppService _vehicleTaskLineAppService => LazyGetRequiredService<IVehicleTaskLineAppService>();
@@ -44,7 +43,7 @@ public class VehicleTaskAppService : InventoryTrackingAutomationAppService, IVeh
     public async Task<VehicleTaskDto> GetAsync(Guid id)
     {
         var entity = await _manager.EnsureExistsAsync(id);
-        return await MapVehicleTaskWithLinesAsync(entity);
+        return _mapper.MapToDto(entity);
     }
 
     public async Task<PagedResultDto<VehicleTaskDto>> GetListAsync(PagedResultRequestDto input)
@@ -73,7 +72,7 @@ public class VehicleTaskAppService : InventoryTrackingAutomationAppService, IVeh
         }
 
         await _localEventBus.PublishAsync(CacheInvalidationEto.ForKeys(CacheKeys.TaskVehicles(inserted.TaskId)));
-        return await MapVehicleTaskWithLinesAsync(inserted);
+        return _mapper.MapToDto(await _repository.GetAsync(inserted.Id, includeDetails: true));
     }
 
     [UnitOfWork]
@@ -129,7 +128,9 @@ public class VehicleTaskAppService : InventoryTrackingAutomationAppService, IVeh
 
         var taskKeys = inserted.Select(e => CacheKeys.TaskVehicles(e.TaskId)).Distinct().ToArray();
         await _localEventBus.PublishAsync(CacheInvalidationEto.ForKeys(taskKeys));
-        return await MapVehicleTasksWithLinesAsync(inserted, insertedLines);
+        var insertedIds = inserted.Select(e => e.Id).ToList();
+        var withDetails = await _repository.GetListAsync(e => insertedIds.Contains(e.Id), includeDetails: true);
+        return _mapper.MapToDto(withDetails);
     }
 
     [UnitOfWork]
@@ -191,40 +192,4 @@ public class VehicleTaskAppService : InventoryTrackingAutomationAppService, IVeh
         await _vehicleTaskLineAppService.DeleteAsync(vehicleTaskId, lineId);
     }
 
-    private async Task<VehicleTaskDto> MapVehicleTaskWithLinesAsync(VehicleTask entity)
-    {
-        var dto = _mapper.MapToDto(entity);
-        dto.Lines = await _vehicleTaskLineAppService.GetByVehicleTaskAsync(entity.Id);
-        return dto;
-    }
-
-    private async Task<List<VehicleTaskDto>> MapVehicleTasksWithLinesAsync(List<VehicleTask> vehicleTasks, List<VehicleTaskLine> lines)
-    {
-        var taskLineIds = lines.Select(x => x.TaskLineId).Distinct().ToList();
-        var productByTaskLineId = taskLineIds.Count == 0
-            ? new Dictionary<Guid, Guid>()
-            : (await _taskLineRepository.GetListAsync(x => taskLineIds.Contains(x.Id)))
-                .ToDictionary(x => x.Id, x => x.ProductId);
-
-        var lineDtosByVehicleTaskId = lines
-            .GroupBy(x => x.VehicleTaskId)
-            .ToDictionary(
-                x => x.Key,
-                x => x.Select(line =>
-                {
-                    var dto = _lineMapper.MapToDto(line);
-                    dto.ProductId = productByTaskLineId.GetValueOrDefault(line.TaskLineId);
-                    return dto;
-                }).ToList());
-
-        var dtos = _mapper.MapToDto(vehicleTasks);
-        foreach (var dto in dtos)
-        {
-            dto.Lines = lineDtosByVehicleTaskId.TryGetValue(dto.Id, out var lineDtos)
-                ? lineDtos
-                : new List<VehicleTaskLineDto>();
-        }
-
-        return dtos;
-    }
 }

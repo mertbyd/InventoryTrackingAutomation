@@ -1,5 +1,6 @@
 using InventoryTrackingAutomation.Entities.Masters;
 using System;
+using System.Collections.Generic;
 using Volo.Abp.Domain.Entities.Auditing;
 using Volo.Abp.MultiTenancy;
 
@@ -21,6 +22,7 @@ public class VehicleTask : AuditedEntity<Guid>
     public virtual InventoryTask Task { get; protected set; }
     public virtual Vehicle Vehicle { get; protected set; }
     public virtual Worker ResponsibleWorker { get; protected set; }
+    public virtual ICollection<VehicleTaskLine> VehicleTaskLines { get; protected set; }
 
     protected VehicleTask() { }
     public VehicleTask(Guid id) : base(id) { }

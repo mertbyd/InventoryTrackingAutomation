@@ -24,10 +24,15 @@ namespace InventoryTrackingAutomation.Application.Mappers.Tasks;
 [Mapper]
 public partial class VehicleTaskMapper
 {
+    // VehicleTaskLine -> VehicleTaskLineDto eslemesini (ProductId/ProductName dahil) tekrar etmemek icin devreder.
+    [UseMapper]
+    private readonly VehicleTaskLineMapper _lineMapper = new();
+
     public partial List<VehicleTaskDto> MapToDto(List<VehicleTask> source);
     public partial CreateVehicleTaskModel MapToModel(CreateVehicleTaskDto source);
     public partial List<CreateVehicleTaskLineModel> MapToModel(List<CreateVehicleTaskLineDto> source);
     public partial UpdateVehicleTaskModel MapToModel(UpdateVehicleTaskDto source);
+    [MapProperty(nameof(VehicleTask.VehicleTaskLines), nameof(VehicleTaskDto.Lines))]
     public partial VehicleTaskDto MapToDto(VehicleTask source);
     public partial void MapToEntity(CreateVehicleTaskModel source, [MappingTarget] VehicleTask target);
     public partial void MapToEntity(UpdateVehicleTaskModel source, [MappingTarget] VehicleTask target);

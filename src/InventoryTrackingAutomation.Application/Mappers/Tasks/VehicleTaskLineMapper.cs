@@ -26,6 +26,9 @@ public partial class VehicleTaskLineMapper
 {
     public partial CreateVehicleTaskLineModel MapToModel(CreateVehicleTaskLineDto source);
     public partial UpdateVehicleTaskLineModel MapToModel(UpdateVehicleTaskLineDto source);
+    // ProductId entity kolonu degildir; TaskLine navigation'ından cozulur.
+    [MapProperty("TaskLine.ProductId", nameof(VehicleTaskLineDto.ProductId))]
+    [MapProperty("TaskLine.Product.Name", nameof(VehicleTaskLineDto.ProductName))]
     public partial VehicleTaskLineDto MapToDto(VehicleTaskLine source);
     public partial void MapToEntity(CreateVehicleTaskLineModel source, [MappingTarget] VehicleTaskLine target);
     public partial void MapToEntity(UpdateVehicleTaskLineModel source, [MappingTarget] VehicleTaskLine target);
