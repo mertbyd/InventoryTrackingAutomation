@@ -43,8 +43,7 @@ public class VehicleTaskAppService : InventoryTrackingAutomationAppService, IVeh
 
     public async Task<VehicleTaskDto> GetAsync(Guid id)
     {
-        await _manager.EnsureExistsAsync(id);
-        var entity = await _repository.GetAsync(id, includeDetails: true);
+        var entity = await _manager.EnsureExistsAsync(id);
         return await MapVehicleTaskWithLinesAsync(entity);
     }
 

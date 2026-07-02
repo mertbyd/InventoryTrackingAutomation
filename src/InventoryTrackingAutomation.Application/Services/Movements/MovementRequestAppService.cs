@@ -47,8 +47,7 @@ public class MovementRequestAppService : InventoryTrackingAutomationAppService, 
     /// Hareket talebi verisini getirmek için kullanılır.
     public async Task<MovementRequestDto> GetAsync(Guid id)
     {
-        await _manager.EnsureExistsAsync(id);
-        var entity = await _repository.GetAsync(id, includeDetails: true);
+        var entity = await _manager.EnsureExistsAsync(id);
         return await MapToDtoAsync(entity);
     }
     /// Hareket talebi listesini getirmek için kullanılır.
