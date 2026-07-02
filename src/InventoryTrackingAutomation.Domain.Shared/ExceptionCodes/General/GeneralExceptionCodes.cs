@@ -9,4 +9,5 @@ public static class GeneralExceptionCodes
     public const string SoftDeleteNotSupported = $"{GeneralErrorCodesPrefix}:00004";
     public const string UpdateNotSupported = $"{GeneralErrorCodesPrefix}:00005";
     public const string DeleteNotSupported = $"{GeneralErrorCodesPrefix}:00006";
+    public const string SearchUnavailable = $"{GeneralErrorCodesPrefix}:00007";
 }

@@ -37,6 +37,37 @@ services:
       timeout: 5s
       retries: 5
 
+  elasticsearch:
+    # Surum notu: .NET client Elastic.Clients.Elasticsearch 9.x, 8.x sunucuya baglanamaz; client ile ayni major tutulur.
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.4.3
+    container_name: inventory-elasticsearch
+    restart: unless-stopped
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    ports:
+      - "9200:9200"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:9200 >/dev/null || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:9.4.3
+    container_name: inventory-kibana
+    restart: unless-stopped
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch
+
 volumes:
   postgres_data:
   redis_data:
+  elasticsearch_data:
