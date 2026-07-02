@@ -51,8 +51,7 @@ public class InventoryTaskAppService : InventoryTrackingAutomationAppService, II
     /// </summary>
     public async Task<InventoryTaskDto> GetAsync(Guid id)
     {
-        await _manager.EnsureExistsAsync(id);
-        var entity = await _repository.GetAsync(id, includeDetails: true);
+        var entity = await _manager.EnsureExistsAsync(id);
         return await MapTaskWithLinesAsync(entity);
     }
 

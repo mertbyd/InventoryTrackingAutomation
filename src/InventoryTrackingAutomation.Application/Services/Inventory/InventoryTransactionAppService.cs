@@ -36,8 +36,7 @@ public class InventoryTransactionAppService : InventoryTrackingAutomationAppServ
     //sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<InventoryTransactionDto> GetAsync(Guid id)
     {
-        await _manager.EnsureExistsAsync(id);
-        var entity = await _repository.GetAsync(id, includeDetails: true);
+        var entity = await _manager.EnsureExistsAsync(id);
         return _mapper.MapToDto(entity);
     }
 

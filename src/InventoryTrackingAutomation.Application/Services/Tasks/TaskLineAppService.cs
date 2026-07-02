@@ -43,8 +43,7 @@ public class TaskLineAppService : InventoryTrackingAutomationAppService, ITaskLi
     /// Görev kalemini Id ile getirmek için kullanılır.
     public async Task<TaskLineDto> GetAsync(Guid id)
     {
-        await _manager.EnsureExistsAsync(id);
-        var entity = await _repository.GetAsync(id, includeDetails: true);
+        var entity = await _manager.EnsureExistsAsync(id);
         return await MapTaskLineAsync(entity);
     }
 
