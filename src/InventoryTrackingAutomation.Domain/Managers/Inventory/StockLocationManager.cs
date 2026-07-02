@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -49,7 +50,7 @@ public class StockLocationManager : BaseManager<StockLocation>
     /// <summary>
     /// Birden fazla stok lokasyon kaydı oluşturmak için toplu validasyon yapar.
     /// </summary>
-    public async Task<System.Collections.Generic.List<CreateStockLocationModel>> CreateManyAsync(System.Collections.Generic.List<CreateStockLocationModel> models)
+    public async Task<List<CreateStockLocationModel>> CreateManyAsync(List<CreateStockLocationModel> models)
     {
         var productIds = models.Select(x => x.ProductId).Distinct().ToList();
         if (productIds.Any()) await EnsureAllExistInAsync(_productRepository, productIds);
@@ -187,4 +188,5 @@ public class StockLocationManager : BaseManager<StockLocation>
         }
     }
 }
+
 

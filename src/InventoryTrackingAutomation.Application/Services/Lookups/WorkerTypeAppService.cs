@@ -25,7 +25,7 @@ public class WorkerTypeAppService : LookupCrudAppService<WorkerType, WorkerTypeD
     }
 
     protected override WorkerTypeDto MapToDto(WorkerType entity) => _mapper.MapToDto(entity);
-    protected override System.Collections.Generic.List<WorkerTypeDto> MapToDto(System.Collections.Generic.List<WorkerType> entities) => _mapper.MapToDto(entities);
+    protected override List<WorkerTypeDto> MapToDto(List<WorkerType> entities) => _mapper.MapToDto(entities);
     protected override CreateWorkerTypeModel MapToCreateModel(CreateWorkerTypeDto input) => _mapper.MapToModel(input);
     protected override UpdateWorkerTypeModel MapToUpdateModel(UpdateWorkerTypeDto input) => _mapper.MapToModel(input);
 
@@ -51,3 +51,4 @@ public class WorkerTypeAppService : LookupCrudAppService<WorkerType, WorkerTypeD
         return entity;
     }
 }
+

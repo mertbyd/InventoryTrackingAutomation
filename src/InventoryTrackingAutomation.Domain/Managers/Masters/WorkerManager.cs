@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System;
 using System.Threading.Tasks;
 using InventoryTrackingAutomation.Entities.Lookups;
@@ -58,7 +59,7 @@ public class WorkerManager : BaseManager<Worker>
     /// <summary>
     /// Birden fazla çalışan oluşturur — Toplu DepartmentId, DefaultWarehouseId ve ManagerId varlık kontrolleri yapar.
     /// </summary>
-    public async Task<System.Collections.Generic.List<CreateWorkerModel>> CreateManyAsync(System.Collections.Generic.List<CreateWorkerModel> models)
+    public async Task<List<CreateWorkerModel>> CreateManyAsync(List<CreateWorkerModel> models)
     {
         var departmentIds = models.Where(x => x.DepartmentId.HasValue).Select(x => x.DepartmentId.Value).ToList();
         if (departmentIds.Any())
@@ -149,4 +150,5 @@ public class WorkerManager : BaseManager<Worker>
         return Task.FromResult(existing);
     }
 }
+
 

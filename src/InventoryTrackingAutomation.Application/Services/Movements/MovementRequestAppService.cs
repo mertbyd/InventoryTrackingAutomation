@@ -1,3 +1,5 @@
+using InventoryTrackingAutomation.Enums;
+using InventoryTrackingAutomation.Entities.Workflows;
 using InventoryTrackingAutomation.Application.Mappers.Movements;
 using System;
 using System.Collections.Generic;
@@ -45,7 +47,8 @@ public class MovementRequestAppService : InventoryTrackingAutomationAppService, 
     /// Hareket talebi verisini getirmek için kullanılır.
     public async Task<MovementRequestDto> GetAsync(Guid id)
     {
-        var entity = await _manager.EnsureExistsAsync(id);
+        await _manager.EnsureExistsAsync(id);
+        var entity = await _repository.GetAsync(id, includeDetails: true);
         return await MapToDtoAsync(entity);
     }
     /// Hareket talebi listesini getirmek için kullanılır.
@@ -53,7 +56,7 @@ public class MovementRequestAppService : InventoryTrackingAutomationAppService, 
     {
         var totalCount = await _repository.GetCountAsync();
         var entities = await _repository.GetPagedListAsync(
-            input.SkipCount, input.MaxResultCount, sorting: string.Empty);
+            input.SkipCount, input.MaxResultCount, sorting: string.Empty, includeDetails: true);
         return new PagedResultDto<MovementRequestDto>(
             totalCount,
             await MapToDtosAsync(entities));
@@ -68,7 +71,7 @@ public class MovementRequestAppService : InventoryTrackingAutomationAppService, 
         model.RequestedByWorkerId = currentWorkerId;
         var validatedModel = await _manager.CreateAsync(model);
         var entity = new MovementRequest(GuidGenerator.Create());
-        entity.Status = InventoryTrackingAutomation.Enums.MovementStatusEnum.Pending;
+        entity.Status = MovementStatusEnum.Pending;
         _mapper.MapToEntity(validatedModel, entity);
 
         var workflowInstance = await _manager.AssignWorkflowAsync(entity, currentUserId);
@@ -99,12 +102,12 @@ public class MovementRequestAppService : InventoryTrackingAutomationAppService, 
         var validatedModels = await _manager.CreateManyAsync(models);
 
         var entities = new List<MovementRequest>();
-        var workflowInstances = new List<InventoryTrackingAutomation.Entities.Workflows.WorkflowInstance>();
+        var workflowInstances = new List<WorkflowInstance>();
 
         foreach (var model in validatedModels)
         {
             var entity = new MovementRequest(GuidGenerator.Create());
-            entity.Status = InventoryTrackingAutomation.Enums.MovementStatusEnum.Pending;
+            entity.Status = MovementStatusEnum.Pending;
             _mapper.MapToEntity(model, entity);
 
             var workflowInstance = await _manager.AssignWorkflowAsync(entity, currentUserId);
@@ -246,4 +249,5 @@ public class MovementRequestAppService : InventoryTrackingAutomationAppService, 
         return result;
     }
 }
+
 

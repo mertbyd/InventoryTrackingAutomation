@@ -1,3 +1,5 @@
+using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Volo.Abp.EntityFrameworkCore;
 using InventoryTrackingAutomation.Entities.Tasks;
@@ -15,9 +17,10 @@ public class InventoryTaskRepository : BaseRepository<InventoryTask>, IInventory
     {
     }
 
-    public override async System.Threading.Tasks.Task<System.Linq.IQueryable<InventoryTrackingAutomation.Entities.Tasks.InventoryTask>> WithDetailsAsync()
+    public override async Task<IQueryable<InventoryTask>> WithDetailsAsync()
     {
         return (await GetQueryableAsync()).Include(x => x.SourceWarehouse).Include(x => x.TargetWarehouse).Include(x => x.ReturnWarehouse);
     }
 }
+
 

@@ -1,3 +1,5 @@
+using InventoryTrackingAutomation.Models.Tasks;
+using System.Linq;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -76,7 +78,7 @@ public class VehicleTaskLineRepository : BaseRepository<VehicleTaskLine>, IVehic
             .SumAsync(x => x.AllocatedQuantity);
     }
 
-    public async Task<List<InventoryTrackingAutomation.Models.Tasks.VehicleTaskLineWithProductModel>> GetTransferContextsByVehicleTaskIdAsync(Guid vehicleTaskId)
+    public async Task<List<VehicleTaskLineWithProductModel>> GetTransferContextsByVehicleTaskIdAsync(Guid vehicleTaskId)
     {
         var dbContext = await GetDbContextAsync();
         var query = await (
@@ -86,12 +88,13 @@ public class VehicleTaskLineRepository : BaseRepository<VehicleTaskLine>, IVehic
             select new { Line = vtl, tl.ProductId }
         ).ToListAsync();
 
-        return query.Select(x => new InventoryTrackingAutomation.Models.Tasks.VehicleTaskLineWithProductModel(x.Line, x.ProductId)).ToList();
+        return query.Select(x => new VehicleTaskLineWithProductModel(x.Line, x.ProductId)).ToList();
     }
 
-    public override async System.Threading.Tasks.Task<System.Linq.IQueryable<InventoryTrackingAutomation.Entities.Tasks.VehicleTaskLine>> WithDetailsAsync()
+    public override async Task<IQueryable<VehicleTaskLine>> WithDetailsAsync()
     {
         return (await GetQueryableAsync()).Include(x => x.TaskLine).ThenInclude(x => x.Product);
     }
 }
+
 

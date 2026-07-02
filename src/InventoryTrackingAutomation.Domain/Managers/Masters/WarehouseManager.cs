@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using InventoryTrackingAutomation.Entities.Masters;
 using InventoryTrackingAutomation.Interface.Masters;
@@ -46,7 +47,7 @@ public class WarehouseManager : BaseManager<Warehouse>
     /// <summary>
     /// Birden fazla depo oluşturur; toplu kod tekilliği ve sorumlu çalışan varlığı kontrol edilir.
     /// </summary>
-    public async Task<System.Collections.Generic.List<CreateWarehouseModel>> CreateManyAsync(System.Collections.Generic.List<CreateWarehouseModel> models)
+    public async Task<List<CreateWarehouseModel>> CreateManyAsync(List<CreateWarehouseModel> models)
     {
         var codes = models.Where(x => !string.IsNullOrWhiteSpace(x.Code)).Select(x => x.Code).ToList();
         if (codes.Any())
@@ -91,3 +92,4 @@ public class WarehouseManager : BaseManager<Warehouse>
         return Task.FromResult(existing);
     }
 }
+

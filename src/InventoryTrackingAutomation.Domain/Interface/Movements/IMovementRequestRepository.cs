@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System;
 using System.Threading.Tasks;
 using InventoryTrackingAutomation.Entities.Movements;
@@ -19,9 +20,10 @@ public interface IMovementRequestRepository : IBaseRepository<MovementRequest>
     /// Birden fazla hareket talebinin task ve vehicle-task bağlamını toplu olarak (batch) getirir.
     /// N+1 sorgu problemini engellemek için kullanılır.
     /// </summary>
-    Task<System.Collections.Generic.Dictionary<Guid, MovementRequestOperationalContextModel>> GetOperationalContextsAsync(System.Collections.Generic.IEnumerable<Guid> movementRequestIds);
+    Task<Dictionary<Guid, MovementRequestOperationalContextModel>> GetOperationalContextsAsync(System.Collections.Generic.IEnumerable<Guid> movementRequestIds);
     /// <summary>
     /// Iade talebi icin ayni vehicle-task'a ait son ana movement'i bulur.
     /// </summary>
     Task<Guid?> FindLatestMainMovementIdAsync(Guid vehicleTaskId);
 }
+

@@ -1,3 +1,4 @@
+using InventoryTrackingAutomation.Entities.Masters;
 using System;
 using Volo.Abp.Domain.Entities.Auditing;
 
@@ -15,8 +16,9 @@ public class TaskLine : AuditedEntity<Guid>
     public int Quantity { get; set; }       // Gorev icin talep edilen toplam miktar.
 
     public virtual InventoryTask Task { get; set; }
-    public virtual InventoryTrackingAutomation.Entities.Masters.Product Product { get; set; }
+    public virtual Product Product { get; set; }
     protected TaskLine() { }
     public TaskLine(Guid id) : base(id) { }
 }
+
 

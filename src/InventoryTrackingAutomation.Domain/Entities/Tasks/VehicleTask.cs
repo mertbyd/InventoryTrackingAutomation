@@ -1,3 +1,4 @@
+using InventoryTrackingAutomation.Entities.Masters;
 using System;
 using Volo.Abp.Domain.Entities.Auditing;
 using Volo.Abp.MultiTenancy;
@@ -18,10 +19,11 @@ public class VehicleTask : AuditedEntity<Guid>
     public DateTime? ReleasedAt { get; set; } // Aracin operasyondan ayrildigi zamani tasir.
 
     public virtual InventoryTask Task { get; protected set; }
-    public virtual InventoryTrackingAutomation.Entities.Masters.Vehicle Vehicle { get; protected set; }
-    public virtual InventoryTrackingAutomation.Entities.Masters.Worker ResponsibleWorker { get; protected set; }
+    public virtual Vehicle Vehicle { get; protected set; }
+    public virtual Worker ResponsibleWorker { get; protected set; }
 
     protected VehicleTask() { }
     public VehicleTask(Guid id) : base(id) { }
 }
+
 

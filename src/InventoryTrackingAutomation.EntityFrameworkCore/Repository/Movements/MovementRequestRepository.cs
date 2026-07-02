@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -57,7 +58,7 @@ public class MovementRequestRepository : BaseRepository<MovementRequest>, IMovem
     /// Birden fazla hareket talebinin task ve vehicle-task bağlamını toplu olarak (batch) getirir.
     /// N+1 sorgu problemini engellemek için kullanılır.
     /// </summary>
-    public async Task<System.Collections.Generic.Dictionary<Guid, MovementRequestOperationalContextModel>> GetOperationalContextsAsync(System.Collections.Generic.IEnumerable<Guid> movementRequestIds)
+    public async Task<Dictionary<Guid, MovementRequestOperationalContextModel>> GetOperationalContextsAsync(System.Collections.Generic.IEnumerable<Guid> movementRequestIds)
     {
         var dbContext = await GetDbContextAsync();
         var idList = movementRequestIds.ToList();
@@ -106,9 +107,10 @@ public class MovementRequestRepository : BaseRepository<MovementRequest>, IMovem
             .FirstOrDefaultAsync();
     }
 
-    public override async System.Threading.Tasks.Task<System.Linq.IQueryable<InventoryTrackingAutomation.Entities.Movements.MovementRequest>> WithDetailsAsync()
+    public override async Task<IQueryable<MovementRequest>> WithDetailsAsync()
     {
         return (await GetQueryableAsync()).Include(x => x.RequestedByWorker).Include(x => x.ParentMovementRequest);
     }
 }
+
 

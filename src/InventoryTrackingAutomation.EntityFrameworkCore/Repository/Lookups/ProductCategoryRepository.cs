@@ -1,3 +1,5 @@
+using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Volo.Abp.EntityFrameworkCore;
 using InventoryTrackingAutomation.Entities.Lookups;
@@ -15,9 +17,10 @@ public class ProductCategoryRepository : BaseRepository<ProductCategory>, IProdu
     {
     }
 
-    public override async System.Threading.Tasks.Task<System.Linq.IQueryable<InventoryTrackingAutomation.Entities.Lookups.ProductCategory>> WithDetailsAsync()
+    public override async Task<IQueryable<ProductCategory>> WithDetailsAsync()
     {
         return (await GetQueryableAsync()).Include(x => x.Parent);
     }
 }
+
 

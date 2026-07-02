@@ -1,3 +1,4 @@
+using InventoryTrackingAutomation.Models.Tasks;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -14,5 +15,6 @@ public interface IVehicleTaskLineRepository : IBaseRepository<VehicleTaskLine>
     Task<List<VehicleTaskLine>> GetByTaskLineIdsAsync(IReadOnlyCollection<Guid> taskLineIds);
     Task<VehicleTaskLine?> FindByVehicleTaskAndTaskLineAsync(Guid vehicleTaskId, Guid taskLineId);
     Task<int> GetAllocatedQuantityByTaskLineIdAsync(Guid taskLineId, Guid? excludedVehicleTaskLineId = null);
-    Task<List<InventoryTrackingAutomation.Models.Tasks.VehicleTaskLineWithProductModel>> GetTransferContextsByVehicleTaskIdAsync(Guid vehicleTaskId);
+    Task<List<VehicleTaskLineWithProductModel>> GetTransferContextsByVehicleTaskIdAsync(Guid vehicleTaskId);
 }
+
