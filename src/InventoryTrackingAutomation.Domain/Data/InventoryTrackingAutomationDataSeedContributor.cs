@@ -24,6 +24,7 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
     // ABP'nin RolePermissionValueProvider.ProviderName sabit değeri.
     // Volo.Abp.PermissionManagement.Identity paketi Domain'e bağlı olmadığından sabiti burada karşılıyoruz.
     private const string RolePermissionProviderName = "R";
+    private const string DemoUserPassword = "123456aA@";
 
 
     private VehicleType vanType;
@@ -1059,17 +1060,17 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
         // Test kullanıcı ve worker verileri tanımla
         var usersToCreate = new[]
         {
-            new { Username = "admin", Email = "admin@inventorysystem.local", Password = "123456aA@", FullName = "Sistem Yöneticisi", Roles = new[] { InventoryTrackingAutomationRoleConstants.Admin }, RegNo = "ADM-001", WorkerType = whiteCollarType, ManagerUsername = (string)null },
-            new { Username = "manager.istanbul", Email = "manager.istanbul@inventorysystem.local", Password = "123456aA@", FullName = "İstanbul Şube Müdürü", Roles = new[] { InventoryTrackingAutomationRoleConstants.Manager }, RegNo = "MGR-001", WorkerType = whiteCollarType, ManagerUsername = "admin" },
-            new { Username = "supervisor.logistics", Email = "supervisor.logistics@inventorysystem.local", Password = "123456aA@", FullName = "Lojistik Operasyon Müdürü", Roles = new[] { InventoryTrackingAutomationRoleConstants.LogisticsSupervisor }, RegNo = "SUP-LOG-001", WorkerType = whiteCollarType, ManagerUsername = "manager.istanbul" },
-            new { Username = "approver.warehouse", Email = "approver.warehouse@inventorysystem.local", Password = "123456aA@", FullName = "Depo Onay Sorumlusu", Roles = new[] { InventoryTrackingAutomationRoleConstants.WorkflowApprover }, RegNo = "APP-001", WorkerType = whiteCollarType, ManagerUsername = "supervisor.logistics" },
-            new { Username = "worker.warehouse01", Email = "worker.warehouse01@inventorysystem.local", Password = "123456aA@", FullName = "Depo Operatörü - Merkezhan", Roles = new[] { InventoryTrackingAutomationRoleConstants.WarehouseWorker }, RegNo = "WRK-WH-001", WorkerType = blueCollarType, ManagerUsername = "approver.warehouse" },
-            new { Username = "worker.warehouse02", Email = "worker.warehouse02@inventorysystem.local", Password = "123456aA@", FullName = "Depo Operatörü - Depo 2", Roles = new[] { InventoryTrackingAutomationRoleConstants.WarehouseWorker }, RegNo = "WRK-WH-002", WorkerType = blueCollarType, ManagerUsername = "approver.warehouse" },
-            new { Username = "worker.field01", Email = "worker.field01@inventorysystem.local", Password = "123456aA@", FullName = "Saha Teknikeri - Kadıköy", Roles = new[] { InventoryTrackingAutomationRoleConstants.FieldWorker }, RegNo = "WRK-FLD-001", WorkerType = blueCollarType, ManagerUsername = "supervisor.logistics" },
-            new { Username = "worker.field02", Email = "worker.field02@inventorysystem.local", Password = "123456aA@", FullName = "Saha Teknikeri - Taksim", Roles = new[] { InventoryTrackingAutomationRoleConstants.FieldWorker }, RegNo = "WRK-FLD-002", WorkerType = blueCollarType, ManagerUsername = "supervisor.logistics" },
-            new { Username = "manager.vehicle", Email = "manager.vehicle@inventorysystem.local", Password = "123456aA@", FullName = "Araç Servis Müdürü", Roles = new[] { InventoryTrackingAutomationRoleConstants.VehicleManager }, RegNo = "MGR-VHC-001", WorkerType = whiteCollarType, ManagerUsername = "manager.istanbul" },
-            new { Username = "driver.ali", Email = "driver.ali@inventorysystem.local", Password = "123456aA@", FullName = "Ali Yılmaz (Şoför)", Roles = new[] { InventoryTrackingAutomationRoleConstants.Driver }, RegNo = "DRV-001", WorkerType = blueCollarType, ManagerUsername = "manager.vehicle" },
-            new { Username = "driver.veli", Email = "driver.veli@inventorysystem.local", Password = "123456aA@", FullName = "Veli Demir (Şoför)", Roles = new[] { InventoryTrackingAutomationRoleConstants.Driver }, RegNo = "DRV-002", WorkerType = blueCollarType, ManagerUsername = "manager.vehicle" }
+            new { Username = "admin", Email = "admin@inventorysystem.local", Password = DemoUserPassword, FullName = "Sistem Yöneticisi", Roles = new[] { InventoryTrackingAutomationRoleConstants.Admin }, RegNo = "ADM-001", WorkerType = whiteCollarType, ManagerUsername = (string)null },
+            new { Username = "manager.istanbul", Email = "manager.istanbul@inventorysystem.local", Password = DemoUserPassword, FullName = "İstanbul Şube Müdürü", Roles = new[] { InventoryTrackingAutomationRoleConstants.Manager }, RegNo = "MGR-001", WorkerType = whiteCollarType, ManagerUsername = "admin" },
+            new { Username = "supervisor.logistics", Email = "supervisor.logistics@inventorysystem.local", Password = DemoUserPassword, FullName = "Lojistik Operasyon Müdürü", Roles = new[] { InventoryTrackingAutomationRoleConstants.LogisticsSupervisor }, RegNo = "SUP-LOG-001", WorkerType = whiteCollarType, ManagerUsername = "manager.istanbul" },
+            new { Username = "approver.warehouse", Email = "approver.warehouse@inventorysystem.local", Password = DemoUserPassword, FullName = "Depo Onay Sorumlusu", Roles = new[] { InventoryTrackingAutomationRoleConstants.WorkflowApprover }, RegNo = "APP-001", WorkerType = whiteCollarType, ManagerUsername = "supervisor.logistics" },
+            new { Username = "worker.warehouse01", Email = "worker.warehouse01@inventorysystem.local", Password = DemoUserPassword, FullName = "Depo Operatörü - Merkezhan", Roles = new[] { InventoryTrackingAutomationRoleConstants.WarehouseWorker }, RegNo = "WRK-WH-001", WorkerType = blueCollarType, ManagerUsername = "approver.warehouse" },
+            new { Username = "worker.warehouse02", Email = "worker.warehouse02@inventorysystem.local", Password = DemoUserPassword, FullName = "Depo Operatörü - Depo 2", Roles = new[] { InventoryTrackingAutomationRoleConstants.WarehouseWorker }, RegNo = "WRK-WH-002", WorkerType = blueCollarType, ManagerUsername = "approver.warehouse" },
+            new { Username = "worker.field01", Email = "worker.field01@inventorysystem.local", Password = DemoUserPassword, FullName = "Saha Teknikeri - Kadıköy", Roles = new[] { InventoryTrackingAutomationRoleConstants.FieldWorker }, RegNo = "WRK-FLD-001", WorkerType = blueCollarType, ManagerUsername = "supervisor.logistics" },
+            new { Username = "worker.field02", Email = "worker.field02@inventorysystem.local", Password = DemoUserPassword, FullName = "Saha Teknikeri - Taksim", Roles = new[] { InventoryTrackingAutomationRoleConstants.FieldWorker }, RegNo = "WRK-FLD-002", WorkerType = blueCollarType, ManagerUsername = "supervisor.logistics" },
+            new { Username = "manager.vehicle", Email = "manager.vehicle@inventorysystem.local", Password = DemoUserPassword, FullName = "Araç Servis Müdürü", Roles = new[] { InventoryTrackingAutomationRoleConstants.VehicleManager }, RegNo = "MGR-VHC-001", WorkerType = whiteCollarType, ManagerUsername = "manager.istanbul" },
+            new { Username = "driver.ali", Email = "driver.ali@inventorysystem.local", Password = DemoUserPassword, FullName = "Ali Yılmaz (Şoför)", Roles = new[] { InventoryTrackingAutomationRoleConstants.Driver }, RegNo = "DRV-001", WorkerType = blueCollarType, ManagerUsername = "manager.vehicle" },
+            new { Username = "driver.veli", Email = "driver.veli@inventorysystem.local", Password = DemoUserPassword, FullName = "Veli Demir (Şoför)", Roles = new[] { InventoryTrackingAutomationRoleConstants.Driver }, RegNo = "DRV-002", WorkerType = blueCollarType, ManagerUsername = "manager.vehicle" }
         };
 
         // Departmanlar ve Warehouseler hazırla
@@ -1089,6 +1090,8 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
             var existingUser = await _identityUserManager.FindByNameAsync(userInfo.Username);
             if (existingUser != null)
             {
+                await EnsureDemoUserPasswordAsync(existingUser, userInfo.Password);
+                await EnsureDemoUserRolesAsync(existingUser, userInfo.Roles);
                 userWorkerMap[userInfo.Username] = existingUser.Id;
                 var existingWorker = await _workerRepository.FirstOrDefaultAsync(w => w.UserId == existingUser.Id);
                 if (existingWorker != null)
@@ -1109,11 +1112,7 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
             if (!createResult.Succeeded)
                 throw new Exception($"Kullanıcı oluşturulamadı: {userInfo.Username}");
 
-            // Rolleri ata
-            foreach (var roleName in userInfo.Roles)
-            {
-                await _identityUserManager.AddToRoleAsync(user, roleName);
-            }
+            await EnsureDemoUserRolesAsync(user, userInfo.Roles);
 
             userWorkerMap[userInfo.Username] = userId;
 
@@ -1149,5 +1148,47 @@ public class InventoryTrackingAutomationDataSeedContributor : IDataSeedContribut
         }
 
         return userWorkerMap;
+    }
+
+    /// <summary>
+    /// Seed edilen demo kullanicisinin parolasini bilinen demo parola ile senkron tutar.
+    /// </summary>
+    private async Task EnsureDemoUserPasswordAsync(IdentityUser user, string password)
+    {
+        // Mevcut parola zaten dogruysa hash'i gereksiz yere degistirme.
+        if (await _identityUserManager.CheckPasswordAsync(user, password))
+        {
+            return;
+        }
+
+        var resetToken = await _identityUserManager.GeneratePasswordResetTokenAsync(user);
+        var resetResult = await _identityUserManager.ResetPasswordAsync(user, resetToken, password);
+        if (!resetResult.Succeeded)
+        {
+            var errors = string.Join(", ", resetResult.Errors.Select(error => error.Description));
+            throw new Exception($"Seed kullanici sifresi guncellenemedi: {user.UserName}. {errors}");
+        }
+    }
+
+    /// <summary>
+    /// Seed edilen demo kullanicisinin beklenen rollerini idempotent olarak tamamlar.
+    /// </summary>
+    private async Task EnsureDemoUserRolesAsync(IdentityUser user, IEnumerable<string> roleNames)
+    {
+        foreach (var roleName in roleNames)
+        {
+            // Rol zaten varsa ABP Identity'ye tekrar yazma.
+            if (await _identityUserManager.IsInRoleAsync(user, roleName))
+            {
+                continue;
+            }
+
+            var roleResult = await _identityUserManager.AddToRoleAsync(user, roleName);
+            if (!roleResult.Succeeded)
+            {
+                var errors = string.Join(", ", roleResult.Errors.Select(error => error.Description));
+                throw new Exception($"Seed kullanici rolu atanamadi: {user.UserName} -> {roleName}. {errors}");
+            }
+        }
     }
 }
