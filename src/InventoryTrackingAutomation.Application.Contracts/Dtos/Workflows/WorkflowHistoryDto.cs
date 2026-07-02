@@ -32,7 +32,7 @@ public class WorkflowHistoryDto
     /// <summary>
     /// InitiatorUserName alanı.
     /// </summary>
-    public string? InitiatorUserName { get; set; }
+    
     /// <summary>
     /// InitiatorFullName alanı.
     /// </summary>
@@ -43,4 +43,9 @@ public class WorkflowHistoryDto
     public DateTime CreatedDate { get; set; }
 
     public List<WorkflowHistoryStepDto> Steps { get; set; } = new();
+
+    public string WorkflowInstanceName { get; set; }
+    public string EntityName { get; set; }
+    public string InitiatorUserName { get; set; }
 }
+

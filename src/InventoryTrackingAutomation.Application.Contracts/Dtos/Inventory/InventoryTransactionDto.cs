@@ -55,4 +55,11 @@ public class InventoryTransactionDto : EnrichedEntityDto<Guid>
     /// Islem notu.
     /// </summary>
     public string? Note { get; set; }                                    // Islem notu.
+    public string ProductName { get; set; }
+    public string SourceLocationName { get; set; }
+    public string TargetLocationName { get; set; }
+
+    public string RelatedMovementRequestName { get; set; }
+    public string PerformedByUserName { get; set; }
 }
+

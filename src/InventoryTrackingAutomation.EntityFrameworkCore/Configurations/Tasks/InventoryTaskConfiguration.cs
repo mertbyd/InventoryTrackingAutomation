@@ -24,17 +24,17 @@ public class InventoryTaskConfiguration : IEntityTypeConfiguration<InventoryTask
 
         builder.HasIndex(x => x.Code).IsUnique();
 
-        builder.HasOne<Warehouse>()
+        builder.HasOne(x => x.SourceWarehouse)
             .WithMany()
             .HasForeignKey(x => x.SourceWarehouseId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasOne<Warehouse>()
+        builder.HasOne(x => x.TargetWarehouse)
             .WithMany()
             .HasForeignKey(x => x.TargetWarehouseId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasOne<Warehouse>()
+        builder.HasOne(x => x.ReturnWarehouse)
             .WithMany()
             .HasForeignKey(x => x.ReturnWarehouseId)
             .OnDelete(DeleteBehavior.Restrict);

@@ -20,12 +20,12 @@ public class InventoryTransactionConfiguration : IEntityTypeConfiguration<Invent
         builder.Property(x => x.OccurredAt).IsRequired();
         builder.Property(x => x.Note).HasMaxLength(500);
 
-        builder.HasOne<Product>()
+        builder.HasOne(x => x.Product)
             .WithMany()
             .HasForeignKey(x => x.ProductId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasOne<MovementRequest>()
+        builder.HasOne(x => x.RelatedMovementRequest)
             .WithMany()
             .HasForeignKey(x => x.RelatedMovementRequestId)
             .OnDelete(DeleteBehavior.Restrict);

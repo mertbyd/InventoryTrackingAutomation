@@ -105,4 +105,10 @@ public class MovementRequestRepository : BaseRepository<MovementRequest>, IMovem
             .Select(x => (Guid?)x.Id)
             .FirstOrDefaultAsync();
     }
+
+    public override async System.Threading.Tasks.Task<System.Linq.IQueryable<InventoryTrackingAutomation.Entities.Movements.MovementRequest>> WithDetailsAsync()
+    {
+        return (await GetQueryableAsync()).Include(x => x.RequestedByWorker).Include(x => x.ParentMovementRequest);
+    }
 }
+

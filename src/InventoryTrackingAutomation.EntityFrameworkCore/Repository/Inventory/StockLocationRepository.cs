@@ -127,4 +127,33 @@ public class StockLocationRepository : BaseRepository<StockLocation>, IStockLoca
             })
             .ToList();
     }
+
+    public override async System.Threading.Tasks.Task<System.Linq.IQueryable<InventoryTrackingAutomation.Entities.Inventory.StockLocation>> WithDetailsAsync()
+    {
+        return (await GetQueryableAsync()).Include(x => x.Product).Include(x => x.Warehouse);
+    }
+
+    public async System.Threading.Tasks.Task<System.Collections.Generic.List<InventoryTrackingAutomation.Dtos.Inventory.InventoryGridItemDto>> GetInventoryGridListAsync()
+    {
+        var dbContext = await GetDbContextAsync();
+        
+        return await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync(
+            dbContext.StockLocations
+                .Where(x => x.LocationType == InventoryTrackingAutomation.Enums.Inventory.StockLocationTypeEnum.Warehouse)
+                .Select(x => new InventoryTrackingAutomation.Dtos.Inventory.InventoryGridItemDto
+                {
+                    Id = x.Id,
+                    ProductId = x.ProductId,
+                    Name = x.Product != null ? x.Product.Name : null,
+                    CategoryId = x.Product != null && x.Product.CategoryId.HasValue ? x.Product.CategoryId.Value : System.Guid.Empty,
+                    CategoryName = x.Product != null && x.Product.Category != null ? x.Product.Category.Name : null,
+                    WarehouseId = x.Warehouse != null ? x.Warehouse.Id : System.Guid.Empty,
+                    WarehouseName = x.Warehouse != null ? x.Warehouse.Name : null,
+                    WarehouseLocation = x.Warehouse != null ? x.Warehouse.Code : null,
+                    Quantity = x.Quantity
+                })
+        );
+    }
 }
+
+

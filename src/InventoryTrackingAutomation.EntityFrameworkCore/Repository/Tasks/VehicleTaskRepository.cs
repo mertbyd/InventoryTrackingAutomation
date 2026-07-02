@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Volo.Abp.EntityFrameworkCore;
 using InventoryTrackingAutomation.Entities.Tasks;
 using InventoryTrackingAutomation.Interface.Tasks;
@@ -30,4 +31,10 @@ public class VehicleTaskRepository : BaseRepository<VehicleTask>, IVehicleTaskRe
                 })
         );
     }
+
+    public override async System.Threading.Tasks.Task<System.Linq.IQueryable<InventoryTrackingAutomation.Entities.Tasks.VehicleTask>> WithDetailsAsync()
+    {
+        return (await GetQueryableAsync()).Include(x => x.Vehicle).Include(x => x.Task).Include(x => x.ResponsibleWorker);
+    }
 }
+

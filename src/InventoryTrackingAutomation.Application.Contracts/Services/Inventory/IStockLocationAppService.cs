@@ -22,4 +22,6 @@ public interface IStockLocationAppService : IApplicationService
     /// Stok bakiyesi silinemez; silme istegini StockLocation.DeleteNotSupported hatasi ile reddeder.
     /// </summary>
     Task DeleteAsync(Guid id);
+    Task<List<InventoryGridItemDto>> GetInventoryGridListAsync();
 }
+

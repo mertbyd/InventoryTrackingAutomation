@@ -20,12 +20,12 @@ public class TaskLineConfiguration : IEntityTypeConfiguration<TaskLine>
         builder.HasIndex(x => new { x.TaskId, x.ProductId })
             .IsUnique();
 
-        builder.HasOne<InventoryTask>()
+        builder.HasOne(x => x.Task)
             .WithMany()
             .HasForeignKey(x => x.TaskId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasOne<Product>()
+        builder.HasOne(x => x.Product)
             .WithMany()
             .HasForeignKey(x => x.ProductId)
             .OnDelete(DeleteBehavior.Restrict);

@@ -29,4 +29,9 @@ public class VehicleTaskLineDto : EnrichedEntityDto<Guid>
     public int ConsumedQuantity { get; set; }   // Gorevde tuketildigi bildirilen miktar.
     /// <summary>Satir bazli teslim alma notu.</summary>
     public string? ReceiveNote { get; set; }    // Satir bazli teslim alma notu.
+    public string ProductName { get; set; }
+
+    public string VehicleTaskName { get; set; }
+    public string TaskLineName { get; set; }
 }
+

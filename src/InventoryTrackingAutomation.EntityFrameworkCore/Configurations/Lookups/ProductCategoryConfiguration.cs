@@ -17,7 +17,7 @@ public class ProductCategoryConfiguration : IEntityTypeConfiguration<ProductCate
 
         builder.HasIndex(x => x.Code).IsUnique();
 
-        builder.HasOne<ProductCategory>()
+        builder.HasOne(x => x.Parent)
             .WithMany()
             .HasForeignKey(x => x.ParentId)
             .OnDelete(DeleteBehavior.Restrict);

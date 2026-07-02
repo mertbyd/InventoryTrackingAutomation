@@ -25,6 +25,10 @@ public class MovementRequest : FullAuditedEntity<Guid>
     public string? CancellationNote { get; set; } // Iptal durumunda gerekce baglamini tasir.
     public Guid? WorkflowInstanceId { get; set; } // Talebin bagli oldugu workflow sureci baglamini tasir.
 
+    public virtual InventoryTrackingAutomation.Entities.Tasks.VehicleTask VehicleTask { get; protected set; }
+    public virtual InventoryTrackingAutomation.Entities.Masters.Worker RequestedByWorker { get; protected set; }
+    public virtual MovementRequest? ParentMovementRequest { get; protected set; }
+
     protected MovementRequest() { }
 
     //işlevi: Aggregate root'u verilen ID ile ilklendirir.

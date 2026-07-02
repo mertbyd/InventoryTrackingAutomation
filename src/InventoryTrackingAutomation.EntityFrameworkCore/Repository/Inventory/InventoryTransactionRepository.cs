@@ -68,4 +68,10 @@ public class InventoryTransactionRepository : BaseRepository<InventoryTransactio
 
         return null;
     }
+
+    public override async System.Threading.Tasks.Task<System.Linq.IQueryable<InventoryTrackingAutomation.Entities.Inventory.InventoryTransaction>> WithDetailsAsync()
+    {
+        return (await GetQueryableAsync()).Include(x => x.Product).Include(x => x.RelatedMovementRequest);
+    }
 }
+

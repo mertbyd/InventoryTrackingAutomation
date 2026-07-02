@@ -34,4 +34,8 @@ public class MovementApprovalDto
     /// Note alanı.
     /// </summary>
     public string Note { get; set; }
+    public string ApproverWorkerName { get; set; }
+
+    public string MovementRequestName { get; set; }
 }
+

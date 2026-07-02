@@ -163,7 +163,6 @@ public class StockLocationManager : BaseManager<StockLocation>
                 LocationId = locationId,
                 ProductId = productId,
                 Quantity = qty,
-                ReservedQuantity = 0
             };
             await Repository.InsertAsync(stock, autoSave: true);
             return;

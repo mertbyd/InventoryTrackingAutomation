@@ -21,19 +21,20 @@ public class MovementRequestConfiguration : IEntityTypeConfiguration<MovementReq
 
         builder.HasIndex(x => x.RequestNumber).IsUnique();
 
-        builder.HasOne<Worker>()
+        builder.HasOne(x => x.RequestedByWorker)
             .WithMany()
             .HasForeignKey(x => x.RequestedByWorkerId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasOne<VehicleTask>()
+        builder.HasOne(x => x.VehicleTask)
             .WithMany()
             .HasForeignKey(x => x.VehicleTaskId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasOne<MovementRequest>()
+        builder.HasOne(x => x.ParentMovementRequest)
             .WithMany()
             .HasForeignKey(x => x.ParentMovementRequestId)
             .OnDelete(DeleteBehavior.Restrict);
     }
 }
+

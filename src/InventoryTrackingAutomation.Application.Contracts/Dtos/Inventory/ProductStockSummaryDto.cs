@@ -28,4 +28,7 @@ public class ProductStockSummaryDto
     /// </summary>
     public int ActiveTaskQuantity { get; set; }                                  // Aktif gorevlerdeki toplam miktar.
     public List<ProductStockLocationSummaryDto> Locations { get; set; } = new(); // Lokasyon detaylari.
+
+    public string ProductName { get; set; }
 }
+

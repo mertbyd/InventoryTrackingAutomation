@@ -55,4 +55,8 @@ public class PendingApprovalDto
     /// Priority alanı.
     /// </summary>
     public MovementPriorityEnum Priority { get; set; }
+
+    public string MovementRequestName { get; set; }
+    public string WorkflowInstanceStepName { get; set; }
 }
+

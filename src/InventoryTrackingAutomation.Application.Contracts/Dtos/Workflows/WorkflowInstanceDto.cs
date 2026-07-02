@@ -28,4 +28,9 @@ public class WorkflowInstanceDto
     /// InitiatorUserId alanı.
     /// </summary>
     public Guid InitiatorUserId { get; set; }
+
+    public string WorkflowDefinitionName { get; set; }
+    public string EntityName { get; set; }
+    public string InitiatorUserName { get; set; }
 }
+

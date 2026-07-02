@@ -28,4 +28,7 @@ public class WorkflowHistoryApproverDto
     /// ActionDate alanı.
     /// </summary>
     public DateTime? ActionDate { get; set; }
+
+ 
 }
+

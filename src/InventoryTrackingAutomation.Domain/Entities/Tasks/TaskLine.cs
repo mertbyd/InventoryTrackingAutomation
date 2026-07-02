@@ -14,6 +14,9 @@ public class TaskLine : AuditedEntity<Guid>
     public Guid ProductId { get; set; }     // Talep edilen urun baglami.
     public int Quantity { get; set; }       // Gorev icin talep edilen toplam miktar.
 
+    public virtual InventoryTask Task { get; set; }
+    public virtual InventoryTrackingAutomation.Entities.Masters.Product Product { get; set; }
     protected TaskLine() { }
     public TaskLine(Guid id) : base(id) { }
 }
+

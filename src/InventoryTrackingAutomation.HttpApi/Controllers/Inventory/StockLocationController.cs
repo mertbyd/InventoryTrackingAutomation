@@ -71,6 +71,17 @@ public class StockLocationController : InventoryTrackingAutomationController
     }
 
     /// <summary>
+    /// Stok listesini ızgara (grid) görünümü için düzleştirilmiş (flattened) yapıda getirir.
+    /// </summary>
+    [HttpGet("inventory-grid")]
+    [Authorize(InventoryTrackingAutomationPermissions.Inventory.View)]
+    public async Task<Result<List<InventoryGridItemDto>>> GetInventoryGridList()
+    {
+        var result = await _appService.GetInventoryGridListAsync();
+        return result;
+    }
+
+    /// <summary>
     /// Yeni stok lokasyonu kaydı oluşturur.
     /// </summary>
     /// <param name="input">Lokasyon bilgileri.</param>
