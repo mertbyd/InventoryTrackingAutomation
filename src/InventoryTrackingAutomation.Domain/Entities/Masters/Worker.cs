@@ -20,6 +20,11 @@ public class Worker : AuditedEntity<Guid>, IPassivable
     public Guid? ManagerId { get; set; } // Calisanin organizasyonel yonetici baglamini tasir.
     public bool IsActive { get; set; } // Calisanin operasyonlarda kullanilip kullanilamayacagini belirler.
 
+    public virtual InventoryTrackingAutomation.Entities.Lookups.WorkerType WorkerType { get; set; }
+    public virtual InventoryTrackingAutomation.Entities.Lookups.Department? Department { get; set; }
+    public virtual Warehouse? DefaultWarehouse { get; set; }
+    public virtual Worker? Manager { get; set; }
     protected Worker() { }
     public Worker(Guid id) : base(id) { }
 }
+

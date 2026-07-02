@@ -17,7 +17,7 @@ public class VehicleConfiguration : IEntityTypeConfiguration<Vehicle>
 
         builder.HasIndex(x => x.PlateNumber).IsUnique();
 
-        builder.HasOne<VehicleType>()
+        builder.HasOne(x => x.VehicleType)
             .WithMany()
             .HasForeignKey(x => x.VehicleTypeId)
             .OnDelete(DeleteBehavior.Restrict);

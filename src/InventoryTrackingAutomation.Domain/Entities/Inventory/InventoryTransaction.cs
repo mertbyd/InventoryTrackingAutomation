@@ -1,4 +1,5 @@
 using System;
+using InventoryTrackingAutomation.Entities.Movements;
 using InventoryTrackingAutomation.Enums.Tasks;
 using InventoryTrackingAutomation.Enums.Inventory;
 using InventoryTrackingAutomation.Enums;
@@ -26,6 +27,9 @@ public class InventoryTransaction : CreationAuditedEntity<Guid>
     public DateTime OccurredAt { get; set; } // Hareketin gerceklestigi zamani tasir.
     public string? Note { get; set; } // Hareket icin operasyonel aciklama baglamini tasir.
 
+    public virtual InventoryTrackingAutomation.Entities.Masters.Product Product { get; set; }
+    public virtual MovementRequest? RelatedMovementRequest { get; set; }
     protected InventoryTransaction() { }
     public InventoryTransaction(Guid id) : base(id) { }
 }
+

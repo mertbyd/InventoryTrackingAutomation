@@ -37,4 +37,10 @@ public class ProductStockLocationSummaryDto
     /// Rezerve miktar.
     /// </summary>
     public int ReservedQuantity { get; set; }                   // Rezerve miktar.
+
+    public string WarehouseName { get; set; }
+    public string VehicleName { get; set; }
+    public string VehicleTaskName { get; set; }
+    public string TaskName { get; set; }
 }
+

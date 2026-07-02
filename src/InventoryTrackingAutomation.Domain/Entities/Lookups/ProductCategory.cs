@@ -13,6 +13,7 @@ public class ProductCategory : IEntity<Guid>
     public string Name { get; set; } = default!; // Kategorinin kullaniciya gorunen adini tasir.
     public Guid? ParentId { get; set; } // Hiyerarside ust kategori baglamini tasir.
 
+    public virtual ProductCategory? Parent { get; set; }
     protected ProductCategory() { }
     public ProductCategory(Guid id)
     {
@@ -29,3 +30,4 @@ public class ProductCategory : IEntity<Guid>
         return Id.ToString();
     }
 }
+

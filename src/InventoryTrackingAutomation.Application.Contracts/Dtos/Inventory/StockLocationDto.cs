@@ -31,4 +31,6 @@ public class StockLocationDto : EnrichedEntityDto<Guid>
     /// Rezerve miktar.
     /// </summary>
     public int ReservedQuantity { get; set; }                 // Rezerve miktar.
+    public string ProductName { get; set; }
+    public string LocationName { get; set; }
 }

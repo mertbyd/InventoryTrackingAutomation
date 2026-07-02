@@ -33,4 +33,7 @@ public class VehicleTaskDto : EnrichedEntityDto<Guid>
     /// Arac-gorev kalemleri. Detayli sorgularda dolu gelir.
     /// </summary>
     public List<VehicleTaskLineDto>? Lines { get; set; } // Arac-gorev kalemleri.
+    public string VehicleName { get; set; }
+    public string TaskName { get; set; }
+    public string ResponsibleWorkerName { get; set; }
 }

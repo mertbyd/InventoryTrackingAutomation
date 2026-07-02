@@ -24,6 +24,8 @@ namespace InventoryTrackingAutomation.Application.Mappers.Masters;
 [Mapper]
 public partial class WorkerMapper
 {
+    // Worker entity'sinde isim alanı yoktur; yönetici display'i sicil numarasından gelir.
+    [MapProperty(nameof(Worker.Manager) + "." + nameof(Worker.RegistrationNumber), nameof(WorkerDto.ManagerName))]
     public partial WorkerDto MapToDto(Worker source);
     public partial List<WorkerDto> MapToDto(List<Worker> source);
     public partial CreateWorkerModel MapToModel(CreateWorkerDto source);

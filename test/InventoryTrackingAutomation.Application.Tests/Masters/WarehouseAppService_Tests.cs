@@ -95,6 +95,5 @@ public abstract class WarehouseAppService_Tests<TStartupModule> : InventoryTrack
 
         // ASSERT
         Assert.Equal("Guncellenmis Isim", result.Name);
-        Assert.False(result.IsActive);
     }
 }

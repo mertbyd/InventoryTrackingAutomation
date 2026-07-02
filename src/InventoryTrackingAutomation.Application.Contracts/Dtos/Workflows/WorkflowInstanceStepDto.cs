@@ -35,4 +35,9 @@ public class WorkflowInstanceStepDto
     /// ActionDate alanı.
     /// </summary>
     public DateTime? ActionDate { get; set; }
+
+    public string WorkflowInstanceName { get; set; }
+    public string WorkflowStepDefinitionName { get; set; }
+    public string AssignedUserName { get; set; }
 }
+

@@ -19,6 +19,9 @@ public class VehicleTaskLine : AuditedEntity<Guid>
     public int ConsumedQuantity { get; set; }   // Gorevde tuketildigi bildirilen miktar.
     public string? ReceiveNote { get; set; }    // Satir bazli teslim alma notu.
 
+    public virtual TaskLine TaskLine { get; protected set; }
+
     protected VehicleTaskLine() { }
     public VehicleTaskLine(Guid id) : base(id) { }
 }
+

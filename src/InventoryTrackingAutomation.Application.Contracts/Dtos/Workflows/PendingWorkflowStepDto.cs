@@ -39,4 +39,10 @@ public class PendingWorkflowStepDto
     /// CreatedAt alanı.
     /// </summary>
     public DateTime CreatedAt { get; set; }
+
+    public string WorkflowInstanceStepName { get; set; }
+    public string WorkflowInstanceName { get; set; }
+    public string EntityName { get; set; }
+    public string InitiatorUserName { get; set; }
 }
+

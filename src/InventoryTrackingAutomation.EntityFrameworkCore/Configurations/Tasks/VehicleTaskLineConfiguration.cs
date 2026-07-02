@@ -29,9 +29,10 @@ public class VehicleTaskLineConfiguration : IEntityTypeConfiguration<VehicleTask
             .HasForeignKey(x => x.VehicleTaskId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasOne<TaskLine>()
+        builder.HasOne(x => x.TaskLine)
             .WithMany()
             .HasForeignKey(x => x.TaskLineId)
             .OnDelete(DeleteBehavior.Restrict);
     }
 }
+

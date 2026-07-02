@@ -88,4 +88,10 @@ public class VehicleTaskLineRepository : BaseRepository<VehicleTaskLine>, IVehic
 
         return query.Select(x => new InventoryTrackingAutomation.Models.Tasks.VehicleTaskLineWithProductModel(x.Line, x.ProductId)).ToList();
     }
+
+    public override async System.Threading.Tasks.Task<System.Linq.IQueryable<InventoryTrackingAutomation.Entities.Tasks.VehicleTaskLine>> WithDetailsAsync()
+    {
+        return (await GetQueryableAsync()).Include(x => x.TaskLine).ThenInclude(x => x.Product);
+    }
 }
+

@@ -20,19 +20,20 @@ public class VehicleTaskConfiguration : IEntityTypeConfiguration<VehicleTask>
 
         builder.HasIndex(x => new { x.VehicleId, x.ReleasedAt });
 
-        builder.HasOne<Vehicle>()
+        builder.HasOne(x => x.Vehicle)
             .WithMany()
             .HasForeignKey(x => x.VehicleId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasOne<InventoryTask>()
+        builder.HasOne(x => x.Task)
             .WithMany()
             .HasForeignKey(x => x.TaskId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasOne<Worker>()
+        builder.HasOne(x => x.ResponsibleWorker)
             .WithMany()
             .HasForeignKey(x => x.ResponsibleWorkerId)
             .OnDelete(DeleteBehavior.Restrict);
     }
 }
+

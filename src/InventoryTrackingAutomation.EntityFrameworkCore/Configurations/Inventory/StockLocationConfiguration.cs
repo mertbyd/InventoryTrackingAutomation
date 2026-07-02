@@ -20,10 +20,16 @@ public class StockLocationConfiguration : IEntityTypeConfiguration<StockLocation
 
         builder.Property(x => x.LocationId).IsRequired();
 
-        builder.HasOne<Product>()
+        builder.HasOne(x => x.Product)
             .WithMany()
             .HasForeignKey(x => x.ProductId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(x => x.Warehouse)
+            .WithMany()
+            .HasForeignKey(x => x.LocationId)
+            .IsRequired(false)
+            .OnDelete(DeleteBehavior.NoAction);
 
     }
 }

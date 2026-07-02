@@ -17,6 +17,11 @@ public class VehicleTask : AuditedEntity<Guid>
     public DateTime AssignedAt { get; set; } // Aracin operasyona dahil edildigi zamani tasir.
     public DateTime? ReleasedAt { get; set; } // Aracin operasyondan ayrildigi zamani tasir.
 
+    public virtual InventoryTask Task { get; protected set; }
+    public virtual InventoryTrackingAutomation.Entities.Masters.Vehicle Vehicle { get; protected set; }
+    public virtual InventoryTrackingAutomation.Entities.Masters.Worker ResponsibleWorker { get; protected set; }
+
     protected VehicleTask() { }
     public VehicleTask(Guid id) : base(id) { }
 }
+
