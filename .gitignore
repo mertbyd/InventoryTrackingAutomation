@@ -265,14 +265,18 @@ host/InventoryTrackingAutomation.Blazor.Server.Host/Logs/logs.txt
 **/appsettings.secrets.json
 **/appsettings.*.secrets.json
 
-# Claude Code worktrees & Codex build artifacts
-.claude/worktrees/
+# Local agent/editor/generated artifacts
+.claude/
+.codex-migration-archive/
+.vscode/
 .codex-build/
 .dotnet-cli-home/
+codex-update-inventorywiki-*.ps1
+proje_yapisi.txt
+script.sql
 
-# Redis runtime files
-tools/redis/**/*.rdb
-tools/redis/**/*.txt
+# Vendored local Redis binaries/runtime files
+tools/redis/
 
 # Temp files
 scratch.cs
