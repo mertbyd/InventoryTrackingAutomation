@@ -18,22 +18,22 @@ public class WorkerConfiguration : IEntityTypeConfiguration<Worker>
         builder.HasIndex(x => x.UserId).IsUnique();
         builder.HasIndex(x => x.RegistrationNumber).IsUnique();
 
-        builder.HasOne<Department>()
+        builder.HasOne(x => x.Department)
             .WithMany()
             .HasForeignKey(x => x.DepartmentId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasOne<Warehouse>()
+        builder.HasOne(x => x.DefaultWarehouse)
             .WithMany()
             .HasForeignKey(x => x.DefaultWarehouseId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasOne<Worker>()
+        builder.HasOne(x => x.Manager)
             .WithMany()
             .HasForeignKey(x => x.ManagerId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasOne<WorkerType>()
+        builder.HasOne(x => x.WorkerType)
             .WithMany()
             .HasForeignKey(x => x.WorkerTypeId)
             .OnDelete(DeleteBehavior.Restrict);

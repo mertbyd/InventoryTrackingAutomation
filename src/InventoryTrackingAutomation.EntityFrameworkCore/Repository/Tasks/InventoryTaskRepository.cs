@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Volo.Abp.EntityFrameworkCore;
 using InventoryTrackingAutomation.Entities.Tasks;
 using InventoryTrackingAutomation.Interface.Tasks;
@@ -13,4 +14,10 @@ public class InventoryTaskRepository : BaseRepository<InventoryTask>, IInventory
         : base(dbContextProvider)
     {
     }
+
+    public override async System.Threading.Tasks.Task<System.Linq.IQueryable<InventoryTrackingAutomation.Entities.Tasks.InventoryTask>> WithDetailsAsync()
+    {
+        return (await GetQueryableAsync()).Include(x => x.SourceWarehouse).Include(x => x.TargetWarehouse).Include(x => x.ReturnWarehouse);
+    }
 }
+

@@ -1,43 +1,59 @@
 using System;
 using Volo.Abp.Application.Dtos;
-using InventoryTrackingAutomation.Dtos.Common;
-using InventoryTrackingAutomation.Enums.Tasks;
-using InventoryTrackingAutomation.Enums.Inventory;
-using System;
 
 namespace InventoryTrackingAutomation.Dtos.Masters;
 
 //işlevi: Worker verisinin transferi sırasında taşınacak olan yapıyı tanımlar.
 //sistemdeki görevi: Katmanlar arası veri alışverişini standartlaştırır.
-public class WorkerDto : EnrichedEntityDto<Guid>
+public class WorkerDto : EntityDto<Guid>
 {
     /// <summary>
     /// ABP Identity kullanıcı kimliği.
     /// </summary>
-    public Guid UserId { get; set; }                  // ABP Identity kullanıcı kimliği.
+    public Guid UserId { get; set; }
+
     /// <summary>
     /// Sicil numarası. Örnek: &quot;EMP-2024-001&quot;
     /// </summary>
-    public string RegistrationNumber { get; set; }    // Sicil numarası. Örnek: "EMP-2024-001"
+    public string RegistrationNumber { get; set; }
+
     /// <summary>
-    /// Çalışan tipi. Örnek: (Lookup)
+    /// Çalışan tipi Id (Lookup FK).
     /// </summary>
-    public Guid WorkerTypeId { get; set; }    // Çalışan tipi. Örnek: (Lookup)
+    public Guid WorkerTypeId { get; set; }
+
+    /// <summary>
+    /// Çalışan tipi adı (WorkerType navigation'ından doldurulur).
+    /// </summary>
+    public string WorkerTypeName { get; set; }
+
     /// <summary>
     /// Bağlı departman Id.
     /// </summary>
-    public Guid? DepartmentId { get; set; }           // Bağlı departman Id.
+    public Guid? DepartmentId { get; set; }
+
     /// <summary>
-    /// Varsayılan lokasyon Id.
+    /// Bağlı departman adı (Department navigation'ından doldurulur).
     /// </summary>
-    public Guid? DefaultWarehouseId { get; set; }          // Varsayılan lokasyon Id.
+    public string DepartmentName { get; set; }
+
+    /// <summary>
+    /// Varsayılan depo Id.
+    /// </summary>
+    public Guid? DefaultWarehouseId { get; set; }
+
+    /// <summary>
+    /// Varsayılan depo adı (DefaultWarehouse navigation'ından doldurulur).
+    /// </summary>
+    public string DefaultWarehouseName { get; set; }
+
     /// <summary>
     /// Yönetici Worker Id.
     /// </summary>
-    public Guid? ManagerId { get; set; }              // Yönetici Worker Id.
-    /// <summary>
-    /// Aktif mi. Örnek: true
-    /// </summary>
-    public bool IsActive { get; set; }                // Aktif mi. Örnek: true
-}
+    public Guid? ManagerId { get; set; }
 
+    /// <summary>
+    /// Yönetici sicil numarası (Manager navigation'ından doldurulur; Worker'da isim alanı yoktur).
+    /// </summary>
+    public string ManagerName { get; set; }
+}

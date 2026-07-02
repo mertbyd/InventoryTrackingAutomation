@@ -26,4 +26,9 @@ public class TaskVehicleDto
     /// Ayrilma zamani.
     /// </summary>
     public DateTime? ReleasedAt { get; set; } // Ayrilma zamani.
+
+    public string VehicleTaskName { get; set; }
+    public string TaskName { get; set; }
+    public string VehicleName { get; set; }
 }
+

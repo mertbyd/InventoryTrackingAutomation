@@ -42,4 +42,10 @@ public class TaskLineRepository : BaseRepository<TaskLine>, ITaskLineRepository
         return await dbContext.TaskLines
             .FirstOrDefaultAsync(x => x.TaskId == taskId && x.ProductId == productId);
     }
+
+    public override async System.Threading.Tasks.Task<System.Linq.IQueryable<InventoryTrackingAutomation.Entities.Tasks.TaskLine>> WithDetailsAsync()
+    {
+        return (await GetQueryableAsync()).Include(x => x.Task).Include(x => x.Product);
+    }
 }
+

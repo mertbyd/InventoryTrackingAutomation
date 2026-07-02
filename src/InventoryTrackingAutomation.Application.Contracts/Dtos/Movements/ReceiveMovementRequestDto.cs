@@ -38,4 +38,7 @@ public class ReceiveMovementRequestVehicleTaskLineDto
     /// Satir bazli kontrol notu.
     /// </summary>
     public string? Note { get; set; } // Satir bazli kontrol notu.
+
+    public string VehicleTaskLineName { get; set; }
 }
+

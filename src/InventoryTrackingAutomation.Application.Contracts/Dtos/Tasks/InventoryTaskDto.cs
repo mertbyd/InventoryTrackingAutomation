@@ -60,4 +60,7 @@ public class InventoryTaskDto : EnrichedEntityDto<Guid>
     /// Gorev kalemleri. Detayli sorgularda dolu gelir.
     /// </summary>
     public List<TaskLineDto>? Lines { get; set; }    // Gorev kalemleri.
+    public string SourceWarehouseName { get; set; }
+    public string TargetWarehouseName { get; set; }
+    public string ReturnWarehouseName { get; set; }
 }

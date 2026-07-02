@@ -16,6 +16,8 @@ public class Vehicle : AuditedEntity<Guid>, IPassivable
     public Guid VehicleTypeId { get; set; } // Aracin saha operasyonundaki tipini (Lookup FK) belirler.
     public bool IsActive { get; set; } // Aracin gorevlere atanabilir olup olmadigini belirler.
 
+    public virtual InventoryTrackingAutomation.Entities.Lookups.VehicleType VehicleType { get; set; }
     protected Vehicle() { }
     public Vehicle(Guid id) : base(id) { }
 }
+

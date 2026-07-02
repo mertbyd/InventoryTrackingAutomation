@@ -15,12 +15,12 @@ public class MovementApprovalConfiguration : IEntityTypeConfiguration<MovementAp
 
         builder.Property(x => x.Note).HasMaxLength(1000);
 
-        builder.HasOne<MovementRequest>()
+        builder.HasOne(x => x.MovementRequest)
             .WithMany()
             .HasForeignKey(x => x.MovementRequestId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasOne<Worker>()
+        builder.HasOne(x => x.ApproverWorker)
             .WithMany()
             .HasForeignKey(x => x.ApproverWorkerId)
             .OnDelete(DeleteBehavior.Restrict);

@@ -56,6 +56,27 @@ public class StockLocationAppService : InventoryTrackingAutomationAppService, IS
         return new PagedResultDto<StockLocationDto>(totalCount, _mapper.MapToDto(entities));
     }
 
+    public async Task<List<InventoryGridItemDto>> GetInventoryGridListAsync()
+    {
+        var locations = await _repository.WithDetailsAsync(x => x.Product, x => x.Warehouse);
+        var filteredLocations = locations
+            .Where(x => x.LocationType == StockLocationTypeEnum.Warehouse)
+            .ToList();
+
+        return filteredLocations.Select(l => new InventoryGridItemDto
+        {
+            Id = l.Id,
+            ProductId = l.ProductId,
+            Name = l.Product.Name,
+            CategoryId = l.Product.CategoryId ?? Guid.Empty,
+            CategoryName = "MockCategory", // To be implemented with ProductCategory Include
+            WarehouseId = l.Warehouse != null ? l.Warehouse.Id : Guid.Empty,
+            WarehouseName = l.Warehouse != null ? l.Warehouse.Name : null,
+            WarehouseLocation = l.Warehouse != null ? l.Warehouse.Code : null,
+            Quantity = l.Quantity
+        }).ToList();
+    }
+
     [UnitOfWork]
     //işlevi: İlgili iş senaryosunu (use-case) yürütür.
     //sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
@@ -158,3 +179,5 @@ public class StockLocationAppService : InventoryTrackingAutomationAppService, IS
             : _localEventBus.PublishAsync(CacheInvalidationEto.ForKeys(keyArray));
     }
 }
+
+

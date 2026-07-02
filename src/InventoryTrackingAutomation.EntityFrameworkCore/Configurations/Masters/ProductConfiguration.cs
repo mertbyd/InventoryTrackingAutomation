@@ -18,12 +18,12 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
 
         builder.HasIndex(x => x.Code).IsUnique();
 
-        builder.HasOne<ProductCategory>()
+        builder.HasOne(x => x.Category)
             .WithMany()
             .HasForeignKey(x => x.CategoryId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasOne<UnitType>()
+        builder.HasOne(x => x.UnitType)
             .WithMany()
             .HasForeignKey(x => x.UnitTypeId)
             .OnDelete(DeleteBehavior.Restrict);

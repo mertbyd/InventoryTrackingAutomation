@@ -1,39 +1,39 @@
 using System;
 using Volo.Abp.Application.Dtos;
-using InventoryTrackingAutomation.Dtos.Common;
-using InventoryTrackingAutomation.Enums.Tasks;
-using InventoryTrackingAutomation.Enums.Inventory;
-using System;
 
 namespace InventoryTrackingAutomation.Dtos.Masters;
 
 //işlevi: Product verisinin transferi sırasında taşınacak olan yapıyı tanımlar.
 //sistemdeki görevi: Katmanlar arası veri alışverişini standartlaştırır.
-public class ProductDto : EnrichedEntityDto<Guid>
+public class ProductDto : EntityDto<Guid>
 {
     /// <summary>
     /// Ürün kodu. Örnek: &quot;PRD-001&quot;
     /// </summary>
-    public string Code { get; set; }            // Ürün kodu. Örnek: "PRD-001"
+    public string Code { get; set; }
+
     /// <summary>
     /// Ürün adı. Örnek: &quot;Vida M8x20&quot;
     /// </summary>
-    public string Name { get; set; }            // Ürün adı. Örnek: "Vida M8x20"
+    public string Name { get; set; }
+
     /// <summary>
     /// Bağlı kategori Id.
     /// </summary>
-    public Guid? CategoryId { get; set; }       // Bağlı kategori Id.
-    /// <summary>
-    /// Ölçü birimi. Örnek: (Lookup)
-    /// </summary>
-    public Guid UnitTypeId { get; set; }  // Ölçü birimi. Örnek: (Lookup)
-    /// <summary>
-    /// Aktif mi. Örnek: true
-    /// </summary>
-    public bool IsActive { get; set; }          // Aktif mi. Örnek: true
-    /// <summary>
-    /// Seri numaralı mı. Örnek: false
-    /// </summary>
-    public bool IsSerializable { get; set; }    // Seri numaralı mı. Örnek: false
-}
+    public Guid? CategoryId { get; set; }
 
+    /// <summary>
+    /// Bağlı kategori adı (Category navigation'ından doldurulur).
+    /// </summary>
+    public string CategoryName { get; set; }
+
+    /// <summary>
+    /// Ölçü birimi Id (Lookup FK).
+    /// </summary>
+    public Guid UnitTypeId { get; set; }
+
+    /// <summary>
+    /// Ölçü birimi adı (UnitType navigation'ından doldurulur).
+    /// </summary>
+    public string UnitTypeName { get; set; }
+}

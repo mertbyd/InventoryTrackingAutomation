@@ -24,6 +24,10 @@ public class InventoryTask : FullAuditedEntity<Guid>
     public Guid? TargetWarehouseId { get; set; } // Depo transferi operasyonunda malzemenin gidecegi hedef depo baglamini tasir.
     public Guid? ReturnWarehouseId { get; set; } // Saha gorevi bitince stoklarin donecegi depo baglamini tasir.
 
+    public virtual InventoryTrackingAutomation.Entities.Masters.Warehouse SourceWarehouse { get; set; }
+    public virtual InventoryTrackingAutomation.Entities.Masters.Warehouse? TargetWarehouse { get; set; }
+    public virtual InventoryTrackingAutomation.Entities.Masters.Warehouse? ReturnWarehouse { get; set; }
     protected InventoryTask() { }
     public InventoryTask(Guid id) : base(id) { }
 }
+

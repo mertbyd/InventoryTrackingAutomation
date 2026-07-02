@@ -58,4 +58,11 @@ public class MovementRequestDto : EnrichedEntityDto<Guid>
     /// Bagli is akisi Id&apos;si.
     /// </summary>
     public Guid? WorkflowInstanceId { get; set; }         // Bagli is akisi Id'si.
+    public string RequestedByWorkerName { get; set; }
+    public string TaskName { get; set; }
+
+    public string VehicleTaskName { get; set; }
+    public string ParentMovementRequestName { get; set; }
+    public string WorkflowInstanceName { get; set; }
 }
+

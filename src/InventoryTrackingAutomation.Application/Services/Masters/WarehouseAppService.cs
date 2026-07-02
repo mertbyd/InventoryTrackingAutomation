@@ -41,7 +41,8 @@ public class WarehouseAppService : InventoryTrackingAutomationAppService, IWareh
     //sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<WarehouseDto> GetAsync(Guid id)
     {
-        var entity = await _manager.EnsureExistsAsync(id);
+        await _manager.EnsureExistsAsync(id);
+        var entity = await _repository.GetAsync(id, includeDetails: true);
         return _mapper.MapToDto(entity);
     }
 
@@ -52,7 +53,7 @@ public class WarehouseAppService : InventoryTrackingAutomationAppService, IWareh
     {
         var totalCount = await _repository.GetCountAsync();
         var entities = await _repository.GetPagedListAsync(
-            input.SkipCount, input.MaxResultCount, sorting: string.Empty);
+            input.SkipCount, input.MaxResultCount, sorting: string.Empty, includeDetails: true);
         return new PagedResultDto<WarehouseDto>(
             totalCount,
             _mapper.MapToDto(entities));

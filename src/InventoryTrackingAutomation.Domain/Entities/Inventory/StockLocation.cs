@@ -1,4 +1,5 @@
 using System;
+using InventoryTrackingAutomation.Entities.Masters;
 using InventoryTrackingAutomation.Enums.Tasks;
 using InventoryTrackingAutomation.Enums.Inventory;
 using InventoryTrackingAutomation.Enums;
@@ -19,6 +20,9 @@ public class StockLocation : AuditedEntity<Guid>
     public Guid LocationId { get; set; } // Lokasyon tipinin isaret ettigi depo veya arac kimligini tasir.
     public int Quantity { get; set; } // Fiziksel kullanilabilir stok miktarini tasir.
     public int ReservedQuantity { get; set; } // Depo stoklarinda ayrilmis miktari tasir.
+
+    public virtual Product? Product { get; set; }
+    public virtual Warehouse? Warehouse { get; set; }
 
     protected StockLocation() { }
     public StockLocation(Guid id) : base(id) { }

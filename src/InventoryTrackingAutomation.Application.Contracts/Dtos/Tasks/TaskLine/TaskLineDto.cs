@@ -21,4 +21,6 @@ public class TaskLineDto : EnrichedEntityDto<Guid>
     public int AllocatedQuantity { get; set; } // Entity kolonu degildir; arac satirlarindan hesaplanir.
     /// <summary>Henuz atanmamis kalan miktar.</summary>
     public int RemainingQuantity => Quantity - AllocatedQuantity; // Hesaplanan kalan.
+    public string TaskName { get; set; }
+    public string ProductName { get; set; }
 }

@@ -1,27 +1,24 @@
 using System;
 using Volo.Abp.Application.Dtos;
-using InventoryTrackingAutomation.Dtos.Common;
-using InventoryTrackingAutomation.Enums.Tasks;
-using InventoryTrackingAutomation.Enums.Inventory;
-using System;
 
 namespace InventoryTrackingAutomation.Dtos.Masters;
 
 //işlevi: Vehicle verisinin transferi sırasında taşınacak olan yapıyı tanımlar.
 //sistemdeki görevi: Katmanlar arası veri alışverişini standartlaştırır.
-public class VehicleDto : EnrichedEntityDto<Guid>
+public class VehicleDto : EntityDto<Guid>
 {
     /// <summary>
     /// Plaka numarası. Örnek: &quot;34 ABC 123&quot;
     /// </summary>
-    public string PlateNumber { get; set; }           // Plaka numarası. Örnek: "34 ABC 123"
-    /// <summary>
-    /// Araç tipi. Örnek: (Lookup)
-    /// </summary>
-    public Guid VehicleTypeId { get; set; } // Araç tipi. Örnek: (Lookup)
-    /// <summary>
-    /// Aktif mi. Örnek: true
-    /// </summary>
-    public bool IsActive { get; set; }               // Aktif mi. Örnek: true
-}
+    public string PlateNumber { get; set; }
 
+    /// <summary>
+    /// Araç tipi Id (Lookup FK).
+    /// </summary>
+    public Guid VehicleTypeId { get; set; }
+
+    /// <summary>
+    /// Araç tipi adı (VehicleType navigation'ından doldurulur).
+    /// </summary>
+    public string VehicleTypeName { get; set; }
+}

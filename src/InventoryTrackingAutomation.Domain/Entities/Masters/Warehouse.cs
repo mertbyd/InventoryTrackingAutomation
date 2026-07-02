@@ -17,6 +17,8 @@ public class Warehouse : AuditedEntity<Guid>, IPassivable
     public Guid? ManagerWorkerId { get; set; } // Depodan sorumlu calisan baglamini tasir.
     public bool IsActive { get; set; } // Deponun operasyonlarda kullanilip kullanilamayacagini belirler.
 
+    public virtual Worker? ManagerWorker { get; set; }
     protected Warehouse() { }
     public Warehouse(Guid id) : base(id) { }
 }
+

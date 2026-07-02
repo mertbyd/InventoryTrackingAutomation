@@ -21,6 +21,9 @@ public class MovementApproval : CreationAuditedEntity<Guid>
     public DateTime? DecidedAt { get; set; } // Kararin verildigi zamani tasir.
     public string? Note { get; set; } // Onaycinin operasyonel notunu veya red gerekcesini tasir.
 
+    public virtual MovementRequest MovementRequest { get; set; }
+    public virtual InventoryTrackingAutomation.Entities.Masters.Worker ApproverWorker { get; set; }
     protected MovementApproval() { }
     public MovementApproval(Guid id) : base(id) { }
 }
+
