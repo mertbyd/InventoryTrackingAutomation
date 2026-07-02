@@ -41,8 +41,7 @@ public class WarehouseAppService : InventoryTrackingAutomationAppService, IWareh
     //sistemdeki görevi: Uygulama katmanındaki bir operasyonu atomik olarak gerçekleştirir.
     public async Task<WarehouseDto> GetAsync(Guid id)
     {
-        await _manager.EnsureExistsAsync(id);
-        var entity = await _repository.GetAsync(id, includeDetails: true);
+        var entity = await _manager.EnsureExistsAsync(id);
         return _mapper.MapToDto(entity);
     }
 
