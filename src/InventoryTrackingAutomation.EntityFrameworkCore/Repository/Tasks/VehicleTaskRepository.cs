@@ -43,7 +43,7 @@ public class VehicleTaskRepository : BaseRepository<VehicleTask>, IVehicleTaskRe
             .Include(x => x.Vehicle)
             .Include(x => x.Task)
             .Include(x => x.ResponsibleWorker)
-            .Include(x => x.VehicleTaskLines).ThenInclude(l => l.TaskLine).ThenInclude(t => t.Product);
+            .Include(x => x.Lines).ThenInclude(l => l.TaskLine).ThenInclude(t => t.Product);
     }
 }
 

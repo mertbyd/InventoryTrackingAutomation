@@ -21,7 +21,7 @@ public class TaskLineConfiguration : IEntityTypeConfiguration<TaskLine>
             .IsUnique();
 
         builder.HasOne(x => x.Task)
-            .WithMany()
+            .WithMany(t => t.Lines)
             .HasForeignKey(x => x.TaskId)
             .OnDelete(DeleteBehavior.Restrict);
 

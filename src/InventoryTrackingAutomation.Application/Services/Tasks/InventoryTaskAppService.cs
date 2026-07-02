@@ -52,7 +52,7 @@ public class InventoryTaskAppService : InventoryTrackingAutomationAppService, II
     public async Task<InventoryTaskDto> GetAsync(Guid id)
     {
         var entity = await _manager.EnsureExistsAsync(id);
-        return await MapTaskWithLinesAsync(entity);
+        return _mapper.MapToDto(entity);
     }
 
     /// <summary>
@@ -111,7 +111,7 @@ public class InventoryTaskAppService : InventoryTrackingAutomationAppService, II
             }
         }
         
-        return await MapTaskWithLinesAsync(insertedTask);
+        return _mapper.MapToDto(await _repository.GetAsync(insertedTask.Id, includeDetails: true));
     }
 
     /// <summary>
@@ -168,7 +168,9 @@ public class InventoryTaskAppService : InventoryTrackingAutomationAppService, II
             insertedLines = await _taskLineRepository.InsertManyAndGetListAsync(lineEntities);
         }
 
-        return MapTasksWithLines(insertedTasks, insertedLines);
+        var insertedTaskIds = insertedTasks.Select(t => t.Id).ToList();
+        var tasksWithDetails = await _repository.GetListAsync(t => insertedTaskIds.Contains(t.Id), includeDetails: true);
+        return _mapper.MapToDto(tasksWithDetails);
     }
 
     /// <summary>
@@ -293,30 +295,6 @@ public class InventoryTaskAppService : InventoryTrackingAutomationAppService, II
         return _localEventBus.PublishAsync(CacheInvalidationEto.ForKeys(
             CacheKeys.TaskInventory(taskId),
             CacheKeys.TaskVehicles(taskId)));
-    }
-
-    private async Task<InventoryTaskDto> MapTaskWithLinesAsync(InventoryTask entity)
-    {
-        var dto = _mapper.MapToDto(entity);
-        dto.Lines = await _taskLineAppService.GetByTaskAsync(entity.Id);
-        return dto;
-    }
-
-    private List<InventoryTaskDto> MapTasksWithLines(List<InventoryTask> tasks, List<TaskLine> lines)
-    {
-        var lineDtosByTaskId = lines
-            .GroupBy(x => x.TaskId)
-            .ToDictionary(x => x.Key, x => _taskLineMapper.MapToDto(x.ToList()));
-
-        var dtos = _mapper.MapToDto(tasks);
-        foreach (var dto in dtos)
-        {
-            dto.Lines = lineDtosByTaskId.TryGetValue(dto.Id, out var lineDtos)
-                ? lineDtos
-                : new List<TaskLineDto>();
-        }
-
-        return dtos;
     }
 
     private async Task<UpdateInventoryTaskModel> BuildCurrentModelAsync(Guid id)

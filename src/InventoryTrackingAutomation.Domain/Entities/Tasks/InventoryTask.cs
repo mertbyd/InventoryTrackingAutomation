@@ -28,6 +28,7 @@ public class InventoryTask : FullAuditedEntity<Guid>
     public virtual Warehouse SourceWarehouse { get; set; }
     public virtual Warehouse? TargetWarehouse { get; set; }
     public virtual Warehouse? ReturnWarehouse { get; set; }
+    public virtual System.Collections.Generic.ICollection<TaskLine> Lines { get; protected set; }
     protected InventoryTask() { }
     public InventoryTask(Guid id) : base(id) { }
 }

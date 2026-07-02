@@ -19,7 +19,9 @@ public class InventoryTaskRepository : BaseRepository<InventoryTask>, IInventory
 
     public override async Task<IQueryable<InventoryTask>> WithDetailsAsync()
     {
-        return (await GetQueryableAsync()).Include(x => x.SourceWarehouse).Include(x => x.TargetWarehouse).Include(x => x.ReturnWarehouse);
+        return (await GetQueryableAsync())
+            .Include(x => x.SourceWarehouse).Include(x => x.TargetWarehouse).Include(x => x.ReturnWarehouse)
+            .Include(x => x.Lines).ThenInclude(l => l.Product);
     }
 }
 
