@@ -25,7 +25,7 @@ public class VehicleTaskLineConfiguration : IEntityTypeConfiguration<VehicleTask
             .IsUnique();
 
         builder.HasOne<VehicleTask>()
-            .WithMany(vt => vt.VehicleTaskLines)
+            .WithMany(vt => vt.Lines)
             .HasForeignKey(x => x.VehicleTaskId)
             .OnDelete(DeleteBehavior.Restrict);
 

@@ -40,8 +40,8 @@ public class VehicleTaskLineAppService : InventoryTrackingAutomationAppService, 
     /// </summary>
     public async Task<VehicleTaskLineDto> GetAsync(Guid id)
     {
-        var model = await _manager.GetWithProductAsync(id);
-        return MapToDto(model);
+        var entity = await _repository.GetAsync(id, includeDetails: true);
+        return _mapper.MapToDto(entity);
     }
 
     /// <summary>
@@ -50,8 +50,8 @@ public class VehicleTaskLineAppService : InventoryTrackingAutomationAppService, 
     public async Task<List<VehicleTaskLineDto>> GetByVehicleTaskAsync(Guid vehicleTaskId)
     {
         await _manager.EnsureVehicleTaskExistsAsync(vehicleTaskId);
-        var models = await _manager.GetListWithProductByVehicleTaskAsync(vehicleTaskId);
-        return models.Select(MapToDto).ToList();
+        var entities = await _repository.GetListAsync(x => x.VehicleTaskId == vehicleTaskId, includeDetails: true);
+        return entities.Select(_mapper.MapToDto).ToList();
     }
 
     /// <summary>
@@ -108,16 +108,6 @@ public class VehicleTaskLineAppService : InventoryTrackingAutomationAppService, 
         await _manager.EnsureCanDeleteAsync(lineId);
         await _repository.DeleteAsync(lineId);
         await InvalidateCachesAsync(vehicleTask);
-    }
-
-    /// <summary>
-    /// Modelden DTO'ya haritalama yapar.
-    /// </summary>
-    private VehicleTaskLineDto MapToDto(VehicleTaskLineWithProductModel model)
-    {
-        var dto = _mapper.MapToDto(model.Line);
-        dto.ProductId = model.ProductId;
-        return dto;
     }
 
     /// <summary>

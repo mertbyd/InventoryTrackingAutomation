@@ -24,6 +24,10 @@ namespace InventoryTrackingAutomation.Application.Mappers.Tasks;
 [Mapper]
 public partial class InventoryTaskMapper
 {
+    // InventoryTask.Lines (TaskLine) -> InventoryTaskDto.Lines (TaskLineDto) eslemesini devreder.
+    [UseMapper]
+    private readonly TaskLineMapper _taskLineMapper = new();
+
     public partial List<InventoryTaskDto> MapToDto(List<InventoryTask> source);
     public partial List<TaskVehicleDto> MapToDto(List<TaskVehicleModel> source);
     public partial List<TaskInventoryDto> MapToDto(List<TaskInventoryModel> source);

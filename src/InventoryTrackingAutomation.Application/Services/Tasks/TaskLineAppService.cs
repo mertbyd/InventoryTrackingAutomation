@@ -33,7 +33,6 @@ public class TaskLineAppService : InventoryTrackingAutomationAppService, ITaskLi
 
     private ITaskLineRepository _repository => LazyGetRequiredService<ITaskLineRepository>();
     private IInventoryTaskRepository _taskRepository => LazyGetRequiredService<IInventoryTaskRepository>();
-    private IVehicleTaskLineRepository _vehicleTaskLineRepository => LazyGetRequiredService<IVehicleTaskLineRepository>();
     private TaskLineManager _manager => LazyGetRequiredService<TaskLineManager>();
     private IValidator<CreateTaskLineDto> _createValidator => LazyGetRequiredService<IValidator<CreateTaskLineDto>>();
     private IValidator<UpdateTaskLineDto> _updateValidator => LazyGetRequiredService<IValidator<UpdateTaskLineDto>>();
@@ -44,15 +43,15 @@ public class TaskLineAppService : InventoryTrackingAutomationAppService, ITaskLi
     public async Task<TaskLineDto> GetAsync(Guid id)
     {
         var entity = await _manager.EnsureExistsAsync(id);
-        return await MapTaskLineAsync(entity);
+        return _mapper.MapToDto(entity);
     }
 
     /// Bir göreve bağlı tüm kalemleri getirmek için kullanılır.
     public async Task<List<TaskLineDto>> GetByTaskAsync(Guid taskId)
     {
         await EnsureTaskExistsAsync(taskId);
-        var lines = await _manager.GetByTaskIdAsync(taskId);
-        return await MapTaskLinesAsync(lines);
+        var lines = await _repository.GetListAsync(x => x.TaskId == taskId, includeDetails: true);
+        return _mapper.MapToDto(lines);
     }
 
     /// Göreve yeni ürün kalemi eklemek için kullanılır.
@@ -71,7 +70,7 @@ public class TaskLineAppService : InventoryTrackingAutomationAppService, ITaskLi
         _mapper.MapToEntity(validatedModel, entity);
         var inserted = await _repository.InsertAsync(entity, autoSave: true);
         await InvalidateTaskLineCachesAsync(taskId);
-        return await MapTaskLineAsync(inserted);
+        return _mapper.MapToDto(await _repository.GetAsync(inserted.Id, includeDetails: true));
     }
 
     /// Görev kalemi miktarını veya ürün bağlamını güncellemek için kullanılır.
@@ -86,7 +85,7 @@ public class TaskLineAppService : InventoryTrackingAutomationAppService, ITaskLi
         _mapper.MapToEntity(validatedModel, existing);
         var saved = await _repository.UpdateAsync(existing, autoSave: true);
         await InvalidateTaskLineCachesAsync(taskId);
-        return await MapTaskLineAsync(saved);
+        return _mapper.MapToDto(await _repository.GetAsync(saved.Id, includeDetails: true));
     }
 
     /// Tahsis edilmemis gorev kalemini silmek icin kullanilir.
@@ -128,29 +127,4 @@ public class TaskLineAppService : InventoryTrackingAutomationAppService, ITaskLi
             CacheKeys.TaskVehicles(taskId)));
     }
 
-    private async Task<TaskLineDto> MapTaskLineAsync(TaskLine entity)
-    {
-        var dto = _mapper.MapToDto(entity);
-        dto.AllocatedQuantity = await _vehicleTaskLineRepository.GetAllocatedQuantityByTaskLineIdAsync(entity.Id);
-        return dto;
-    }
-
-    private async Task<List<TaskLineDto>> MapTaskLinesAsync(List<TaskLine> entities)
-    {
-        var dtos = _mapper.MapToDto(entities);
-        var taskLineIds = entities.Select(x => x.Id).ToList();
-        var vehicleLines = await _vehicleTaskLineRepository.GetByTaskLineIdsAsync(taskLineIds);
-        var allocationsByTaskLineId = vehicleLines
-            .GroupBy(x => x.TaskLineId)
-            .ToDictionary(x => x.Key, x => x.Sum(y => y.AllocatedQuantity));
-
-        foreach (var dto in dtos)
-        {
-            dto.AllocatedQuantity = allocationsByTaskLineId.TryGetValue(dto.Id, out var allocatedQuantity)
-                ? allocatedQuantity
-                : 0;
-        }
-
-        return dtos;
-    }
 }
