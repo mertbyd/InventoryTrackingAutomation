@@ -1,3 +1,5 @@
+using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Volo.Abp.EntityFrameworkCore;
 using InventoryTrackingAutomation.Entities.Movements;
@@ -15,9 +17,10 @@ public class MovementApprovalRepository : BaseRepository<MovementApproval>, IMov
     {
     }
 
-    public override async System.Threading.Tasks.Task<System.Linq.IQueryable<InventoryTrackingAutomation.Entities.Movements.MovementApproval>> WithDetailsAsync()
+    public override async Task<IQueryable<MovementApproval>> WithDetailsAsync()
     {
         return (await GetQueryableAsync()).Include(x => x.MovementRequest).Include(x => x.ApproverWorker);
     }
 }
+
 

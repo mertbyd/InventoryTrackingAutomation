@@ -1,3 +1,4 @@
+using InventoryTrackingAutomation.Models.Tasks;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -65,7 +66,7 @@ public class MovementRequestManager : BaseManager<MovementRequest>
     /// <summary>
     /// Birden fazla hareket talebini toplu olarak doğrulamak için kullanılır.
     /// </summary>
-    public async Task<System.Collections.Generic.List<CreateMovementRequestModel>> CreateManyAsync(System.Collections.Generic.List<CreateMovementRequestModel> models)
+    public async Task<List<CreateMovementRequestModel>> CreateManyAsync(List<CreateMovementRequestModel> models)
     {
         if (models.Count == 0)
         {
@@ -334,7 +335,7 @@ public class MovementRequestManager : BaseManager<MovementRequest>
     }
 
     /// Transfer edilecek VehicleTaskLine verilerini getirmek için kullanılır.
-    private async Task<List<InventoryTrackingAutomation.Models.Tasks.VehicleTaskLineWithProductModel>> GetVehicleTaskLinesForTransferAsync(Guid vehicleTaskId)
+    private async Task<List<VehicleTaskLineWithProductModel>> GetVehicleTaskLinesForTransferAsync(Guid vehicleTaskId)
     {
         var lines = await _vehicleTaskLineRepository.GetTransferContextsByVehicleTaskIdAsync(vehicleTaskId);
         if (lines.Count == 0)
@@ -391,7 +392,7 @@ public class MovementRequestManager : BaseManager<MovementRequest>
     /// İade alım giriş verilerini VehicleTaskLine bazlı doğrulamak için kullanılır.
     private static void ValidateReturnReceiveInput(
         MovementRequest request,
-        IReadOnlyCollection<InventoryTrackingAutomation.Models.Tasks.VehicleTaskLineWithProductModel> expectedLines,
+        IReadOnlyCollection<VehicleTaskLineWithProductModel> expectedLines,
         ReceiveMovementRequestModel model)
     {
         if (model.Lines.Count == 0)
@@ -538,7 +539,7 @@ public class MovementRequestManager : BaseManager<MovementRequest>
 
     /// Hareket rotasinin gecerliligini dogrulamak icin kullanilir.
     private static void CollectAndValidateTaskRoute(
-        InventoryTrackingAutomation.Entities.Tasks.InventoryTask task,
+        InventoryTask task,
         ISet<Guid> warehouseIds)
     {
         if (task.SourceWarehouseId == Guid.Empty)
@@ -564,7 +565,7 @@ public class MovementRequestManager : BaseManager<MovementRequest>
 
     /// Hareket rotasinin gecerliligini dogrulamak icin kullanilir.
     private async Task ValidateTaskRouteAsync(
-        InventoryTrackingAutomation.Entities.Tasks.InventoryTask task,
+        InventoryTask task,
         Guid vehicleId)
     {
         // Arac her hareket icin VehicleTask uzerinden zorunludur.
@@ -635,7 +636,7 @@ public class MovementRequestManager : BaseManager<MovementRequest>
     }
 
     /// Task varligini repository uzerinden dogrulamak icin kullanilir.
-    private async Task<InventoryTrackingAutomation.Entities.Tasks.InventoryTask> EnsureTaskExistsAsync(Guid taskId)
+    private async Task<InventoryTask> EnsureTaskExistsAsync(Guid taskId)
     {
         if (taskId == Guid.Empty)
         {
@@ -651,7 +652,7 @@ public class MovementRequestManager : BaseManager<MovementRequest>
         return task;
     }
 
-    public async Task<InventoryTrackingAutomation.Entities.Workflows.WorkflowInstance?> AssignWorkflowAsync(
+    public async Task<WorkflowInstance?> AssignWorkflowAsync(
         MovementRequest entity,
         Guid currentUserId)
     {
@@ -671,7 +672,7 @@ public class MovementRequestManager : BaseManager<MovementRequest>
             return null;
         }
 
-        var startModel = new InventoryTrackingAutomation.Models.Workflows.StartWorkflowModel
+        var startModel = new StartWorkflowModel
         {
             WorkflowDefinitionId = workflowDef.Id,
             EntityType = WorkflowEntityTypes.MovementRequest,
@@ -682,7 +683,7 @@ public class MovementRequestManager : BaseManager<MovementRequest>
         var workflowInstance = await _workflowManager.StartWorkflowAsync(startModel);
         await _workflowInstanceRepository.InsertAsync(workflowInstance);
         entity.WorkflowInstanceId = workflowInstance.Id;
-        entity.Status = InventoryTrackingAutomation.Enums.MovementStatusEnum.InReview;
+        entity.Status = MovementStatusEnum.InReview;
         return workflowInstance;
     }
 
@@ -691,7 +692,7 @@ public class MovementRequestManager : BaseManager<MovementRequest>
     private static bool MissingId(Guid? id) => !id.HasValue || id.Value == Guid.Empty;
 
     /// İlk workflow adımı için bildirim yayınlamak için kullanılır.
-    public Task PublishInitialWorkflowStepAssignedAsync(InventoryTrackingAutomation.Entities.Workflows.WorkflowInstance? workflowInstance)
+    public Task PublishInitialWorkflowStepAssignedAsync(WorkflowInstance? workflowInstance)
     {
         var firstStep = workflowInstance?.Steps.FirstOrDefault();
         if (workflowInstance == null || firstStep == null)
@@ -710,3 +711,4 @@ public class MovementRequestManager : BaseManager<MovementRequest>
         });
     }
 }
+

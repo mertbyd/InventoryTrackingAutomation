@@ -1,3 +1,4 @@
+using InventoryTrackingAutomation.Entities.Lookups;
 using System;
 using InventoryTrackingAutomation.Entities;
 using InventoryTrackingAutomation.Enums;
@@ -19,10 +20,11 @@ public class Product : AuditedEntity<Guid>, IPassivable
     public bool IsActive { get; set; } // Urunun operasyonlarda kullanilip kullanilamayacagini belirler.
     public bool IsSerializable { get; set; } // Urunun seri bazli takip gerektirip gerektirmedigini belirler.
 
-    public virtual InventoryTrackingAutomation.Entities.Lookups.ProductCategory? Category { get; set; }
+    public virtual ProductCategory? Category { get; set; }
 
-    public virtual InventoryTrackingAutomation.Entities.Lookups.UnitType UnitType { get; set; }
+    public virtual UnitType UnitType { get; set; }
     protected Product() { }
     public Product(Guid id) : base(id) { }
 }
+
 

@@ -1,3 +1,4 @@
+using InventoryTrackingAutomation.Models.Movements;
 using System;
 using InventoryTrackingAutomation.Managers;
 using System.Collections.Generic;
@@ -108,7 +109,7 @@ public class TaskReturnRequestManager : InventoryTrackingAutomationDomainService
     }
 
     /// Iade akisi icin VehicleTaskLine kayitlarini guvenceye alir; eksikse olusturur.
-    private async Task EnsureVehicleTaskLinesAsync(Guid taskId, Guid vehicleTaskId, IReadOnlyList<InventoryTrackingAutomation.Models.Movements.TaskVehicleReturnLineModel> returnLines)
+    private async Task EnsureVehicleTaskLinesAsync(Guid taskId, Guid vehicleTaskId, IReadOnlyList<TaskVehicleReturnLineModel> returnLines)
     {
         foreach (var line in returnLines)
         {
@@ -174,7 +175,7 @@ public class TaskReturnRequestManager : InventoryTrackingAutomationDomainService
     }
 
     /// Görev aracındaki iade satırlarını getirmek için kullanılır.
-    private async Task<IReadOnlyList<InventoryTrackingAutomation.Models.Movements.TaskVehicleReturnLineModel>> GetTaskVehicleReturnLinesAsync(Guid taskId, Guid vehicleTaskId, Guid vehicleId)
+    private async Task<IReadOnlyList<TaskVehicleReturnLineModel>> GetTaskVehicleReturnLinesAsync(Guid taskId, Guid vehicleTaskId, Guid vehicleId)
     {
         var movementIds = (await _movementRequestRepository.GetListAsync(x =>
                 x.VehicleTaskId == vehicleTaskId))
@@ -191,4 +192,5 @@ public class TaskReturnRequestManager : InventoryTrackingAutomationDomainService
         return $"RET-{DateTime.UtcNow:yyyyMMddHHmmss}-{suffix}";
     }
 }
+
 

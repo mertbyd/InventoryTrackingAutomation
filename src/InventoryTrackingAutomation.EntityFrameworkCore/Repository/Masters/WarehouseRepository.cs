@@ -1,3 +1,5 @@
+using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Volo.Abp.EntityFrameworkCore;
 using InventoryTrackingAutomation.Entities.Masters;
@@ -15,9 +17,10 @@ public class WarehouseRepository : BaseRepository<Warehouse>, IWarehouseReposito
     {
     }
 
-    public override async System.Threading.Tasks.Task<System.Linq.IQueryable<InventoryTrackingAutomation.Entities.Masters.Warehouse>> WithDetailsAsync()
+    public override async Task<IQueryable<Warehouse>> WithDetailsAsync()
     {
         return (await GetQueryableAsync()).Include(x => x.ManagerWorker);
     }
 }
+
 

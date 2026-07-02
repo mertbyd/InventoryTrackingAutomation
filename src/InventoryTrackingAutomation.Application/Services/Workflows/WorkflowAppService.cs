@@ -1,3 +1,4 @@
+using InventoryTrackingAutomation.Enums.Workflows;
 using InventoryTrackingAutomation.Application.Mappers.Workflows;
 using System;
 using System.Collections.Generic;
@@ -91,7 +92,7 @@ public class WorkflowAppService : InventoryTrackingAutomationAppService, IWorkfl
 
         var pendingSteps = await _workflowInstanceStepRepository.GetListAsync(
             x => x.WorkflowInstanceId == instanceId &&
-                 x.ActionTaken == InventoryTrackingAutomation.Enums.Workflows.WorkflowActionType.Pending);
+                 x.ActionTaken == WorkflowActionType.Pending);
 
         if (!pendingSteps.Any())
         {
@@ -131,7 +132,7 @@ public class WorkflowAppService : InventoryTrackingAutomationAppService, IWorkfl
 
         var pendingSteps = await _workflowInstanceStepRepository.GetListAsync(
             x => x.AssignedUserId == currentUserId &&
-                 x.ActionTaken == InventoryTrackingAutomation.Enums.Workflows.WorkflowActionType.Pending);
+                 x.ActionTaken == WorkflowActionType.Pending);
 
         var result = new List<PendingWorkflowStepDto>();
         if (!pendingSteps.Any()) return result;
@@ -263,3 +264,4 @@ public class WorkflowAppService : InventoryTrackingAutomationAppService, IWorkfl
         return dto;
     }
 }
+

@@ -1,3 +1,8 @@
+using InventoryTrackingAutomation.Models.Tasks;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Volo.Abp.EntityFrameworkCore;
 using InventoryTrackingAutomation.Entities.Tasks;
@@ -15,13 +20,13 @@ public class VehicleTaskRepository : BaseRepository<VehicleTask>, IVehicleTaskRe
     {
     }
 
-    public async System.Threading.Tasks.Task<System.Collections.Generic.List<InventoryTrackingAutomation.Models.Tasks.TaskVehicleModel>> GetTaskVehiclesByTaskIdAsync(System.Guid inventoryTaskId)
+    public async Task<List<TaskVehicleModel>> GetTaskVehiclesByTaskIdAsync(Guid inventoryTaskId)
     {
         var dbContext = await GetDbContextAsync();
         return await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync(
             dbContext.VehicleTasks
                 .Where(x => x.TaskId == inventoryTaskId)
-                .Select(x => new InventoryTrackingAutomation.Models.Tasks.TaskVehicleModel
+                .Select(x => new TaskVehicleModel
                 {
                     VehicleTaskId = x.Id,
                     TaskId = x.TaskId,
@@ -32,9 +37,10 @@ public class VehicleTaskRepository : BaseRepository<VehicleTask>, IVehicleTaskRe
         );
     }
 
-    public override async System.Threading.Tasks.Task<System.Linq.IQueryable<InventoryTrackingAutomation.Entities.Tasks.VehicleTask>> WithDetailsAsync()
+    public override async Task<IQueryable<VehicleTask>> WithDetailsAsync()
     {
         return (await GetQueryableAsync()).Include(x => x.Vehicle).Include(x => x.Task).Include(x => x.ResponsibleWorker);
     }
 }
+
 

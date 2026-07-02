@@ -25,7 +25,7 @@ public class VehicleTypeAppService : LookupCrudAppService<VehicleType, VehicleTy
     }
 
     protected override VehicleTypeDto MapToDto(VehicleType entity) => _mapper.MapToDto(entity);
-    protected override System.Collections.Generic.List<VehicleTypeDto> MapToDto(System.Collections.Generic.List<VehicleType> entities) => _mapper.MapToDto(entities);
+    protected override List<VehicleTypeDto> MapToDto(List<VehicleType> entities) => _mapper.MapToDto(entities);
     protected override CreateVehicleTypeModel MapToCreateModel(CreateVehicleTypeDto input) => _mapper.MapToModel(input);
     protected override UpdateVehicleTypeModel MapToUpdateModel(UpdateVehicleTypeDto input) => _mapper.MapToModel(input);
 
@@ -51,3 +51,4 @@ public class VehicleTypeAppService : LookupCrudAppService<VehicleType, VehicleTy
         return entity;
     }
 }
+

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -43,7 +44,7 @@ public class VehicleTaskManager : BaseManager<VehicleTask>
     /// <summary>
     /// Birden fazla araç görev ataması oluşturmak için toplu validasyon yapar.
     /// </summary>
-    public async Task<System.Collections.Generic.List<CreateVehicleTaskModel>> CreateManyAsync(System.Collections.Generic.List<CreateVehicleTaskModel> models)
+    public async Task<List<CreateVehicleTaskModel>> CreateManyAsync(List<CreateVehicleTaskModel> models)
     {
         var vehicleIds = models.Select(x => x.VehicleId).Distinct().ToList();
         if (vehicleIds.Any()) await EnsureAllExistInAsync(_vehicleRepository, vehicleIds);
@@ -164,3 +165,4 @@ public class VehicleTaskManager : BaseManager<VehicleTask>
         }
     }
 }
+

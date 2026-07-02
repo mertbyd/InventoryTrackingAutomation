@@ -25,7 +25,7 @@ public class UnitTypeAppService : LookupCrudAppService<UnitType, UnitTypeDto, Cr
     }
 
     protected override UnitTypeDto MapToDto(UnitType entity) => _mapper.MapToDto(entity);
-    protected override System.Collections.Generic.List<UnitTypeDto> MapToDto(System.Collections.Generic.List<UnitType> entities) => _mapper.MapToDto(entities);
+    protected override List<UnitTypeDto> MapToDto(List<UnitType> entities) => _mapper.MapToDto(entities);
     protected override CreateUnitTypeModel MapToCreateModel(CreateUnitTypeDto input) => _mapper.MapToModel(input);
     protected override UpdateUnitTypeModel MapToUpdateModel(UpdateUnitTypeDto input) => _mapper.MapToModel(input);
 
@@ -51,3 +51,4 @@ public class UnitTypeAppService : LookupCrudAppService<UnitType, UnitTypeDto, Cr
         return entity;
     }
 }
+

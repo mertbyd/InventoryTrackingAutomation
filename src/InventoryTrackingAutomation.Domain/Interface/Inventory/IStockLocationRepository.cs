@@ -1,3 +1,9 @@
+using InventoryTrackingAutomation.Models.Inventory;
+using InventoryTrackingAutomation.Models.Tasks;
+using InventoryTrackingAutomation.Dtos.Inventory;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using InventoryTrackingAutomation.Entities.Inventory;
 
 namespace InventoryTrackingAutomation.Interface.Inventory;
@@ -7,9 +13,10 @@ namespace InventoryTrackingAutomation.Interface.Inventory;
 /// </summary>
 public interface IStockLocationRepository : IBaseRepository<StockLocation>
 {
-    System.Threading.Tasks.Task<InventoryTrackingAutomation.Models.Inventory.ProductStockSummaryModel> GetProductStockSummaryAsync(System.Guid productId);
-    System.Threading.Tasks.Task<System.Collections.Generic.List<InventoryTrackingAutomation.Models.Inventory.VehicleInventoryModel>> GetVehicleInventoriesAsync(System.Guid vehicleId);
-    System.Threading.Tasks.Task<System.Collections.Generic.List<InventoryTrackingAutomation.Models.Tasks.TaskInventoryModel>> GetTaskInventoryAsync(System.Guid inventoryTaskId);
-    System.Threading.Tasks.Task<System.Collections.Generic.List<InventoryTrackingAutomation.Dtos.Inventory.InventoryGridItemDto>> GetInventoryGridListAsync();
+    Task<ProductStockSummaryModel> GetProductStockSummaryAsync(Guid productId);
+    Task<List<VehicleInventoryModel>> GetVehicleInventoriesAsync(Guid vehicleId);
+    Task<List<TaskInventoryModel>> GetTaskInventoryAsync(Guid inventoryTaskId);
+    Task<List<InventoryGridItemDto>> GetInventoryGridListAsync();
 }
+
 

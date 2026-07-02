@@ -1,3 +1,11 @@
+using InventoryTrackingAutomation.Models.Inventory;
+using InventoryTrackingAutomation.Enums.Inventory;
+using InventoryTrackingAutomation.Entities.Tasks;
+using InventoryTrackingAutomation.Models.Tasks;
+using InventoryTrackingAutomation.Dtos.Inventory;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using Volo.Abp.EntityFrameworkCore;
 using InventoryTrackingAutomation.Entities.Inventory;
 using InventoryTrackingAutomation.Interface.Inventory;
@@ -16,7 +24,7 @@ public class StockLocationRepository : BaseRepository<StockLocation>, IStockLoca
     {
     }
 
-    public async System.Threading.Tasks.Task<InventoryTrackingAutomation.Models.Inventory.ProductStockSummaryModel> GetProductStockSummaryAsync(System.Guid productId)
+    public async Task<ProductStockSummaryModel> GetProductStockSummaryAsync(Guid productId)
     {
         var dbContext = await GetDbContextAsync();
         
@@ -24,27 +32,27 @@ public class StockLocationRepository : BaseRepository<StockLocation>, IStockLoca
             dbContext.StockLocations.Where(x => x.ProductId == productId));
 
         var vehicleIds = locations
-            .Where(x => x.LocationType == InventoryTrackingAutomation.Enums.Inventory.StockLocationTypeEnum.Vehicle)
-            .Select(x => (System.Guid?)x.LocationId)
+            .Where(x => x.LocationType == StockLocationTypeEnum.Vehicle)
+            .Select(x => (Guid?)x.LocationId)
             .ToList();
 
         var activeVehicleTasks = vehicleIds.Count > 0 
             ? await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync(
                 dbContext.VehicleTasks.Where(x => vehicleIds.Contains(x.VehicleId) && !x.ReleasedAt.HasValue))
-            : new System.Collections.Generic.List<InventoryTrackingAutomation.Entities.Tasks.VehicleTask>();
+            : new List<VehicleTask>();
 
         var locationSummaries = locations
             .Select(location =>
             {
-                var vehicleTask = location.LocationType == InventoryTrackingAutomation.Enums.Inventory.StockLocationTypeEnum.Vehicle
+                var vehicleTask = location.LocationType == StockLocationTypeEnum.Vehicle
                     ? activeVehicleTasks.FirstOrDefault(x => x.VehicleId == location.LocationId)
                     : null;
 
-                return new InventoryTrackingAutomation.Models.Inventory.ProductStockLocationSummaryModel
+                return new ProductStockLocationSummaryModel
                 {
                     LocationType = location.LocationType,
-                    WarehouseId = location.LocationType == InventoryTrackingAutomation.Enums.Inventory.StockLocationTypeEnum.Warehouse ? location.LocationId : null,
-                    VehicleId = location.LocationType == InventoryTrackingAutomation.Enums.Inventory.StockLocationTypeEnum.Vehicle ? location.LocationId : null,
+                    WarehouseId = location.LocationType == StockLocationTypeEnum.Warehouse ? location.LocationId : null,
+                    VehicleId = location.LocationType == StockLocationTypeEnum.Vehicle ? location.LocationId : null,
                     VehicleTaskId = vehicleTask?.Id,
                     TaskId = vehicleTask?.TaskId,
                     Quantity = location.Quantity,
@@ -53,15 +61,15 @@ public class StockLocationRepository : BaseRepository<StockLocation>, IStockLoca
             })
             .ToList();
 
-        return new InventoryTrackingAutomation.Models.Inventory.ProductStockSummaryModel
+        return new ProductStockSummaryModel
         {
             ProductId = productId,
             TotalQuantity = locations.Sum(x => x.Quantity),
             WarehouseQuantity = locations
-                .Where(x => x.LocationType == InventoryTrackingAutomation.Enums.Inventory.StockLocationTypeEnum.Warehouse)
+                .Where(x => x.LocationType == StockLocationTypeEnum.Warehouse)
                 .Sum(x => x.Quantity),
             VehicleQuantity = locations
-                .Where(x => x.LocationType == InventoryTrackingAutomation.Enums.Inventory.StockLocationTypeEnum.Vehicle)
+                .Where(x => x.LocationType == StockLocationTypeEnum.Vehicle)
                 .Sum(x => x.Quantity),
             ActiveTaskQuantity = locationSummaries
                 .Where(x => x.TaskId.HasValue)
@@ -70,20 +78,20 @@ public class StockLocationRepository : BaseRepository<StockLocation>, IStockLoca
         };
     }
 
-    public async System.Threading.Tasks.Task<System.Collections.Generic.List<InventoryTrackingAutomation.Models.Inventory.VehicleInventoryModel>> GetVehicleInventoriesAsync(System.Guid vehicleId)
+    public async Task<List<VehicleInventoryModel>> GetVehicleInventoriesAsync(Guid vehicleId)
     {
         var dbContext = await GetDbContextAsync();
         
         var locations = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync(
             dbContext.StockLocations.Where(x => 
-                x.LocationType == InventoryTrackingAutomation.Enums.Inventory.StockLocationTypeEnum.Vehicle && 
+                x.LocationType == StockLocationTypeEnum.Vehicle && 
                 x.LocationId == vehicleId));
 
         var activeVehicleTask = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.FirstOrDefaultAsync(
             dbContext.VehicleTasks.Where(x => x.VehicleId == vehicleId && !x.ReleasedAt.HasValue));
 
         return locations
-            .Select(location => new InventoryTrackingAutomation.Models.Inventory.VehicleInventoryModel
+            .Select(location => new VehicleInventoryModel
             {
                 VehicleId = vehicleId,
                 ProductId = location.ProductId,
@@ -95,7 +103,7 @@ public class StockLocationRepository : BaseRepository<StockLocation>, IStockLoca
             .ToList();
     }
 
-    public async System.Threading.Tasks.Task<System.Collections.Generic.List<InventoryTrackingAutomation.Models.Tasks.TaskInventoryModel>> GetTaskInventoryAsync(System.Guid inventoryTaskId)
+    public async Task<List<TaskInventoryModel>> GetTaskInventoryAsync(Guid inventoryTaskId)
     {
         var dbContext = await GetDbContextAsync();
         
@@ -107,15 +115,15 @@ public class StockLocationRepository : BaseRepository<StockLocation>, IStockLoca
         var locations = vehicleIds.Count > 0 
             ? await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync(
                 dbContext.StockLocations.Where(x => 
-                    x.LocationType == InventoryTrackingAutomation.Enums.Inventory.StockLocationTypeEnum.Vehicle && 
+                    x.LocationType == StockLocationTypeEnum.Vehicle && 
                     vehicleIds.Contains(x.LocationId)))
-            : new System.Collections.Generic.List<InventoryTrackingAutomation.Entities.Inventory.StockLocation>();
+            : new List<StockLocation>();
 
         return locations
             .Select(location =>
             {
                 var vehicleTask = vehicleTasks.First(x => x.VehicleId == location.LocationId);
-                return new InventoryTrackingAutomation.Models.Tasks.TaskInventoryModel
+                return new TaskInventoryModel
                 {
                     TaskId = inventoryTaskId,
                     VehicleTaskId = vehicleTask.Id,
@@ -128,26 +136,26 @@ public class StockLocationRepository : BaseRepository<StockLocation>, IStockLoca
             .ToList();
     }
 
-    public override async System.Threading.Tasks.Task<System.Linq.IQueryable<InventoryTrackingAutomation.Entities.Inventory.StockLocation>> WithDetailsAsync()
+    public override async Task<IQueryable<StockLocation>> WithDetailsAsync()
     {
         return (await GetQueryableAsync()).Include(x => x.Product).Include(x => x.Warehouse);
     }
 
-    public async System.Threading.Tasks.Task<System.Collections.Generic.List<InventoryTrackingAutomation.Dtos.Inventory.InventoryGridItemDto>> GetInventoryGridListAsync()
+    public async Task<List<InventoryGridItemDto>> GetInventoryGridListAsync()
     {
         var dbContext = await GetDbContextAsync();
         
         return await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync(
             dbContext.StockLocations
-                .Where(x => x.LocationType == InventoryTrackingAutomation.Enums.Inventory.StockLocationTypeEnum.Warehouse)
-                .Select(x => new InventoryTrackingAutomation.Dtos.Inventory.InventoryGridItemDto
+                .Where(x => x.LocationType == StockLocationTypeEnum.Warehouse)
+                .Select(x => new InventoryGridItemDto
                 {
                     Id = x.Id,
                     ProductId = x.ProductId,
                     Name = x.Product != null ? x.Product.Name : null,
-                    CategoryId = x.Product != null && x.Product.CategoryId.HasValue ? x.Product.CategoryId.Value : System.Guid.Empty,
+                    CategoryId = x.Product != null && x.Product.CategoryId.HasValue ? x.Product.CategoryId.Value : Guid.Empty,
                     CategoryName = x.Product != null && x.Product.Category != null ? x.Product.Category.Name : null,
-                    WarehouseId = x.Warehouse != null ? x.Warehouse.Id : System.Guid.Empty,
+                    WarehouseId = x.Warehouse != null ? x.Warehouse.Id : Guid.Empty,
                     WarehouseName = x.Warehouse != null ? x.Warehouse.Name : null,
                     WarehouseLocation = x.Warehouse != null ? x.Warehouse.Code : null,
                     Quantity = x.Quantity
@@ -155,5 +163,6 @@ public class StockLocationRepository : BaseRepository<StockLocation>, IStockLoca
         );
     }
 }
+
 
 
