@@ -39,7 +39,11 @@ public class VehicleTaskRepository : BaseRepository<VehicleTask>, IVehicleTaskRe
 
     public override async Task<IQueryable<VehicleTask>> WithDetailsAsync()
     {
-        return (await GetQueryableAsync()).Include(x => x.Vehicle).Include(x => x.Task).Include(x => x.ResponsibleWorker);
+        return (await GetQueryableAsync())
+            .Include(x => x.Vehicle)
+            .Include(x => x.Task)
+            .Include(x => x.ResponsibleWorker)
+            .Include(x => x.VehicleTaskLines).ThenInclude(l => l.TaskLine).ThenInclude(t => t.Product);
     }
 }
 
