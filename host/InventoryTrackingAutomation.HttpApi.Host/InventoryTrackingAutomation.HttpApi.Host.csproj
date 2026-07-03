@@ -11,7 +11,6 @@
 
   <ItemGroup>
     <PackageReference Include="Abp.RedisCache" Version="10.4.0" />
-    <PackageReference Include="Elastic.Clients.Elasticsearch" Version="9.4.2" />
     <PackageReference Include="Volo.Abp.AspNetCore.Mvc.UI.Theme.Basic" Version="10.3.0" />
     <PackageReference Include="SystemStandards.Core" Version="2.0.0" />
     <PackageReference Include="SystemStandards.Validation" Version="2.0.0" />

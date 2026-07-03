@@ -1,5 +1,9 @@
+using System;
+using Elastic.Clients.Elasticsearch;
+using InventoryTrackingAutomation.Search;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using Microsoft.EntityFrameworkCore;
 using Volo.Abp.EntityFrameworkCore;
 using Volo.Abp.Modularity;
@@ -125,6 +129,15 @@ public class InventoryTrackingAutomationEntityFrameworkCoreModule : AbpModule
 
     public override void ConfigureServices(ServiceConfigurationContext context)
     {
+        // Elasticsearch: typed options + tek singleton client. ES'e dokunan tek katman bu projedeki repository'lerdir.
+        var configuration = context.Services.GetConfiguration();
+        Configure<ElasticsearchOptions>(configuration.GetSection(ElasticsearchOptions.SectionName));
+        context.Services.AddSingleton(serviceProvider =>
+        {
+            var options = serviceProvider.GetRequiredService<IOptions<ElasticsearchOptions>>().Value;
+            return new ElasticsearchClient(new ElasticsearchClientSettings(new Uri(options.Url!)));
+        });
+
         Configure<AbpDbContextOptions>(options =>
         {
             options.UseNpgsql();

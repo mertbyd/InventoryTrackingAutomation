@@ -61,7 +61,6 @@
     "GeneralManagement.General:00003": "Islem sirasinda bir hata olustu.",
     "GeneralManagement.General:00004": "Record silinemez.",
     "GeneralManagement.General:00007": "Search service is currently unavailable.",
-    "GeneralManagement.General:00008": "Search predicate '{Predicate}' is not supported.",
     "MasterManagement.Warehouse:00003": "Islem sirasinda bir hata olustu.",
     "InventoryManagement.InventoryTransaction:00002": "Gecersiz transfer hareketi.",
     "InventoryManagement.InventoryTransaction:00003": "Islem sirasinda bir hata olustu.",

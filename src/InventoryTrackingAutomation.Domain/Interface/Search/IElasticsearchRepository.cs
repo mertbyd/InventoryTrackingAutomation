@@ -3,32 +3,28 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 using InventoryTrackingAutomation.Search;
-using Volo.Abp.Application.Dtos;
 
 namespace InventoryTrackingAutomation.Interface.Search;
 
 /// <summary>
-/// Elasticsearch index'leri icin generic repository arayuzu; ES sorgu DSL'i cagirana sizmasin diye
-/// okuma tarafinda EF repository'lerdeki gibi expression predicate kullanilir.
+/// Elasticsearch index'leri icin generic repository arayuzu; okuma tarafinda EF repository'lerdeki gibi
+/// lambda predicate kullanilir, ceviriyi Elastic'in resmi LINQ-to-ES|QL provider'i yapar.
 /// </summary>
-// islevi: Dokuman okuma/yazma operasyonlarini lambda tabanli sunar; index adi ISearchDocument.IndexName'den cozulur.
-// sistemdeki gorevi: ES client cagrilari yalnizca bu repository implementasyonlarinda yasar; AppService ve event handler DSL gormez.
+// islevi: Lambda tabanli okuma + index yazma/silme sozlesmesini sunar; index adi ISearchDocument.IndexName'den cozulur.
+// sistemdeki gorevi: ES client cagrilari yalnizca bu repository implementasyonlarinda yasar; fuzzy/sayfali arama gibi
+// ES|QL'in desteklemedigi sorgular index'e ozel repository'de isimli metot olarak tanimlanir.
 public interface IElasticsearchRepository<TDocument> where TDocument : class, ISearchDocument
 {
     /// <summary>
     /// Predicate'e uyan ilk dokumani doner; eslesme yoksa null. Ornek: GetByAsync(x => x.Code == "PRD-001").
-    /// Desteklenen ifadeler: ==, &amp;&amp;, ||, Equals, Contains.
     /// </summary>
     Task<TDocument?> GetByAsync(Expression<Func<TDocument, bool>> predicate);
 
     /// <summary>
-    /// Predicate'e uyan dokumanlari sayfali doner. Ornek: GetListByAsync(x => x.CategoryId == id &amp;&amp; x.Name.Contains("vida"), 0, 20).
-    /// String alanda Contains fuzzy metin aramasi, == birebir eslesme olarak calisir; x => true tum dokumanlari doner.
+    /// Predicate'e uyan dokumanlari doner. Ornek: GetListByAsync(x => x.CategoryId == categoryId, 20).
+    /// Esitlik/karsilastirma, &amp;&amp;, ||, ! ve koleksiyon Contains (IN) desteklenir; fuzzy ve skip sayfalama ES|QL'de yoktur.
     /// </summary>
-    Task<PagedResultDto<TDocument>> GetListByAsync(
-        Expression<Func<TDocument, bool>> predicate,
-        int skipCount,
-        int maxResultCount);
+    Task<List<TDocument>> GetListByAsync(Expression<Func<TDocument, bool>> predicate, int maxResultCount);
 
     /// <summary>
     /// Dokumani upsert eder (ayni Id varsa uzerine yazar); ES erisilemezse false doner.
