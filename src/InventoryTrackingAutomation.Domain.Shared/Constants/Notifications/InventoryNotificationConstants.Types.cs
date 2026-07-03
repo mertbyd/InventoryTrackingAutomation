@@ -9,5 +9,8 @@ public static partial class InventoryNotificationConstants
     {
         // Workflow adimi bir onayciya atandiginda gonderilen bildirim tipi.
         public const string WorkflowStepAssigned = "WorkflowStepAssigned";
+
+        // Depodan urun cikisi gerceklestiginde depo sorumlusuna gonderilen bildirim tipi.
+        public const string WarehouseStockDispatched = "WarehouseStockDispatched";
     }
 }

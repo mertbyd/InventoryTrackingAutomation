@@ -64,6 +64,8 @@ public class VehicleTaskLineAppService : InventoryTrackingAutomationAppService, 
         var vehicleTask = await _manager.EnsureVehicleTaskExistsAsync(vehicleTaskId);
 
         var model = _mapper.MapToModel(input);
+        // Nested create'te DTO VehicleTaskId tasimaz; FK map'ten once modele yazilir ki mapper bos Guid ezmesin.
+        model.VehicleTaskId = vehicleTaskId;
         var validatedModel = await _manager.CreateAsync(vehicleTaskId, model);
         var entity = new VehicleTaskLine(GuidGenerator.Create());
         entity.VehicleTaskId = vehicleTaskId;

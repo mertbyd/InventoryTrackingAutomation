@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Concurrent;
 using System.Threading.Channels;
+using InventoryTrackingAutomation.Dtos.Notifications;
+using Microsoft.Extensions.Options;
 using Volo.Abp.DependencyInjection;
 
 namespace InventoryTrackingAutomation.Notifications;
@@ -14,6 +16,12 @@ public class InventorySseConnectionManager : ISingletonDependency
 {
     // Ayni kullanici birden fazla sekme/cihazdan baglanabilir; her baglanti kendi kanalini alir.
     private readonly ConcurrentDictionary<Guid, ConcurrentDictionary<Guid, Channel<InventoryNotificationPayload>>> _connections = new();
+    private readonly SseOptions _options;
+
+    public InventorySseConnectionManager(IOptions<SseOptions> options)
+    {
+        _options = options.Value;
+    }
 
     /// <summary>
     /// Kullanici icin yeni bir SSE kanali acar; baglanti kapaninca subscription dispose edilerek kayit silinir.
@@ -21,7 +29,13 @@ public class InventorySseConnectionManager : ISingletonDependency
     public InventorySseSubscription Subscribe(Guid userId)
     {
         var connectionId = Guid.NewGuid();
-        var channel = Channel.CreateUnbounded<InventoryNotificationPayload>();
+
+        // Tampon dolarsa en eski bildirim dusurulur; yavas client sunucu bellegini sisiremez.
+        var channel = Channel.CreateBounded<InventoryNotificationPayload>(new BoundedChannelOptions(_options.ChannelCapacity)
+        {
+            FullMode = BoundedChannelFullMode.DropOldest,
+            SingleReader = true
+        });
 
         var userChannels = _connections.GetOrAdd(
             userId,

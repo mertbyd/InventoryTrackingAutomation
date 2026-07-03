@@ -1,5 +1,7 @@
 using System;
 using System.Threading.Tasks;
+using InventoryTrackingAutomation.Dtos.Notifications;
+using InventoryTrackingAutomation.Interface.Notifications;
 using Volo.Abp.DependencyInjection;
 
 namespace InventoryTrackingAutomation.Notifications;

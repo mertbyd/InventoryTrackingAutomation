@@ -12,5 +12,8 @@ public static partial class InventoryNotificationConstants
 
         // Client tarafinda dinlenecek SSE event adi (SignalREvents.ReceiveInventoryNotification'in SSE karsiligi).
         public const string InventoryNotification = "inventory-notification";
+
+        // Sessiz donemde baglantiyi canli tutmak icin atilan bos event; client bu adi gorunce yok sayar.
+        public const string Heartbeat = "heartbeat";
     }
 }

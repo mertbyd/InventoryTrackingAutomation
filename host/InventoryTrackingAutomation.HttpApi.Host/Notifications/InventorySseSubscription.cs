@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Channels;
+using InventoryTrackingAutomation.Dtos.Notifications;
 
 namespace InventoryTrackingAutomation.Notifications;
 

@@ -15,8 +15,6 @@ public class InventorySignalRDebugNotification
     public string Message { get; set; } = string.Empty;
     public string EntityType { get; set; } = string.Empty;
     public Guid? EntityId { get; set; }
-    public Guid? WorkflowInstanceId { get; set; }
-    public Guid? WorkflowInstanceStepId { get; set; }
     public DateTime CreatedAtUtc { get; set; }
     public bool Sent { get; set; }
     public string? Error { get; set; }

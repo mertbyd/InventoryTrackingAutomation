@@ -13,7 +13,10 @@ public static partial class InventoryNotificationConstants
         // Onayciya gosterilecek standart workflow atama mesaji.
         public const string WorkflowStepAssignedMessage = "Bir hareket talebi onayiniz icin bekliyor.";
 
-        // Workflow onaycisi cozulemezse debug kaydinda gorunen hata.
-        public const string MissingAssignedUser = "AssignedUserId bos; workflow onaycisi cozulemedi.";
+        // Depo sorumlusuna gosterilecek standart urun cikisi basligi.
+        public const string WarehouseStockDispatchedTitle = "Depodan urun cikisi";
+
+        // Depo sorumlusuna gosterilecek standart urun cikisi mesaji.
+        public const string WarehouseStockDispatchedMessage = "Sorumlusu oldugunuz depodan urun cikisi gerceklesti.";
     }
 }

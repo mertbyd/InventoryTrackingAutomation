@@ -13,6 +13,7 @@ using InventoryTrackingAutomation.Interface.Masters;
 using InventoryTrackingAutomation.Interface.Movements;
 using InventoryTrackingAutomation.Interface.Tasks;
 using InventoryTrackingAutomation.Interface.Workflows;
+using InventoryTrackingAutomation.Events.Movements;
 using InventoryTrackingAutomation.Events.Workflows;
 using InventoryTrackingAutomation.Models.Movements;
 using InventoryTrackingAutomation.Managers.Inventory;
@@ -211,6 +212,14 @@ public class MovementRequestManager : BaseManager<MovementRequest>
         }
 
         request.Status = MovementStatusEnum.Shipped;
+
+        // Sevkiyat bildirimi urun satiri sayisindan bagimsizdir; dispatch basina tek olay yayinlanir.
+        await _localEventBus.PublishAsync(new WarehouseStockDispatchedEto
+        {
+            MovementRequestId = request.Id,
+            SourceWarehouseId = context.SourceWarehouseId
+        });
+
         return await Repository.UpdateAsync(request, autoSave: true);
     }
 

@@ -1,4 +1,5 @@
 using System;
+using InventoryTrackingAutomation.Dtos.Notifications;
 using InventoryTrackingAutomation.Notifications;
 using Volo.Abp.DependencyInjection;
 
@@ -29,8 +30,6 @@ public class InventorySignalRDebugRecorder : IInventorySignalRDebugRecorder, ITr
             Message = payload.Message,
             EntityType = payload.EntityType,
             EntityId = payload.EntityId,
-            WorkflowInstanceId = payload.WorkflowInstanceId,
-            WorkflowInstanceStepId = payload.WorkflowInstanceStepId,
             CreatedAtUtc = payload.CreatedAt,
             Sent = sent,
             Error = error

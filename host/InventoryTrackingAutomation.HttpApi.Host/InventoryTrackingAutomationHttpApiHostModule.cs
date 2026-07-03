@@ -17,12 +17,14 @@ using OpenIddict.Validation.AspNetCore;
 using System.Net.ServerSentEvents;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using InventoryTrackingAutomation.Dtos.Notifications;
 using InventoryTrackingAutomation.EntityFrameworkCore;
 using InventoryTrackingAutomation.MultiTenancy;
 using InventoryTrackingAutomation.Notifications;
 using InventoryTrackingAutomation.SignalR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using SystemStandards.Extensions;
 using SystemStandards.Abp;
 using SystemStandards.Abp.Extensions;
@@ -168,6 +170,9 @@ public class InventoryTrackingAutomationHttpApiHostModule : AbpModule
         // SystemStandards services are now registered via SystemStandardsAbpModule
 
         context.Services.AddSingleton<InventorySignalRDebugNotificationStore>();
+
+        // SSE davranisi (heartbeat araligi, kanal tamponu) koddan degil config'den gelir.
+        Configure<SseOptions>(configuration.GetSection(SseOptions.SectionName));
 
         // CRITICAL: API isteklerinde Bearer kullanıldığı için CSRF/Antiforgery filtresini kapatıyoruz
         Configure<AbpAntiForgeryOptions>(options =>
@@ -394,9 +399,9 @@ public class InventoryTrackingAutomationHttpApiHostModule : AbpModule
             // Tek yonlu canli bildirim akisi; cift yonlu soket gerektirmeyen client'lar SignalR yerine bu SSE stream'ine baglanir.
             endpoints.MapGet(
                     InventoryNotificationConstants.SseEvents.StreamPath,
-                    (HttpContext httpContext, ICurrentUser currentUser, InventorySseConnectionManager connectionManager) =>
+                    (HttpContext httpContext, ICurrentUser currentUser, InventorySseConnectionManager connectionManager, IOptions<SseOptions> sseOptions) =>
                         TypedResults.ServerSentEvents(StreamInventoryNotificationsAsync(
-                            connectionManager, currentUser.GetId(), httpContext.RequestAborted)))
+                            connectionManager, sseOptions.Value, currentUser.GetId(), httpContext.RequestAborted)))
                 .RequireAuthorization();
         });
 
@@ -404,17 +409,40 @@ public class InventoryTrackingAutomationHttpApiHostModule : AbpModule
     }
 
     // Baglanti acik kaldigi surece kullanicinin kanalina dusen bildirimleri SSE event'i olarak akitir.
-    private static async IAsyncEnumerable<SseItem<InventoryNotificationPayload>> StreamInventoryNotificationsAsync(
+    // SseItem verisi object tutulur; deklare tip payload base'i olsaydi kalitilan bildirim alanlari JSON'a yazilmazdi.
+    private static async IAsyncEnumerable<SseItem<object?>> StreamInventoryNotificationsAsync(
         InventorySseConnectionManager connectionManager,
+        SseOptions sseOptions,
         Guid userId,
         [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         using var subscription = connectionManager.Subscribe(userId);
+        var heartbeatInterval = TimeSpan.FromSeconds(sseOptions.HeartbeatSeconds);
+        Task<bool>? pendingRead = null;
 
-        await foreach (var payload in subscription.Reader.ReadAllAsync(cancellationToken))
+        while (!cancellationToken.IsCancellationRequested)
         {
-            yield return new SseItem<InventoryNotificationPayload>(
-                payload, InventoryNotificationConstants.SseEvents.InventoryNotification);
+            pendingRead ??= subscription.Reader.WaitToReadAsync(cancellationToken).AsTask();
+
+            // Heartbeat suresi boyunca bildirim dusmezse ara sunucular baglantiyi kesmesin diye bos event atilir.
+            if (await Task.WhenAny(pendingRead, Task.Delay(heartbeatInterval, cancellationToken)) != pendingRead)
+            {
+                yield return new SseItem<object?>(
+                    null, InventoryNotificationConstants.SseEvents.Heartbeat);
+                continue;
+            }
+
+            if (!await pendingRead)
+            {
+                yield break;
+            }
+            pendingRead = null;
+
+            while (subscription.Reader.TryRead(out var payload))
+            {
+                yield return new SseItem<object?>(
+                    payload, InventoryNotificationConstants.SseEvents.InventoryNotification);
+            }
         }
     }
 

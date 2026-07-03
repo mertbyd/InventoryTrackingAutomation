@@ -1,5 +1,5 @@
 using System;
-using InventoryTrackingAutomation.Notifications;
+using InventoryTrackingAutomation.Dtos.Notifications;
 
 namespace InventoryTrackingAutomation.SignalR;
 
