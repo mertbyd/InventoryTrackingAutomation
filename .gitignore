@@ -280,3 +280,9 @@ tools/redis/
 
 # Temp files
 scratch.cs
+
+# Ajan/arac artiklari ve vendor binary'leri
+.claude/
+.codex/
+.codex-migration-archive/
+tools/redis/
